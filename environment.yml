@@ -1,0 +1,10 @@
+name: dbs
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - dask
+  - pandas
+  - poetry
+  - geopandas
+  - pyarrow==2.0.0
