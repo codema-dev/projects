@@ -2,6 +2,9 @@
 
 Creates a live, open Dublin building stock at Postcode level by merging <2011 Census data with the BER Public Search.
 
+## Download
+
+[Dublin Residential Building Stock up to 2011](https://zenodo.org/record/4552498) - Central Statistics Office (CSO) Small Area cross-tabulation of period built | dwelling type anonymised to Postcode level 
 ## Installation
 
 Clone a local copy
