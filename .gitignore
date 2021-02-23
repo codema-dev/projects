@@ -133,4 +133,5 @@ dmypy.json
 
 # Custom
 *.ipynb
-data/
+data/*
+!data/.gitkeep
