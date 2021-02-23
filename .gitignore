@@ -130,3 +130,7 @@ dmypy.json
 
 # Vscode
 .vscode/
+
+# Custom
+*.ipynb
+data/
