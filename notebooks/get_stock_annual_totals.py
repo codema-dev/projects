@@ -19,10 +19,11 @@ from os import path
 from shutil import unpack_archive
 from urllib.request import urlretrieve
 
+from berpublicsearch.download import download_berpublicsearch_parquet
 import pandas as pd
 
 # %%
-path_to_census_stock = "data/dublin_building_stock_up_to_2011.csv"
+path_to_census_stock = "../data/dublin_building_stock_up_to_2011.csv"
 if not path.exists(path_to_census_stock):
     urlretrieve(
         url="https://zenodo.org/record/4552498/files/dublin_building_stock_up_to_2011.csv",
@@ -38,7 +39,13 @@ total_pre_2011 = (
 )
 
 # %%
-berpublicsearch_ireland = dd.read_parquet("data/BERPublicsearch_parquet")
+path_to_berpublicsearch = "../data/BERPublicsearch_parquet"
+if not path.exists(path_to_berpublicsearch):
+    download_berpublicsearch_parquet(
+        email_address="rowan.molony@codema.ie", savedir="../data"
+    )
+
+berpublicsearch_ireland = dd.read_parquet(path_to_berpublicsearch)
 berpublicsearch_dublin = (
     berpublicsearch_ireland[
         berpublicsearch_ireland["CountyName"].str.contains("Dublin")
@@ -57,4 +64,4 @@ for year in range(2016, 2021, 1):
         .count()
         .rename(f"post_{year}")
     )
-    total.to_csv(f"data/residential_total_buildings_{year}.csv")
+    total.to_csv(f"../data/residential_total_buildings_{year}.csv")
