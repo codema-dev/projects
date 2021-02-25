@@ -21,7 +21,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 
-from ods import join
+from dublin_building_stock import join
 
 # %% [markdown]
 # # Amalgamate Cross-tabulated Small Area building stock for all Dublin LAs
@@ -160,7 +160,7 @@ dublin_indiv_buildings_at_postcode_level[
         "1981 - 1990": "1983 - 1993",
         "1991 - 2000": "1994 - 1999",
         "2001 - 2005": "2000 - 2004",
-        "2006 - 2011": "2005 - 2009",
+        "2006 - 2010": "2005 - 2009",
     }
 )
 
