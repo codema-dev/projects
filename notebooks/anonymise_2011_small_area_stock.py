@@ -18,6 +18,7 @@ from shutil import unpack_archive
 from urllib.request import urlretrieve
 
 import geopandas as gpd
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -48,39 +49,20 @@ dublin_buildings_at_small_area = (
 )
 
 # %% [markdown]
-# # Get 2011 Small Area Boundaries
+# # Get 2011 Small Area Boundaries (linked to Postcodes)
 
 # %%
-if not path.exists("../data/Census2011_Small_Areas_generalised20m.zip"):
+small_area_boundaries_filepath = (
+    "../data/small_areas_boundaries_2011_linked_to_autoaddress_dublin_postcodes.geojson"
+)
+if not path.exists(small_area_boundaries_filepath):
     urlretrieve(
-        url="http://census.cso.ie/censusasp/saps/boundaries/Census2011_Small_Areas_generalised20m.zip",
-        filename="../data/Census2011_Small_Areas_generalised20m.zip",
-    )
-    unpack_archive(
-        "../data/Census2011_Small_Areas_generalised20m.zip",
-        "../data/Census2011_Small_Areas_generalised20m",
+        url="https://zenodo.org/record/4564475/files/small_areas_boundaries_2011_linked_to_autoaddress_dublin_postcodes.geojson",
+        filename=small_area_boundaries_filepath,
     )
 
-small_area_boundaries = gpd.read_file("../data/Census2011_Small_Areas_generalised20m")[
-    ["SMALL_AREA", "EDNAME", "geometry"]
-].to_crs(epsg=2157)
-
-# %% [markdown]
-# # Get Postcode boundaries
-
-# %%
-if not path.exists("../data/dublin_postcode_boundaries.zip"):
-    urlretrieve(
-        url="https://zenodo.org/record/4327005/files/dublin_postcode_boundaries.zip",
-        filename="../data/dublin_postcode_boundaries.zip",
-    )
-    unpack_archive(
-        "../data/dublin_postcode_boundaries.zip",
-        "../data",
-    )
-
-postcode_boundaries = gpd.read_file(
-    "../data/dublin_postcode_boundaries.geojson", driver="GeoJSON"
+small_area_boundaries = gpd.read_file(
+    small_area_boundaries_filepath, driver="GeoJSON"
 ).to_crs(epsg=2157)
 
 
@@ -109,60 +91,12 @@ dublin_small_areas = gpd.GeoDataFrame(
 )
 
 # %% [markdown]
-# # Link Dublin Small Areas to Dublin Postcodes
-
-# %%
-most_small_areas_linked_to_dublin_postcodes = join.centroids_within(
-    dublin_small_areas, postcode_boundaries
-)
-
-# %%
-missing_sas = dublin_small_areas.merge(
-    small_areas_linked_to_dublin_postcodes, how="left", indicator=True
-).query("`_merge` == 'left_only'")
-
-# %%
-# visually matched missing SAs to Postcodes via plot()
-# missing_sas_linked = ..
-
-# %%
-small_areas_linked_to_dublin_postcodes = pd.concat(
-    [most_small_areas_linked_to_dublin_postcodes, missing_sas_linked]
-)
-
-# %% [markdown]
 # # Anonymise stock to Postcode level
 
 # %%
-dublin_indiv_buildings_at_postcode_level = (
-    dublin_indiv_buildings_at_small_area.merge(
-        small_area_boundaries, how="left", left_on="sa_2011", right_on="SMALL_AREA"
-    )
-    .merge(small_areas_linked_to_dublin_postcodes)
-    .drop(columns=["sa_2011", "SMALL_AREA", "EDNAME", "geometry"])
-)
-
-# %% [markdown]
-# # Group Buildings by Regulation Period
-#
-# ... as per DEAP Manual 4.2.2 Appendix S Table S1
-
-# %%
-dublin_indiv_buildings_at_postcode_level[
-    "regulation_period_deap_appendix_s"
-] = dublin_indiv_buildings_at_postcode_level.period_built_unstandardised.map(
-    {
-        "before 1919": "<1978",
-        "1919 - 1945": "<1978",
-        "1946 - 1960": "<1978",
-        "1961 - 1970": "<1978",
-        "1971 - 1980": "<1978",
-        "1981 - 1990": "1983 - 1993",
-        "1991 - 2000": "1994 - 1999",
-        "2001 - 2005": "2000 - 2004",
-        "2006 - 2010": "2005 - 2009",
-    }
-)
+dublin_indiv_buildings_at_postcode_level = dublin_indiv_buildings_at_small_area.merge(
+    small_area_boundaries, how="left", left_on="sa_2011", right_on="SMALL_AREA"
+).drop(columns=["sa_2011", "SMALL_AREA", "geometry"])
 
 # %% [markdown]
 # # Save
