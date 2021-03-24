@@ -1,18 +1,5 @@
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: percent
-#       format_version: '1.3'
-#       jupytext_version: 1.10.2
-#   kernelspec:
-#     display_name: Python 3
-#     language: python
-#     name: python3
-# ---
-
 # %%
+from pathlib import Path
 from os import path
 from shutil import unpack_archive
 from urllib.request import urlretrieve
@@ -23,6 +10,8 @@ import numpy as np
 import pandas as pd
 
 from dublin_building_stock import join
+
+data_dir = Path("../data")
 
 # %% [markdown]
 # # Amalgamate Cross-tabulated Small Area building stock for all Dublin LAs
@@ -49,22 +38,38 @@ dublin_buildings_at_small_area = (
 )
 
 # %% [markdown]
-# # Get 2011 Small Area Boundaries (linked to Postcodes)
-
-# %%
-small_area_boundaries_filepath = (
-    "../data/small_areas_boundaries_2011_linked_to_autoaddress_dublin_postcodes.geojson"
-)
-if not path.exists(small_area_boundaries_filepath):
-    urlretrieve(
-        url="https://zenodo.org/record/4564475/files/small_areas_boundaries_2011_linked_to_autoaddress_dublin_postcodes.geojson",
-        filename=small_area_boundaries_filepath,
+# # Read 2011 Small Area Boundaries
+dublin_small_area_boundaries = (
+    gpd.read_file(
+        data_dir / "DublinCensus2011_Small_Areas_generalised20m_with_postcodes",
     )
+    .to_crs(epsg=2157)
+    .drop(columns="postcodes")
+)
 
-small_area_boundaries = gpd.read_file(
-    small_area_boundaries_filepath, driver="GeoJSON"
+# %% [markdown]
+# # Read Postcode Boundaries
+ireland_postcode_boundaries = gpd.read_file(
+    data_dir / "routingkeys_shape_itm_2016_09_29",
 ).to_crs(epsg=2157)
 
+# %% [markdown]
+# # Link 2011 Small Areas to Postcodes
+
+# %%
+dublin_small_area_boundaries["CountyName"] = (
+    gpd.sjoin(
+        dublin_small_area_boundaries.assign(
+            geometry=lambda gdf: gdf.geometry.representative_point()
+        ),
+        ireland_postcode_boundaries,
+        op="within",
+        how="left",
+    )
+    .loc[:, "Descriptor"]
+    .str.title()
+    .replace(r"(^(?!Dublin|Bray|Maynooth).*$)", "Co. Dublin", regex=True)
+)
 
 # %% [markdown]
 # # Expand each Small Area to Individual Buildings
@@ -79,24 +84,12 @@ dublin_indiv_buildings_at_small_area = expand_to_indiv_buildings(
 ).drop(columns="value")
 
 # %% [markdown]
-# # Extract Dublin Small Area boundaries by pulling Dublin LA SAs from All-Of-Ireland SA Boundaries
-
-# %%
-dublin_small_areas = gpd.GeoDataFrame(
-    dublin_indiv_buildings_at_small_area.merge(
-        small_area_boundaries, how="left", left_on="sa_2011", right_on="SMALL_AREA"
-    )
-    .loc[:, ["SMALL_AREA", "geometry"]]
-    .drop_duplicates()
-)
-
-# %% [markdown]
 # # Anonymise stock to Postcode level
 
 # %%
 dublin_indiv_buildings_at_postcode_level = dublin_indiv_buildings_at_small_area.merge(
-    small_area_boundaries, how="left", left_on="sa_2011", right_on="SMALL_AREA"
-).drop(columns=["sa_2011", "SMALL_AREA", "geometry"])
+    dublin_small_area_boundaries, how="left", left_on="sa_2011", right_on="SMALL_AREA"
+).loc[:, ["dwelling_type_unstandardised", "period_built_unstandardised", "CountyName"]]
 
 # %% [markdown]
 # # Save
@@ -105,3 +98,5 @@ dublin_indiv_buildings_at_postcode_level = dublin_indiv_buildings_at_small_area.
 dublin_indiv_buildings_at_postcode_level.to_csv(
     "../data/dublin_building_stock_up_to_2011.csv", index=False
 )
+
+# %%
