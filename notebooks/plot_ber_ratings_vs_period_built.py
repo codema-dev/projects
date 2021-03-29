@@ -6,9 +6,12 @@ import numpy as np
 
 import pandas_bokeh
 
-# pandas_bokeh.output_notebook()
+pandas_bokeh.output_notebook()
 data_dir = Path("../data")
 html_dir = Path("../html")
+
+# %% [markdown]
+# # Get Dublin BER Public
 
 # %%
 keep_columns = [
@@ -48,6 +51,12 @@ ber_dublin = pd.read_parquet(data_dir / "BERPublicsearch_Dublin.parquet").assign
     ),
 )
 
+# %% [markdown]
+# # Plot BER Ratings vs Age
+
+# %%
+pandas_bokeh.output_file(html_dir / "ber_ratings_vs_period_built.html")
+
 # %%
 ber_dublin.pivot_table(
     index="EnergyRating",
@@ -56,9 +65,11 @@ ber_dublin.pivot_table(
     aggfunc="count",
 ).plot_bokeh.bar()
 
-# %%
-pandas_bokeh.output_file(html_dir / "plot_ber_ratings_vs_period_built.html")
+# %% [markdown]
+# # Plot BER Bands vs Age
 
+# %%
+pandas_bokeh.output_file(html_dir / "ber_bands_vs_period_built.html")
 # %%
 ber_dublin.pivot_table(
     index="BerBand",
@@ -67,7 +78,18 @@ ber_dublin.pivot_table(
     aggfunc="count",
 ).plot_bokeh.bar(ylabel="Number of Buildings")
 
+# %% [markdown]
+# # Plot Estimated BER Ratings vs Age
+
 # %%
-pandas_bokeh.output_file(html_dir / "plot_ber_bands_vs_period_built.html")
+pandas_bokeh.output_file(html_dir / "ber_estimated_vs_period_built.html")
+
+# %%
+ber_dublin.pivot_table(
+    index="EstimatedBer",
+    columns="cso_period_built",
+    values="Year_of_Construction",
+    aggfunc="count",
+).plot_bokeh.bar(ylabel="Number of Buildings")
 
 # %%
