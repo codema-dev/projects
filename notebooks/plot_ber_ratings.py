@@ -57,7 +57,7 @@ estimated_dublin_small_area_bers = (
         aggfunc="count",
     )
     .fillna(0)
-    .reset_index(drop=True)
+    .reset_index()
     .assign(
         total=lambda df: df.eval("A + C + D + E + unknown"),
         A_to_B=lambda df: df["A"],
@@ -65,7 +65,13 @@ estimated_dublin_small_area_bers = (
         E_to_G=lambda df: df["E"],
     )
     .rename(columns=lambda name: name + "_estimate")
-    .rename(columns={"total_estimate": "census_total"})
+    .rename(
+        columns={
+            "SMALL_AREA_estimate": "SMALL_AREA",
+            "EDNAME_estimate": "EDNAME",
+            "total_estimate": "census_total",
+        }
+    )
     .join(dublin_small_area_boundaries)
     .pipe(gpd.GeoDataFrame)
 )
@@ -79,7 +85,7 @@ sample_dublin_small_area_bers = (
         aggfunc="count",
     )
     .fillna(0)
-    .reset_index(drop=True)
+    .reset_index()
     .assign(
         total=lambda df: df.eval("A + B + C + D + E + F + G"),
         A_to_B=lambda df: df.eval("A + B"),
@@ -87,7 +93,8 @@ sample_dublin_small_area_bers = (
         E_to_G=lambda df: df.eval("E + F + G"),
     )
     .rename(columns=lambda name: name + "_sample")
-    .join(dublin_small_area_boundaries)
+    .rename(columns={"SMALL_AREA_sample": "SMALL_AREA", "EDNAME_sample": "EDNAME"})
+    .merge(dublin_small_area_boundaries)
     .pipe(gpd.GeoDataFrame)
 )
 
