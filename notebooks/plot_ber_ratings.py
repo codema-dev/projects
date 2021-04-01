@@ -115,8 +115,8 @@ hovertool_string = """
     <table style="background-color:#084594;color:#ffffff">
         <tr>
             <th>BER<br>Rating</th>
-            <th>Estimated<br>BER<br>Rating</th>
-            <th>Sample<br>BER<br>Rating</th>
+            <th>Estimated<br>(complete)</th>
+            <th>Actual<br>(incomplete)</th>
         </tr>
         <tr>
             <td>A</td>
@@ -162,7 +162,6 @@ hovertool_string = """
 """
 dublin_small_area_bers.plot_bokeh(
     figsize=(700, 900),
-    simplify_shapes=50,
     dropdown=["E_to_G_estimate", "C_to_D_estimate", "A_to_B_estimate"],
     colormap=(
         "#f7fbff",
@@ -170,6 +169,7 @@ dublin_small_area_bers.plot_bokeh(
     ),
     colormap_range=(0, 80),
     hovertool_string=hovertool_string,
+    fill_alpha=0.5,
 )
 
 # %%
