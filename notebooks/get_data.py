@@ -201,11 +201,18 @@ column_names = {
     "T6_5_NS": "Not stated",
     "T6_5_T": "Total",
 }
-dublin_small_area_boiler_types = extract_census_columns(
+dublin_small_area_hh_boilers = extract_census_columns(
     data_dir / "SAPS2016_SA2017.csv",
     dublin_small_area_boundaries,
     column_names,
     "boiler_type",
+    melt=False,
+)
+
+# %%
+dublin_small_area_hh_boilers.to_csv(
+    data_dir / "dublin_small_area_hh_boilers.csv",
+    index=False,
 )
 
 # %% [markdown]
@@ -214,7 +221,7 @@ dublin_small_area_boiler_types = extract_census_columns(
 # - Floor Area via Closed BER Dataset
 dublin_small_area_hh_age_indiv = (
     repeat_rows_on_column(dublin_small_area_hh_age, "value")
-    .query("period_built != ['total', 'not stated']")
+    .query("period_built != ['total']")
     .assign(
         estimated_ber=lambda df: df["period_built"].replace(
             {
@@ -227,6 +234,7 @@ dublin_small_area_hh_age_indiv = (
                 "1991 - 2000": "D",
                 "2001 - 2010": "C",
                 "2011 or later": "A",
+                "not stated": "unknown",
             }
         )
     )
