@@ -63,7 +63,7 @@ ber_dublin.pivot_table(
     columns="cso_period_built",
     values="Year_of_Construction",
     aggfunc="count",
-).plot_bokeh.bar()
+).plot_bokeh.bar(ylabel="Number of Buildings")
 
 # %% [markdown]
 # # Plot BER Bands vs Age
