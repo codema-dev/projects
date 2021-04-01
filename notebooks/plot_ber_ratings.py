@@ -72,7 +72,7 @@ estimated_dublin_small_area_bers = (
             "total_estimate": "census_total",
         }
     )
-    .join(dublin_small_area_boundaries)
+    .merge(dublin_small_area_boundaries)
     .pipe(gpd.GeoDataFrame)
 )
 
