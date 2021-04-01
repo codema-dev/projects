@@ -278,6 +278,21 @@ ber_private_dublin = (
     .assign(
         EDNAME=lambda df: df["ED_Name"].str.title(),
         BERBand=lambda df: df["Energy Rating"].str[0],
+        period_built=lambda df: pd.cut(
+            df["Year of construction"],
+            bins=[-np.inf, 1919, 1945, 1960, 1970, 1980, 1990, 2000, 2010, np.inf],
+            labels=[
+                "before 1919",
+                "1919 - 1945",
+                "1946 - 1960",
+                "1961 - 1970",
+                "1971 - 1980",
+                "1981 - 1990",
+                "1991 - 2000",
+                "2001 - 2010",
+                "2011 or later",
+            ],
+        ),
     )
     .drop(columns=["cso_small_area", "geo_small_area", "ED_Name"])
 )
