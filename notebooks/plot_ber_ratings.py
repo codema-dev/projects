@@ -59,7 +59,7 @@ estimated_dublin_small_area_bers = (
     .fillna(0)
     .reset_index(drop=True)
     .assign(
-        total=lambda df: df.eval("A + C + D + E"),
+        total=lambda df: df.eval("A + C + D + E + unknown"),
         A_to_B=lambda df: df["A"],
         C_to_D=lambda df: df.eval("C + D"),
         E_to_G=lambda df: df["E"],
@@ -152,6 +152,11 @@ hovertool_string = """
             <td>G</td>
             <td>-</td>
             <td>@G_sample</td>
+        </tr>
+        <tr>
+            <td>Unknown</td>
+            <td>@unknown_estimate</td>
+            <td>-</td>
         </tr>
         <tr>
             <td><strong>Total</strong></td>
