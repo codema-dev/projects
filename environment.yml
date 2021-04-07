@@ -1,14 +1,21 @@
 name: dbs
+
 channels:
   - conda-forge
   - defaults
+  - patrikhlobil # for pandas-bokeh
+
 dependencies:
-  - dask
-  - pandas
+  - bokeh
   - geopandas
-  - pyarrow>=2.0.0
+  - pandas
+  - pandas-bokeh
 
   # dev dependencies
   - poetry
   - jupytext
   - ipykernel
+
+  - pip
+  pip:
+    - berpublicsearch
