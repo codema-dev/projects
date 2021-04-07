@@ -41,6 +41,11 @@ def repeat_rows_on_column(df, on):
     return df.reindex(df.index.repeat(df[on])).drop(columns=on)
 
 
+def convert_to_geodataframe(df, x, y, crs):
+    geometry = gpd.points_from_xy(df[x], df[y])
+    return gpd.GeoDataFrame(df, geometry=geometry, crs=crs).drop(columns=[x, y])
+
+
 # %% [markdown]
 # # Get 2011 Admin County Boundaries
 
@@ -87,7 +92,14 @@ if not filepath.exists():
     )
 
 use_columns = ["SMALL_AREA", "EDNAME", "geometry"]
-ireland_small_area_boundaries = gpd.read_file(filepath)[use_columns]
+ireland_small_area_boundaries = gpd.read_file(filepath)[use_columns].assign(
+    EDNAME=lambda gdf: gdf["EDNAME"]
+    .str.normalize("NFKD")
+    .str.encode("ascii", errors="ignore")
+    .str.decode("utf-8")
+    .str.replace(r"(['.])", "", regex=True)
+    .str.replace(r"(-)", " ", regex=True)
+)  # Remove Fadas etc for merging (... gpd.merge seems to drop fadas as side-effect)
 
 # %%
 filepath = data_dir / "dublin_small_area_boundaries.geojson"
@@ -99,6 +111,16 @@ if not filepath.exists():
     dublin_small_area_boundaries.to_file(filepath, driver="GeoJSON")
 
 dublin_small_area_boundaries = gpd.read_file(filepath)
+
+# %%
+filepath = data_dir / "dublin_electoral_district_boundaries.geojson"
+if not filepath.exists():
+    dublin_electoral_district_boundaries = dublin_small_area_boundaries.dissolve(
+        by="EDNAME"
+    ).drop(columns="SMALL_AREA")
+    dublin_electoral_district_boundaries.to_file(filepath, driver="GeoJSON")
+
+dublin_electoral_district_boundaries = gpd.read_file(filepath, driver="GeoJSON")
 
 # %% [markdown]
 # # Get 2016 Dublin Small Area Statistics
@@ -219,7 +241,7 @@ dublin_small_area_hh_boilers.to_csv(
 # # Estimate Small Area Statistics
 # - BER Rating via Period Built
 # - Floor Area via Closed BER Dataset
-dublin_small_area_hh_age_indiv = (
+dublin_indiv_hh_age = (
     repeat_rows_on_column(dublin_small_area_hh_age, "value")
     .query("period_built != ['total']")
     .assign(
@@ -236,14 +258,26 @@ dublin_small_area_hh_age_indiv = (
                 "2011 or later": "A",
                 "not stated": "unknown",
             }
+        ),
+        ber_kwh_per_m2_y=lambda df: df["estimated_ber"]
+        .replace(
+            {
+                "A": 25,
+                "B": 100,
+                "C": 175,
+                "D": 240,
+                "E": 320,
+                "F": 380,
+                "G": 450,
+                "unknown": 240,
+            }
         )
+        .astype(np.int32),
     )
 )
 
 # %%
-dublin_small_area_hh_age_indiv.to_csv(
-    data_dir / "dublin_small_area_hh_age_indiv.csv", index=False
-)
+dublin_indiv_hh_age.to_csv(data_dir / "dublin_indiv_hh_age.csv", index=False)
 
 # %% [markdown]
 # # Get Dublin BER Public Database Rows
@@ -260,52 +294,223 @@ if not filepath.exists():
         savedir=data_dir,
     )
 
-ber_public = dd.read_parquet(filepath)
-
 # %%
-ber_public_dublin = ber_public[
-    ber_public["CountyName"].str.contains("Dublin")
-].compute()
-
-# %%
-ber_public_dublin.to_parquet(data_dir / "BERPublicsearch_Dublin.parquet")
-
+filepath = data_dir / "BERPublicsearch_Dublin.parquet"
+if not filepath.exists():
+    ber_public = dd.read_parquet(data_dir / "BERPublicsearch_parquet")
+    ber_public_dublin = ber_public[
+        ber_public["CountyName"].str.contains("Dublin")
+    ].compute()
+    ber_public_dublin.to_parquet(filepath)
+else:
+    ber_public_dublin = pd.read_parquet(filepath)
 
 # %% [markdown]
 # # Get Dublin BER Private Database Rows
 
 # %%
-ber_private_dublin = (
-    pd.read_csv(data_dir / "BER.09.06.2020.csv")
-    .query("CountyName2.str.contains('DUBLIN')")
-    .merge(
-        dublin_small_area_boundaries["SMALL_AREA"],
-        left_on="cso_small_area",
-        right_on="SMALL_AREA",
-    )  # filter out invalide Small Areas
-    .assign(
-        EDNAME=lambda df: df["ED_Name"].str.title(),
-        BERBand=lambda df: df["Energy Rating"].str[0],
-        period_built=lambda df: pd.cut(
-            df["Year of construction"],
-            bins=[-np.inf, 1919, 1945, 1960, 1970, 1980, 1990, 2000, 2010, np.inf],
-            labels=[
-                "before 1919",
-                "1919 - 1945",
-                "1946 - 1960",
-                "1961 - 1970",
-                "1971 - 1980",
-                "1981 - 1990",
-                "1991 - 2000",
-                "2001 - 2010",
-                "2011 or later",
-            ],
-        ),
+filepath = data_dir / "BER.09.06.2020.parquet"
+if not filepath.exists():
+    ber_private_dublin = (
+        pd.read_csv(data_dir / "BER.09.06.2020.csv")
+        .query("CountyName2.str.contains('DUBLIN')")
+        .merge(
+            dublin_small_area_boundaries[["SMALL_AREA", "EDNAME"]],
+            left_on="cso_small_area",
+            right_on="SMALL_AREA",
+        )  # filter out invalide Small Areas
+        .assign(
+            EDNAME=lambda df: df["ED_Name"].str.title(),
+            BERBand=lambda df: df["Energy Rating"].str[0],
+            period_built=lambda df: pd.cut(
+                df["Year of construction"],
+                bins=[-np.inf, 1919, 1945, 1960, 1970, 1980, 1990, 2000, 2010, np.inf],
+                labels=[
+                    "before 1919",
+                    "1919 - 1945",
+                    "1946 - 1960",
+                    "1961 - 1970",
+                    "1971 - 1980",
+                    "1981 - 1990",
+                    "1991 - 2000",
+                    "2001 - 2010",
+                    "2011 or later",
+                ],
+            ),
+        )
+        .drop(columns=["cso_small_area", "geo_small_area"])
     )
-    .drop(columns=["cso_small_area", "geo_small_area", "ED_Name"])
+    ber_private_dublin.to_parquet(data_dir / "BER_Dublin.09.06.2020.parquet")
+else:
+    ber_private_dublin = pd.read_parquet(filepath)
+
+
+# %% [markdown]
+# # Get Valuation Office open & closed
+# ... closed access includes commercially sensitive floor areas
+
+# %%
+from valuation_office_ireland.download import download_valuation_office_categories
+
+# %%
+filepath = data_dir / "valuation_office"
+local_authorities = [
+    "DUN LAOGHAIRE RATHDOWN CO CO",
+    "DUBLIN CITY COUNCIL",
+    "FINGAL COUNTY COUNCIL",
+    "SOUTH DUBLIN COUNTY COUNCIL",
+]
+if not filepath.exists():
+    download_valuation_office_categories(
+        savedir=data_dir,
+        local_authorities=local_authorities,
+    )
+
+    vo_public = pd.concat(
+        [pd.read_csv(filepath) for filepath in filepath.glob("*.csv")]
+    ).reset_index(drop=True)
+
+# %%
+dcc_vo_private = (
+    pd.read_excel(
+        data_dir / "DCC - Valuation Office.xlsx",
+        sheet_name="Energy Calculation Sheet",
+        header=3,
+    )
+    .assign(ID=lambda df: df["ID"].astype(str).str.extract("(\d{3,})")[0])
+    .dropna(how="all", axis="rows", subset=["ID"])
+    .dropna(how="all", axis="columns")
+    .pipe(convert_to_geodataframe, x="X_Long", y="Y_Lat", crs="EPSG:2157")
 )
 
 # %%
-ber_private_dublin.to_csv(data_dir / "BER_Dublin.09.06.2020.csv", index=False)
+dlrcc_vo_private = (
+    pd.read_excel(
+        data_dir / "DLRCC - Valuation Office.xlsm",
+        sheet_name="Energy Demand Calculation",
+        header=3,
+    )
+    .assign(ID=lambda df: df["ID"].astype(str).str.extract("(\d+)")[0])
+    .dropna(how="all", axis="rows", subset=["ID"])
+    .dropna(how="all", axis="columns")
+    .pipe(convert_to_geodataframe, x="X_Long", y="Y_Lat", crs="EPSG:2157")
+)
+
+# %%
+sdcc_vo_private = (
+    pd.read_excel(
+        data_dir / "SDCC - Valuation Office.xlsx",
+        sheet_name="Energy Calculation Sheet",
+        header=3,
+    )
+    .assign(ID=lambda df: df["ID"].astype(str).str.extract("(\d{3,})")[0])
+    .dropna(how="all", axis="rows", subset=["ID"])
+    .dropna(how="all", axis="columns")
+    .pipe(convert_to_geodataframe, x="X_Long", y="Y_Lat", crs="EPSG:29903")
+)
+
+# %%
+fcc_vo_private = (
+    pd.read_excel(
+        data_dir / "FCC - Valuation Office.xlsm",
+        sheet_name="Energy Demand Calculation",
+        header=3,
+    )
+    .assign(ID=lambda df: df["ID"].astype(str).str.extract("(\d{3,})")[0])
+    .dropna(how="all", axis="rows", subset=["ID"])
+    .dropna(how="all", axis="columns")
+    .pipe(convert_to_geodataframe, x="X_Long", y="Y_Lat", crs="EPSG:2157")
+)
+
+# %%
+vo_private = (
+    pd.concat([dcc_vo_private, dlrcc_vo_private, sdcc_vo_private, fcc_vo_private])
+    .reset_index(drop=True)
+    .assign(
+        heat_demand_kwh_per_year=lambda gdf: gdf["FF.3"].fillna(0)
+        + gdf["Industrial Space Heating kWh"].fillna(0)
+    )
+    .pipe(gpd.sjoin, dublin_electoral_district_boundaries, op="within")
+)
+
+# %% [markdown]
+# # Estimate Commercial HDD
+
+# %%
+dublin_electoral_district_comm_demand = (
+    vo_private.groupby("EDNAME")["heat_demand_kwh_per_year"]
+    .sum()
+    .multiply(10 ** -6)
+    .round(2)
+    .fillna(0)
+    .rename("residential_gwh_per_y")
+)
+
+
+# %% [markdown]
+# # Estimate Residential HDD via Median ED Floor Area & BER Rating
+
+# %%
+median_electoral_district_floor_area = (
+    ber_private_dublin.where(ber_private_dublin["Floor Total Area"] > 0, np.nan)
+    .groupby("EDNAME")["Floor Total Area"]
+    .median()
+    .rename("median_floor_area")
+)
+
+# %%
+dublin_indiv_hh_demand = dublin_indiv_hh_age.merge(
+    median_electoral_district_floor_area,
+    left_on="EDNAME",
+    right_index=True,
+    how="left",
+).assign(
+    ber_kwh_per_y=lambda df: df.eval("ber_kwh_per_m2_y * median_floor_area"),
+)
+
+# %%
+dublin_electoral_district_hh_demand = (
+    dublin_indiv_hh_demand.groupby("EDNAME")["ber_kwh_per_y"]
+    .sum()
+    .multiply(10 ** -6)
+    .round(2)
+    .fillna(0)
+    .rename("commercial_gwh_per_y")
+)
+
+# %% [markdown]
+# # Estimate HDD
+
+# %%
+dublin_electoral_district_hdd = (
+    dublin_electoral_district_boundaries.merge(
+        dublin_electoral_district_comm_demand,
+        left_on="EDNAME",
+        right_index=True,
+        how="left",
+    )
+    .merge(
+        dublin_electoral_district_hh_demand,
+        left_on="EDNAME",
+        right_index=True,
+        how="left",
+    )
+    .assign(
+        area_km2=lambda gdf: gdf.area * 10 ** -6,
+        commercial_tj_per_y_km2=lambda gdf: gdf["commercial_gwh_per_y"].fillna(0)
+        * 3.6
+        / gdf["area_km2"],
+        residential_tj_per_y_km2=lambda gdf: gdf["residential_gwh_per_y"].fillna(0)
+        * 3.6
+        / gdf["area_km2"],
+        total_tj_per_y_km2=lambda gdf: gdf["commercial_tj_per_y_km2"]
+        + gdf["residential_tj_per_y_km2"],
+    )
+)
+
+# %%
+dublin_electoral_district_hdd.to_file(
+    data_dir / "dublin_electoral_district_hdd.geojson", driver="GeoJSON"
+)
 
 # %%
