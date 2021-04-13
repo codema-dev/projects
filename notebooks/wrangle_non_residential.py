@@ -6,29 +6,31 @@ import numpy as np
 import pandas as pd
 
 from dublin_building_stock.non_residential import (
-    load_small_area_boundaries,
     load_uses_benchmarks,
     load_benchmarks,
-    load_vo_private,
-    load_vo_public,
-    load_vo_private,
-    anonymise_vo_private,
+    create_valuation_office_public,
+    create_valuation_office_private,
+    anonymise_valuation_office_private,
 )
 
 data_dir = Path("../data")
 
 # %%
-small_area_boundaries = load_small_area_boundaries(data_dir)
+small_area_boundaries_2011 = gpd.read_file(
+    data_dir / "Dublin_Census2011_Small_Areas_generalised20m"
+)
 # %%
 uses_linked_to_benchmarks = load_uses_benchmarks(data_dir)
 # %%
 benchmarks = load_benchmarks(data_dir)
 # %%
-vo_public = load_vo_public(data_dir, uses_linked_to_benchmarks, benchmarks)
+create_valuation_office_public(data_dir, uses_linked_to_benchmarks, benchmarks)
 # %%
-vo_private = load_vo_private(
-    data_dir, small_area_boundaries, uses_linked_to_benchmarks, benchmarks
+create_valuation_office_private(
+    data_dir, small_area_boundaries_2011, uses_linked_to_benchmarks, benchmarks
 )
 # %%
-vo_private_anonymised = anonymise_vo_private(vo_private, vo_public)
+vo_public = gpd.read_file(data_dir / "valuation_office_public.gpkg", driver="GPKG")
+vo_private = gpd.read_file(data_dir / "valuation_office_private.gpkg", driver="GPKG")
+anonymise_valuation_office_private(data_dir, vo_private, vo_public)
 # %%
