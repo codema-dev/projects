@@ -637,15 +637,38 @@ if not filepath.exists():
         local_authorities=local_authorities,
     )
 
+vo_public_raw = pd.concat(
+    [pd.read_csv(filepath) for filepath in filepath.glob("*.csv")]
+).reset_index(drop=True)
+
+benchmark_columns = ["Benchmark"]
 vo_public = (
-    pd.concat(
-        [pd.read_csv(filepath) for filepath in filepath.glob("*.csv")]
-    )
-    .reset_index(drop=True)
+    vo_public_raw.pipe(convert_to_geodataframe, x=" X ITM", y=" Y ITM", crs="EPSG:2157")
+    .join(
+        vo_public_raw["Uses"].str.split(", ", expand=True)
+    )  # Split 'USE, -' into 'USE', '-'
+    .drop(columns=[2, 3])  # both are empty columns
+    .rename(columns={0: "use_1", 1: "use_2", "Property Number": "ID"})
     .assign(
-        Benchmark=lambda gdf: gdf["Property Use"].map(uses_benchmarks),
+        # Benchmark=lambda gdf: gdf["use_1"].map(uses_benchmarks),
+        benchmark_1=lambda gdf: gdf["use_1"].map(uses_benchmarks),
+        benchmark_2=lambda gdf: gdf["use_2"].map(uses_benchmarks),
+        ID=lambda df: df["ID"].astype("int32"),
     )  # link uses to benchmarks so can merge on common benchmarks
-    .merge(vo_benchmarks, how="left")
+    # .merge(vo_benchmarks, how="left")
+    .merge(
+        vo_benchmarks[benchmark_columns],
+        how="left",
+        left_on="benchmark_1",
+        right_on="Benchmark",
+    )
+    .merge(
+        vo_benchmarks[benchmark_columns],
+        how="left",
+        left_on="benchmark_2",
+        right_on="Benchmark",
+        suffixes=["_1", "_2"],
+    )
 )
 
 # %% [markdown]
@@ -755,30 +778,23 @@ vo_private = (
         category_area_band_m2=lambda gdf: gdf.groupby("Benchmark")[
             "inferred_area_m2"
         ].transform(lambda x: str(x.min()) + " - " + str(x.max())),
-        Use=lambda gdf: gdf["Property Use"].str.title(),
-        typical_ff=lambda gdf: gdf["typical_ff"]
-        .replace({0: np.nan})
-        .astype(str)
-        .replace({"nan": ""}),
-        industrial_sh=lambda gdf: gdf["industrial_sh"]
-        .replace({0: np.nan})
-        .astype(str)
-        .replace({"nan": ""}),
+        ID=lambda gdf: gdf["ID"].astype("int32"),
     )
     .loc[
         :,
         [
             "ID",
             "Benchmark",
-            "Use",
+            "Property Use",
             "inferred_area_m2",
             "area_is_estimated",
             "Industrial",
             "heating_mwh_per_year",
+            "Typical Area [m²]",
+            "area_conversion_factors",
+            "Area (m2)",
             "typical_ff",
             "industrial_sh",
-            "category_area_band_m2",
-            "Area (m2)",
             "latitude",
             "longitude",
             "geometry",
@@ -792,6 +808,48 @@ vo_private.to_file(data_dir / "vo_private.geojson", driver="GeoJSON")
 # %%
 vo_private.sort_values("heating_mwh_per_year", ascending=False).to_csv(
     data_dir / "vo_private.csv", index=False
+)
+
+# %%
+private_columns = ["ID", "Benchmark", "inferred_area_m2"]
+public_columns = ["ID", "benchmark_1", "Area"]
+vo_private_vs_public = vo_private[private_columns].merge(vo_public[public_columns])
+
+# %%
+anonymised_buildings = (
+    vo_private_vs_public.query("inferred_area_m2.notnull() & Area.isnull()")
+    .loc[:, "ID"]
+    .to_numpy()
+)
+
+# %%
+vo_private_anonymised = vo_private.copy()
+
+# %%
+mask = vo_private_anonymised["ID"].isin(anonymised_buildings)
+to_anonymise = (
+    vo_private_anonymised.loc[mask]
+    .copy()
+    .assign(
+        inferred_area_m2=lambda df: df["Typical Area [m²]"]
+        * df["area_conversion_factors"],
+        area_is_estimated=True,
+        heating_mwh_per_year=lambda df: np.round(
+            (
+                df["typical_ff"].fillna(0) * df["inferred_area_m2"]
+                + df["industrial_sh"].fillna(0) * df["inferred_area_m2"]
+            )
+            * 10 ** -3
+        ),
+    )
+)
+
+#%%
+vo_private_anonymised.loc[mask] = to_anonymise
+
+# %%
+vo_private_anonymised.to_file(
+    data_dir / "vo_private_anonymised.geojson", driver="GeoJSON"
 )
 
 
