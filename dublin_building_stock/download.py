@@ -1,34 +1,35 @@
 from pathlib import Path
+from shutil import unpack_archive
 from typing import Union
+from urllib.request import urlopen
 
 from loguru import logger
-from requests import get
-from requests import Response
 from tqdm import tqdm
+from valuation_office_ireland.download import download_valuation_office_categories
 
 FilePath = Union[Path, str]
 logger.remove()
 logger.add(lambda msg: tqdm.write(msg, end=""))
 
 
-def _save_file(response: Response, filepath: FilePath) -> None:
-    """Download file to filepath via a HTTP response.
+def _download(url, filepath):
+    response = urlopen(url)
+    with tqdm.wrapattr(
+        open(str(filepath), "wb"),
+        "write",
+        miniters=1,
+        desc=str(filepath),
+        total=getattr(response, "length", None),
+    ) as fout:
+        for chunk in response:
+            fout.write(chunk)
 
-    Args:
-        response (Response): A HTTP response from a request
-        filepath (str): Save path destination for downloaded file
-    """
-    total_size_in_bytes = int(response.headers.get("content-length", 0))
-    block_size = 1024  # 1 Kilobyte
-    progress_bar = tqdm(total=total_size_in_bytes, unit="iB", unit_scale=True)
 
-    with open(filepath, "wb") as save_destination:
-
-        for stream_data in response.iter_content(block_size):
-            progress_bar.update(len(stream_data))
-            save_destination.write(stream_data)
-
-    progress_bar.close()
+def _unzip(input_filepath, output_filepath):
+    return unpack_archive(
+        input_filepath,
+        output_filepath,
+    )
 
 
 def download(url: str, filepath: FilePath, latest: bool = False) -> None:
@@ -40,5 +41,41 @@ def download(url: str, filepath: FilePath, latest: bool = False) -> None:
         )
     else:
         logger.info(f"Downloading {filepath.stem} to {filepath} via {url}...")
-        response = get(url=url, stream=True)
-        _save_file(response, filepath)
+        _download(url, filepath)
+        if "zip" in str(filepath):
+            logger.info(f"Unzipping {filepath.stem} to {filepath.with_suffix('').stem}")
+            _unzip(filepath, filepath.with_suffix(""))
+
+
+def download_dublin_valuation_office(data_dir: FilePath, latest: bool = False):
+    vo_data_dir = Path(data_dir) / "valuation_office"
+    local_authorities = [
+        "DUN LAOGHAIRE RATHDOWN CO CO",
+        "DUBLIN CITY COUNCIL",
+        "FINGAL COUNTY COUNCIL",
+        "SOUTH DUBLIN COUNTY COUNCIL",
+    ]
+    if vo_data_dir.exists() and latest is False:
+        logger.info(
+            f"Skipping download as {vo_data_dir} already exists "
+            f" & download latest version is {latest}"
+        )
+    else:
+        download_valuation_office_categories(
+            savedir=vo_data_dir,
+            local_authorities=local_authorities,
+        )
+
+
+def download_ber_public(data_dir: FilePath, email_address: str, latest: bool = False):
+    filepath = data_dir / "BERPublicsearch_parquet"
+    if filepath.exists() and latest is False:
+        logger.info(
+            f"Skipping download as {filepath} already exists "
+            f" & download latest version is {latest}"
+        )
+    else:
+        download_berpublicsearch_parquet(
+            email_address=email_address,
+            savedir=data_dir,
+        )

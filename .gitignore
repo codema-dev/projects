@@ -136,4 +136,6 @@ dmypy.json
 data/*
 !data/.gitkeep
 !data/benchmarks
+html/*
+!html/.gitkeep
 cache/
