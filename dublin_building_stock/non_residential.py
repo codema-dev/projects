@@ -10,22 +10,6 @@ from dublin_building_stock.spatial_operations import (
 )
 
 
-def load_small_area_boundaries(data_dir):
-
-    use_columns = ["SMALL_AREA", "EDNAME", "geometry"]
-    ireland_small_area_boundaries_2011 = gpd.read_file(
-        data_dir / "Census2011_Small_Areas_generalised20m"
-    )[use_columns]
-    dublin_boundary = gpd.read_file(
-        data_dir / "dublin_boundary.geojson", driver="GeoJSON"
-    )
-
-    return get_geometries_within(
-        ireland_small_area_boundaries_2011.to_crs(epsg=2157),
-        dublin_boundary.to_crs(epsg=2157),
-    )
-
-
 def load_uses_benchmarks(data_dir):
     dirpath = data_dir / "benchmarks" / "uses"
     benchmark_uses = defaultdict()
@@ -42,23 +26,33 @@ def load_benchmarks(data_dir):
     )
 
 
-def load_vo_public(data_dir, uses_linked_to_benchmarks, benchmarks):
+def create_valuation_office_public(data_dir, uses_linked_to_benchmarks, benchmarks):
     vo_data_dir = data_dir / "valuation_office"
-    vo_public = pd.concat(
+    vo_public_raw = pd.concat(
         [pd.read_csv(filepath) for filepath in vo_data_dir.glob("*.csv")]
     ).reset_index(drop=True)
-    benchmark_columns = ["Benchmark"]
-    return (
-        vo_public.pipe(convert_to_geodataframe, x=" X ITM", y=" Y ITM", crs="EPSG:2157")
+    benchmark_columns = [
+        "Benchmark",
+        "Typical fossil fuel [kWh/m²y]",
+        "Industrial space heat [kWh/m²y]",
+    ]
+    vo_public_clean = (
+        vo_public_raw.pipe(
+            convert_to_geodataframe, x=" X ITM", y=" Y ITM", crs="EPSG:2157"
+        )
         .join(
-            vo_public["Uses"].str.split(", ", expand=True)
+            vo_public_raw["Uses"].str.split(", ", expand=True)
         )  # Split 'USE, -' into 'USE', '-'
         .drop(columns=[2, 3])  # both are empty columns
         .rename(columns={0: "use_1", 1: "use_2", "Property Number": "ID"})
         .assign(
             # Benchmark=lambda gdf: gdf["use_1"].map(uses_linked_to_benchmarks),
-            benchmark_1=lambda gdf: gdf["use_1"].map(uses_linked_to_benchmarks),
-            benchmark_2=lambda gdf: gdf["use_2"].map(uses_linked_to_benchmarks),
+            benchmark_1=lambda gdf: gdf["use_1"]
+            .map(uses_linked_to_benchmarks)
+            .astype(str),
+            benchmark_2=lambda gdf: gdf["use_2"]
+            .map(uses_linked_to_benchmarks)
+            .astype(str),
             ID=lambda df: df["ID"].astype("int32"),
         )  # link uses to benchmarks so can merge on common benchmarks
         # .merge(vo_benchmarks, how="left")
@@ -75,7 +69,9 @@ def load_vo_public(data_dir, uses_linked_to_benchmarks, benchmarks):
             right_on="Benchmark",
             suffixes=["_1", "_2"],
         )
+        .drop(columns=["Benchmark_1", "Benchmark_2"])
     )
+    vo_public_clean.to_file(data_dir / "valuation_office_public.gpkg", driver="GPKG")
 
 
 def _load_dcc_vo_private(data_dir):
@@ -135,7 +131,7 @@ def _load_fcc_vo_private(data_dir):
     )
 
 
-def load_vo_private(
+def create_valuation_office_private(
     data_dir, small_area_boundaries, uses_linked_to_benchmarks, benchmarks
 ):
     dcc_vo_private = _load_dcc_vo_private(data_dir)
@@ -143,7 +139,7 @@ def load_vo_private(
     sdcc_vo_private = _load_sdcc_vo_private(data_dir)
     fcc_vo_private = _load_fcc_vo_private(data_dir)
 
-    return (
+    valuation_office_private = (
         pd.concat([dcc_vo_private, dlrcc_vo_private, sdcc_vo_private, fcc_vo_private])
         .reset_index(drop=True)
         .assign(
@@ -216,9 +212,12 @@ def load_vo_private(
             ],
         ]
     )
+    valuation_office_private.to_file(
+        data_dir / "valuation_office_private.gpkg", driver="GPKG"
+    )
 
 
-def anonymise_vo_private(vo_private, vo_public):
+def anonymise_valuation_office_private(data_dir, vo_private, vo_public):
     private_columns = ["ID", "Benchmark", "inferred_area_m2"]
     public_columns = ["ID", "benchmark_1", "Area"]
     vo_private_vs_public = vo_private[private_columns].merge(vo_public[public_columns])
@@ -249,4 +248,6 @@ def anonymise_vo_private(vo_private, vo_public):
     )
 
     vo_private_anonymised.loc[mask] = to_anonymise
-    return vo_private_anonymised
+    vo_private_anonymised.to_file(
+        data_dir / "valuation_office_private_anonymised.gpkg", driver="GPKG"
+    )
