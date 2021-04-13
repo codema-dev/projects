@@ -30,5 +30,5 @@ vo_private = load_vo_private(
     data_dir, small_area_boundaries, uses_linked_to_benchmarks, benchmarks
 )
 # %%
-vo_private_anonymised = anonymise_vo_private(vo_private)
+vo_private_anonymised = anonymise_vo_private(vo_private, vo_public)
 # %%
