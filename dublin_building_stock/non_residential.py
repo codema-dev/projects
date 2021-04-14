@@ -26,7 +26,9 @@ def load_benchmarks(data_dir):
     )
 
 
-def create_valuation_office_public(data_dir, uses_linked_to_benchmarks, benchmarks):
+def create_valuation_office_public(
+    data_dir, uses_linked_to_benchmarks, benchmarks, small_area_boundaries
+):
     vo_data_dir = data_dir / "valuation_office"
     vo_public_raw = pd.concat(
         [pd.read_csv(filepath) for filepath in vo_data_dir.glob("*.csv")]
@@ -70,6 +72,7 @@ def create_valuation_office_public(data_dir, uses_linked_to_benchmarks, benchmar
             suffixes=["_1", "_2"],
         )
         .drop(columns=["Benchmark_1", "Benchmark_2"])
+        .pipe(gpd.sjoin, small_area_boundaries[["SMALL_AREA", "geometry"]], op="within")
     )
     vo_public_clean.to_file(data_dir / "valuation_office_public.gpkg", driver="GPKG")
 
@@ -132,13 +135,31 @@ def _load_fcc_vo_private(data_dir):
 
 
 def create_valuation_office_private(
-    data_dir, small_area_boundaries, uses_linked_to_benchmarks, benchmarks
+    data_dir, uses_linked_to_benchmarks, benchmarks, small_area_boundaries
 ):
     dcc_vo_private = _load_dcc_vo_private(data_dir)
     dlrcc_vo_private = _load_dlrcc_vo_private(data_dir)
     sdcc_vo_private = _load_sdcc_vo_private(data_dir)
     fcc_vo_private = _load_fcc_vo_private(data_dir)
 
+    use_columns = [
+        "ID",
+        "Benchmark",
+        "Property Use",
+        "inferred_area_m2",
+        "area_is_estimated",
+        "Industrial",
+        "heating_mwh_per_year",
+        "Typical Area [m²]",
+        "area_conversion_factors",
+        "Area (m2)",
+        "typical_ff",
+        "industrial_sh",
+        "latitude",
+        "longitude",
+        "SMALL_AREA",
+        "geometry",
+    ]
     valuation_office_private = (
         pd.concat([dcc_vo_private, dlrcc_vo_private, sdcc_vo_private, fcc_vo_private])
         .reset_index(drop=True)
@@ -191,26 +212,7 @@ def create_valuation_office_private(
             ].transform(lambda x: str(x.min()) + " - " + str(x.max())),
             ID=lambda gdf: gdf["ID"].astype("int32"),
         )
-        .loc[
-            :,
-            [
-                "ID",
-                "Benchmark",
-                "Property Use",
-                "inferred_area_m2",
-                "area_is_estimated",
-                "Industrial",
-                "heating_mwh_per_year",
-                "Typical Area [m²]",
-                "area_conversion_factors",
-                "Area (m2)",
-                "typical_ff",
-                "industrial_sh",
-                "latitude",
-                "longitude",
-                "geometry",
-            ],
-        ]
+        .loc[:, use_columns]
     )
     valuation_office_private.to_file(
         data_dir / "valuation_office_private.gpkg", driver="GPKG"

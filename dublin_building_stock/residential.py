@@ -99,7 +99,7 @@ def create_census_2016_hh_boilers(data_dir, dublin_small_area_boundaries_2016):
 
 
 def create_census_2016_hh_age_indiv(data_dir, census_2016_hh_age):
-    return (
+    census_2016_hh_age_indiv = (
         _repeat_rows_on_column(census_2016_hh_age, "value")
         .query("period_built != ['total']")
         .assign(
@@ -133,6 +133,9 @@ def create_census_2016_hh_age_indiv(data_dir, census_2016_hh_age):
             .astype(np.int32),
         )
     )
+    census_2016_hh_age_indiv.to_csv(
+        data_dir / "census_2016_hh_age_indiv.csv", index=False
+    )
 
 
 def create_census_2011_small_area_hhs(data_dir, dublin_small_area_boundaries_2011):
@@ -154,13 +157,12 @@ def create_census_2011_small_area_hhs(data_dir, dublin_small_area_boundaries_201
                 "period_built_unstandardised": "period_built",
             }
         )
-        .merge(dublin_small_area_boundaries_2011[["SMALL_AREA", "EDNAME"]])
         .assign(
             value=lambda df: df["value"].astype(np.int32),
             SMALL_AREA=lambda df: df["SMALL_AREA"].str.replace(r"_", r"/"),
             period_built=lambda df: df["period_built"]
             .str.lower()
-            .str.replace("2006 or later", "2006 - 2011"),
+            .str.replace("2006 or later", "2006 - 2010"),
             dwelling_type=lambda df: df["dwelling_type_unstandardised"].replace(
                 {
                     "Flat/apartment in a purpose-built block": "Apartment",
@@ -169,11 +171,16 @@ def create_census_2011_small_area_hhs(data_dir, dublin_small_area_boundaries_201
                 }
             ),
         )
+        .merge(
+            dublin_small_area_boundaries_2011[["SMALL_AREA", "EDNAME"]],
+            indicator=True,
+            how="outer",
+        )
         .reset_index(drop=True)
         .drop(columns=["dwelling_type_unstandardised"])
     )
-    census_2011_small_area_hhs.to_csv(
-        data_dir / "census_2011_small_area_hhs.csv", index=False
+    census_2011_small_area_hhs.drop(columns="_merge").to_parquet(
+        data_dir / "census_2011_small_area_hhs.parquet",
     )
 
 
@@ -183,7 +190,7 @@ def create_census_2011_hh_indiv(data_dir, census_2011_small_area_hhs):
         .query("period_built != ['total']")
         .assign(
             category_id=lambda df: df.groupby(
-                ["EDNAME", "dwelling_type", "period_built"]
+                ["SMALL_AREA", "dwelling_type", "period_built"]
             )
             .cumcount()
             .apply(lambda x: x + 1),
@@ -193,10 +200,10 @@ def create_census_2011_hh_indiv(data_dir, census_2011_small_area_hhs):
             .str.decode("utf-8")
             .str.replace(r"[-]", " ", regex=True)
             .str.replace(r"[,'.]", "", regex=True)
-            .str.lower(),
+            .str.capitalize(),
         )
     )
-    census_2011_hh_indiv.to_csv(data_dir / "census_2011_hh_indiv.csv", index=False)
+    census_2011_hh_indiv.to_parquet(data_dir / "census_2011_hh_indiv.parquet")
 
 
 def create_dublin_ber_public(data_dir):
@@ -207,15 +214,16 @@ def create_dublin_ber_public(data_dir):
     dublin_ber_public.to_parquet(data_dir / "dublin_ber_public.parquet")
 
 
-def create_dublin_ber_private(data_dir, dublin_small_area_boundaries_2016):
+def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
     dublin_ber_private = (
         pd.read_csv(data_dir / "BER.09.06.2020.csv")
         .query("CountyName2.str.contains('DUBLIN')")
         .merge(
-            dublin_small_area_boundaries_2016[["SMALL_AREA", "EDNAME"]],
+            small_areas_2011_vs_2016,
             left_on="cso_small_area",
-            right_on="SMALL_AREA",
-        )  # filter out invalide Small Areas
+            right_on="SMALL_AREA_2016",
+            indicator=True,
+        )  # Link 2016 SAs to 2011 SAs as best census data is 2011
         .assign(
             BERBand=lambda df: df["Energy Rating"].str[0],
             period_built=lambda df: pd.cut(
@@ -230,7 +238,7 @@ def create_dublin_ber_private(data_dir, dublin_small_area_boundaries_2016):
                     1990,
                     2000,
                     2005,
-                    2012,
+                    2011,
                     np.inf,
                 ],
                 labels=[
@@ -242,8 +250,8 @@ def create_dublin_ber_private(data_dir, dublin_small_area_boundaries_2016):
                     "1981 - 1990",
                     "1991 - 2000",
                     "2001 - 2005",
-                    "2006 - 2011",
-                    "after 2012",
+                    "2006 - 2010",
+                    "2011 or later",
                 ],
             ),
             dwelling_type=lambda df: df["Dwelling type description"].replace(
@@ -262,7 +270,7 @@ def create_dublin_ber_private(data_dir, dublin_small_area_boundaries_2016):
                 }
             ),
             category_id=lambda df: df.groupby(
-                ["EDNAME", "dwelling_type", "period_built"]
+                ["SMALL_AREA_2011", "dwelling_type", "period_built"]
             )
             .cumcount()
             .apply(lambda x: x + 1),
@@ -275,42 +283,51 @@ def create_dublin_ber_private(data_dir, dublin_small_area_boundaries_2016):
             .str.decode("utf-8")
             .str.replace(r"[-]", " ", regex=True)
             .str.replace(r"[,'.]", "", regex=True)
-            .str.lower(),
+            .str.capitalize(),
+            SMALL_AREA_2011=lambda df: df["SMALL_AREA_2011"].astype(str),
         )
         .drop(columns=["cso_small_area", "geo_small_area"])
     )
     dublin_ber_private.to_parquet(data_dir / "dublin_ber_private.parquet")
 
 
-def create_latest_stock(data_dir, census_2011_hh_indiv, dublin_ber_private):
+def create_latest_stock(
+    data_dir,
+    census_2011_hh_indiv,
+    dublin_ber_private,
+):
     right_columns = [
+        "SMALL_AREA_2011",
         "EDNAME",
         "dwelling_type",
         "period_built",
         "category_id",
-        "SMALL_AREA",
         "Year of construction",
         "total_floor_area",
         "BERBand",
     ]
-    dublin_indiv_hh_including_unmatched = census_2011_hh_indiv.merge(
+    dublin_indiv_hh_before_2011 = census_2011_hh_indiv.merge(
         dublin_ber_private[right_columns],
-        on=["EDNAME", "dwelling_type", "period_built", "category_id"],
-        how="outer",
+        left_on=["SMALL_AREA", "dwelling_type", "period_built", "category_id"],
+        right_on=["SMALL_AREA_2011", "dwelling_type", "period_built", "category_id"],
+        how="left",
         indicator=True,
-        suffixes=["_2011", "_2016"],
+        suffixes=["", "_BER"],
     )
-
-    not_stated_hhs = dublin_indiv_hh_including_unmatched.query(
-        "period_built == 'not stated' or dwelling_type == 'Not stated'"
-    )
-    unmatched_hhs = dublin_indiv_hh_including_unmatched.query(
-        "`Year of construction` <= 2011"
-    ).query("_merge != 'both'")
 
     dublin_indiv_hh = (
-        dublin_indiv_hh_including_unmatched.query("index not in @unmatched_hhs.index")
+        pd.concat(
+            [
+                dublin_indiv_hh_before_2011,
+                dublin_ber_private.query("`Year of construction` >= 2011"),
+            ]
+        )
+        .reset_index(drop=True)
         .assign(
+            SMALL_AREA=lambda df: df["SMALL_AREA"].fillna(
+                df["SMALL_AREA_2011"].astype(str)
+            ),
+            EDNAME=lambda df: df["EDNAME"].fillna(df["EDNAME_BER"]),
             category_floor_area=lambda df: df.groupby(["EDNAME", "dwelling_type"])[
                 "total_floor_area"
             ]
@@ -338,8 +355,8 @@ def create_latest_stock(data_dir, census_2011_hh_indiv, dublin_ber_private):
                     "1981 - 1990": "D",
                     "1991 - 2000": "D",
                     "2001 - 2005": "C",
-                    "2006 - 2011": "B",
-                    "after 2012": "A",
+                    "2006 - 2010": "B",
+                    "2011 or later": "A",
                     "not stated": "unknown",
                 }
             ),
@@ -348,7 +365,7 @@ def create_latest_stock(data_dir, census_2011_hh_indiv, dublin_ber_private):
                 df["estimated_ber"],
                 df["BERBand"],
             ),
-            energy_kwh_per_m2_y=lambda df: df["estimated_ber"]
+            energy_kwh_per_m2_year=lambda df: df["estimated_ber"]
             .replace(
                 {
                     "A": 25,
@@ -362,8 +379,10 @@ def create_latest_stock(data_dir, census_2011_hh_indiv, dublin_ber_private):
                 }
             )
             .astype(np.int32),
-            heating_kwh_per_m2_y=lambda df: df["energy_kwh_per_m2_y"] * 0.8,
-            heating_kwh_per_y=lambda df: df["heating_kwh_per_m2_y"]
+            heating_mwh_per_m2_year=lambda df: df["energy_kwh_per_m2_year"]
+            * 0.8
+            * 10 ** -3,
+            heating_mwh_per_year=lambda df: df["heating_mwh_per_m2_year"]
             * df["estimated_floor_area"],
         )
         .drop(

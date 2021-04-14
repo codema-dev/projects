@@ -24,10 +24,12 @@ uses_linked_to_benchmarks = load_uses_benchmarks(data_dir)
 # %%
 benchmarks = load_benchmarks(data_dir)
 # %%
-create_valuation_office_public(data_dir, uses_linked_to_benchmarks, benchmarks)
+create_valuation_office_public(
+    data_dir, uses_linked_to_benchmarks, benchmarks, small_area_boundaries_2011
+)
 # %%
 create_valuation_office_private(
-    data_dir, small_area_boundaries_2011, uses_linked_to_benchmarks, benchmarks
+    data_dir, uses_linked_to_benchmarks, benchmarks, small_area_boundaries_2011
 )
 # %%
 vo_public = gpd.read_file(data_dir / "valuation_office_public.gpkg", driver="GPKG")
