@@ -33,3 +33,20 @@ small_areas_2011_vs_2011 = (
 small_areas_2011_vs_2011.to_csv(data_dir / "small_areas_2011_vs_2011.csv", index=False)
 
 # %%
+ireland_municipality_boundaries = gpd.read_file(
+    data_dir / "Census2011_Admin_Counties_generalised20m"
+)
+dublin_municipalities = [
+    "Dublin City",
+    "South Dublin",
+    "Fingal",
+    "Dún Laoghaire-Rathdown",
+]
+dublin_municipality_boundaries = ireland_municipality_boundaries.query(
+    f"COUNTYNAME in {dublin_municipalities}"
+)[["COUNTYNAME", "geometry"]]
+dublin_municipality_boundaries.to_file(
+    data_dir / "Dublin_Census2011_Admin_Counties_generalised20m"
+)
+
+# %%
