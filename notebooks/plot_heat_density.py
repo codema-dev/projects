@@ -1,7 +1,6 @@
 # %%
 from pathlib import Path
 
-from bokeh.palettes import diverging_palette
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -12,6 +11,10 @@ data_dir = Path("../data")
 html_dir = Path("../html")
 pandas_bokeh.output_notebook()
 
+# %%
+dublin_municipality_boundaries = gpd.read_file(
+    data_dir / "Dublin_Census2011_Admin_Counties_generalised20m"
+)
 
 # %%
 dublin_small_area_boundaries_2011 = gpd.read_file(
@@ -145,18 +148,31 @@ small_area_hdd = small_area_heat_demands[
         gdf["total_tj_per_km2_year"],
         bins=[-np.inf, 20, 50, 120, 300, np.inf],
         labels=[
-            "Not Feasible [<20 TJ/km²year]",
-            "Future Potential [20-50 TJ/km²year]",
-            "Feasible with Supporting Regulation [50-120 TJ/km²year]",
-            "Feasible [120-300 TJ/km²year]",
-            "Very Feasible [>300 TJ/km²year]",
+            "Not Feasible<br>[<20 TJ/km²year]",
+            "Future Potential<br>[20-50 TJ/km²year]",
+            "Feasible with<br>Supporting Regulation<br>[50-120 TJ/km²year]",
+            "Feasible<br>[120-300 TJ/km²year]",
+            "Very Feasible<br>[>300 TJ/km²year]",
         ],
     ),
     category=lambda gdf: gdf["feasibility"].cat.codes,
 )
 
 # %%
+figure = dublin_municipality_boundaries.plot_bokeh(
+    figsize=(700, 900),
+    fill_alpha=0,
+    legend="Municipalities",
+)
 hovertool_string = """
+<style type='text/css'>
+    th {
+        background-color: #bdbdbd;
+    };
+    tr {
+        background-color: #f0f0f0;
+    };
+</style>
 <h2>@feasibility</h2>
 <table>
     <tr>
@@ -185,12 +201,13 @@ hovertool_string = """
 </table>
 """
 small_area_hdd.plot_bokeh(
-    figsize=(700, 900),
+    figure=figure,
     category="category",
     colormap=["#ffffb2", "#fecc5c", "#fd8d3c", "#f03b20", "#bd0026"],
     show_colorbar=False,
     fill_alpha=0.5,
     hovertool_string=hovertool_string,
+    legend="Heat Demmand Densities",
 )
 
 # %%
@@ -224,6 +241,14 @@ small_area_hd = small_area_heat_demands[
 
 # %%
 hovertool_string = """
+<style type='text/css'>
+    th {
+        background-color: #bdbdbd;
+    };
+    tr {
+        background-color: #f0f0f0;
+    };
+</style>
 <h3>Demand [GWh/year]</h3>
 <table>
     <tr>
