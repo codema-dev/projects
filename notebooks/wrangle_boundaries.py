@@ -50,3 +50,23 @@ dublin_municipality_boundaries.to_file(
 )
 
 # %%
+ireland_routing_key_boundaries = gpd.read_file(
+    data_dir / "routingkeys_mi_itm_2016_09_29",
+).to_crs(epsg=2157)
+dublin_routing_key_boundaries = (
+    get_geometries_within(
+        ireland_routing_key_boundaries, dublin_boundary.to_crs(epsg=2157)
+    )
+    .assign(
+        CountyName=lambda gdf: gdf["Descriptor"]
+        .str.title()
+        .str.replace(r"^(?!Dublin \d+)(.*)$", "Co. Dublin", regex=True)
+    )
+    .pipe(get_geometries_within, dublin_municipality_boundaries.to_crs(epsg=2157))
+)
+dublin_routing_key_boundaries.to_file(
+    data_dir / "dublin_routing_boundaries.geojson",
+    driver="GeoJSON",
+)
+
+# %%
