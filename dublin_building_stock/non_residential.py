@@ -1,13 +1,21 @@
 from collections import defaultdict
+from os import getenv
 
+from dotenv import load_dotenv
 import geopandas as gpd
+from loguru import logger
 import numpy as np
 import pandas as pd
+from postal.expand import expand_address
 
 from dublin_building_stock.spatial_operations import (
     get_geometries_within,
     convert_to_geodataframe,
 )
+
+
+# loads environmental variables from a .env file (such as API keys for Google Maps)
+load_dotenv()
 
 
 def load_uses_benchmarks(data_dir):
@@ -270,4 +278,154 @@ def anonymise_valuation_office_private(data_dir, vo_private, vo_public):
     vo_private_anonymised.loc[mask] = to_anonymise
     vo_private_anonymised.to_file(
         data_dir / "valuation_office_private_anonymised.gpkg", driver="GPKG"
+    )
+
+
+def _clean_string(s):
+    return (
+        s.astype(str)
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+        .str.lower()
+    )
+
+
+def _flatten_column_names(df):
+    new_names = [str(c[0]) + "_" + str(c[1]) for c in df.columns.to_flat_index()]
+    df.columns = new_names
+    return df
+
+
+def create_m_and_r(data_dir):
+
+    mprn = (
+        pd.read_excel(data_dir / "FOI_Codema_24.1.20.xlsx", sheet_name="MPRN_data")
+        .assign(
+            postcode=lambda df: _clean_string(
+                df["County"].replace({"Dublin (County)": "Co. Dublin"})
+            ).str.title(),
+            location=lambda df: _clean_string(
+                df["Location"].str.replace("(,? ?Dublin \d+)", "", regex=True)
+            ),  # remove postcodes as accounted for by 'postcode' column
+            pb_name=lambda df: _clean_string(df["PB Name"]),
+            address=lambda df: (
+                df["pb_name"]
+                + " "
+                + df["location"]
+                + " "
+                + df["postcode"]
+                + " "
+                + "ireland"
+            ).apply(lambda x: expand_address(x)[0]),
+            category=lambda df: df["Consumption Category"],
+        )
+        .rename(
+            columns={"Attributable Total Final Consumption (kWh)": "electricity_kwh"}
+        )
+        .loc[
+            :, ["pb_name", "address", "category", "postcode", "Year", "electricity_kwh"]
+        ]
+    )
+
+    gprn = (
+        pd.read_excel(data_dir / "FOI_Codema_24.1.20.xlsx", sheet_name="GPRN_data")
+        .assign(
+            postcode=lambda df: _clean_string(
+                df["County"].replace({"Dublin (County)": "Co. Dublin"})
+            ).str.title(),
+            location=lambda df: _clean_string(
+                df["Location"].str.replace("(,? ?Dublin \d+)", "", regex=True)
+            ),  # remove postcodes as accounted for by 'postcode' column
+            pb_name=lambda df: _clean_string(df["PB Name"]),
+            address=lambda df: (
+                df["pb_name"]
+                + " "
+                + df["location"]
+                + " "
+                + df["postcode"]
+                + " "
+                + "ireland"
+            ).apply(lambda x: expand_address(x)[0]),
+            category=lambda df: df["Consumption Category"],
+        )
+        .rename(columns={"Attributable Total Final Consumption (kWh)": "gas_kwh"})
+        .loc[:, ["pb_name", "address", "category", "postcode", "Year", "gas_kwh"]]
+    )
+
+    m_and_r = (
+        mprn.merge(gprn, how="outer", indicator=True)
+        .assign(
+            dataset=lambda df: df["_merge"].replace(
+                {"left_only": "mprn_only", "right_only": "gprn_only"}
+            )
+        )
+        .drop(columns="_merge")
+    )
+
+    columns_to_drop = ["Year", "electricity_kwh", "gas_kwh"]
+    m_and_r_by_year = (
+        m_and_r.pivot_table(
+            index="address", columns="Year", values=["electricity_kwh", "gas_kwh"]
+        )
+        .pipe(_flatten_column_names)
+        .reset_index()
+        .merge(m_and_r.drop(columns=columns_to_drop).drop_duplicates())
+        .pipe(gpd.GeoDataFrame)
+    )
+
+    m_and_r_by_year.to_csv(data_dir / "m_and_r.csv", index=False)
+
+
+def create_geocoded_m_and_r(
+    data_dir, m_and_r, dublin_boundary, dublin_routing_key_boundaries
+):
+
+    m_and_r_addresses = pd.Series(m_and_r["address"].unique())
+
+    try:
+        GOOGLE_GEOCODING_API = getenv("GOOGLE_GEOCODING_API")
+    except:
+        logger.error(
+            "Need to create a .env file and store your API key for Google Maps"
+            " Geocoding API as GOOGLE_GEOCODING_API=<YOUR API KEY>"
+        )
+
+    geocoded_m_and_r_addresses_raw = gpd.tools.geocode(
+        m_and_r_addresses,
+        provider="google",
+        api_key=GOOGLE_GEOCODING_API,
+    )
+    geocoded_m_and_r_addresses_raw.to_file(
+        data_dir / "M&R_raw_addresses_geocoded_by_google_maps.geojson",
+        driver="GeoJSON",
+    )
+    geocoded_m_and_r_addresses_raw = gpd.read_file(
+        data_dir / "M&R_raw_addresses_geocoded_by_google_maps.geojson",
+        driver="GeoJSON",
+    )
+
+    geocoded_m_and_r_addresses_clean = (
+        gpd.sjoin(
+            geocoded_m_and_r_addresses_raw,
+            dublin_boundary.to_crs(epsg=4326),
+            op="within",
+        )
+        .drop(columns="index_right")
+        .query("address != 'Dublin, Ireland'")
+        .rename(columns={"address": "google_maps_address"})
+        .join(m_and_r_addresses.rename("raw_address"), how="right")
+        .pipe(get_geometries_within, dublin_routing_key_boundaries.to_crs(epsg=4326))
+        .merge(
+            m_and_r[["postcode", "address"]],
+            left_on="raw_address",
+            right_on="address",
+        )
+        .drop_duplicates()
+        .query("COUNTYNAME == postcode")  # filter out incorrect postcodes
+        .drop(columns=["postcode", "address"])
+    )
+    geocoded_m_and_r_addresses_clean.to_file(
+        data_dir / "M&R_clean_addresses_geocoded_by_google_maps.geojson",
+        driver="GeoJSON",
     )

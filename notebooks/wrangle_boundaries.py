@@ -65,7 +65,7 @@ dublin_routing_key_boundaries = (
     .pipe(get_geometries_within, dublin_municipality_boundaries.to_crs(epsg=2157))
 )
 dublin_routing_key_boundaries.to_file(
-    data_dir / "dublin_routing_boundaries.geojson",
+    data_dir / "dublin_routing_key_boundaries.geojson",
     driver="GeoJSON",
 )
 
