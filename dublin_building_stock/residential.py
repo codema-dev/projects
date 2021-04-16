@@ -215,6 +215,9 @@ def create_dublin_ber_public(data_dir):
 
 
 def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
+    thermal_bridging_factor = 0.15
+    ventilation_heat_loss_constant = 0.33
+    effective_air_rate_change = 0.5
     dublin_ber_private = (
         pd.read_csv(data_dir / "BER.09.06.2020.csv")
         .query("CountyName2.str.contains('DUBLIN')")
@@ -274,9 +277,10 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
             )
             .cumcount()
             .apply(lambda x: x + 1),
-            total_floor_area=lambda df: np.where(
-                df["Floor Total Area"] > 5, df["Floor Total Area"], np.nan
-            ),
+            total_floor_area=lambda df: df["Ground Floor Area"]
+            + df["First Floor Area"]
+            + df["Second Floor Area"]
+            + df["Third Floor Area"],
             EDNAME=lambda df: df["EDNAME"]
             .str.normalize("NFKD")
             .str.encode("ascii", errors="ignore")
@@ -285,6 +289,30 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
             .str.replace(r"[,'.]", "", regex=True)
             .str.capitalize(),
             SMALL_AREA_2011=lambda df: df["SMALL_AREA_2011"].astype(str),
+            thermal_bridging=lambda df: (
+                df["Roof Total Area"]
+                + df["total_floor_area"]
+                + df["Door Total Area"]
+                + df["Wall Total Area"]
+                + df["Windows Total Area"]
+            )
+            * thermal_bridging_factor,
+            heat_loss_via_plane_elements=lambda df: df["Wall Total Area"]
+            * df["Wall weighted Uvalue"]
+            + df["Roof Total Area"] * df["Roof Weighted Uvalue"]
+            + df["total_floor_area"] * df["Floor Weighted Uvalue"]
+            + df["Windows Total Area"] * df["WindowsWeighted Uvalue"]
+            + df["Door Total Area"] * df["Door Weighted Uvalue"],
+            fabric_heat_loss=lambda df: df["thermal_bridging"]
+            + df["heat_loss_via_plane_elements"],
+            building_volume=lambda df: df["total_floor_area"] * df["No Of Storeys"],
+            ventilation_heat_loss=lambda df: df["building_volume"]
+            * ventilation_heat_loss_constant
+            * ventilation_heat_loss_constant,
+            heat_loss_coefficient=lambda df: df["fabric_heat_loss"]
+            + df["ventilation_heat_loss"],
+            heat_loss_parameter=lambda df: df["heat_loss_coefficient"]
+            / df["total_floor_area"],
         )
         .drop(columns=["cso_small_area", "geo_small_area"])
     )
