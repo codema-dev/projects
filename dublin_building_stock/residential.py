@@ -207,10 +207,53 @@ def create_census_2011_hh_indiv(data_dir, census_2011_small_area_hhs):
 
 
 def create_dublin_ber_public(data_dir):
+    thermal_bridging_factor = 0.15
+    ventilation_heat_loss_constant = 0.33
+    effective_air_rate_change = 0.5
+    typical_floor_height = 2.5  # 200,000 / 280,000 Dublin HH are (2.4, 2.6]
     ber_public = dd.read_parquet(data_dir / "BERPublicsearch_parquet")
-    dublin_ber_public = ber_public[
-        ber_public["CountyName"].str.contains("Dublin")
-    ].compute()
+    dublin_ber_public = (
+        ber_public[ber_public["CountyName"].str.contains("Dublin")]
+        .compute()
+        .assign(
+            total_floor_area=lambda df: df["GroundFloorArea"]
+            + df["FirstFloorArea"]
+            + df["SecondFloorArea"]
+            + df["ThirdFloorArea"],
+            thermal_bridging=lambda df: (
+                df["RoofArea"]
+                + df["total_floor_area"]
+                + df["DoorArea"]
+                + df["WallArea"]
+                + df["WindowArea"]
+            )
+            * thermal_bridging_factor,
+            heat_loss_via_plane_elements=lambda df: df["WallArea"] * df["UValueWall"]
+            + df["RoofArea"] * df["UValueRoof"]
+            + df["total_floor_area"] * df["UValueFloor"]
+            + df["WindowArea"] * df["UValueWindow"]
+            + df["DoorArea"] * df["UvalueDoor"],
+            fabric_heat_loss=lambda df: df["thermal_bridging"]
+            + df["heat_loss_via_plane_elements"],
+            building_volume=lambda df: df["GroundFloorArea"] * df["GroundFloorHeight"]
+            + df["FirstFloorArea"] * df["FirstFloorHeight"]
+            + df["SecondFloorArea"] * df["SecondFloorHeight"]
+            + df["ThirdFloorArea"] * df["ThirdFloorHeight"],
+            building_volume_approx=lambda df: df["total_floor_area"]
+            * df["NoStoreys"]
+            * typical_floor_height,
+            ventilation_heat_loss=lambda df: df["building_volume"]
+            * ventilation_heat_loss_constant
+            * ventilation_heat_loss_constant,
+            heat_loss_coefficient=lambda df: df["fabric_heat_loss"]
+            + df["ventilation_heat_loss"],
+            heat_loss_parameter=lambda df: df["heat_loss_coefficient"]
+            / df["total_floor_area"],
+            heat_pump_ready=lambda df: pd.cut(
+                df["heat_loss_parameter"], bins=[0, 2.2, np.inf], labels=[True, False]
+            ),
+        )
+    )
     dublin_ber_public.to_parquet(data_dir / "dublin_ber_public.parquet")
 
 
@@ -218,6 +261,7 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
     thermal_bridging_factor = 0.15
     ventilation_heat_loss_constant = 0.33
     effective_air_rate_change = 0.5
+    typical_floor_height = 2.5  # 200,000 / 280,000 Dublin HH are (2.4, 2.6]
     dublin_ber_private = (
         pd.read_csv(data_dir / "BER.09.06.2020.csv")
         .query("CountyName2.str.contains('DUBLIN')")
@@ -305,7 +349,9 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
             + df["Door Total Area"] * df["Door Weighted Uvalue"],
             fabric_heat_loss=lambda df: df["thermal_bridging"]
             + df["heat_loss_via_plane_elements"],
-            building_volume=lambda df: df["total_floor_area"] * df["No Of Storeys"],
+            building_volume=lambda df: df["total_floor_area"]
+            * df["No Of Storeys"]
+            * typical_floor_height,
             ventilation_heat_loss=lambda df: df["building_volume"]
             * ventilation_heat_loss_constant
             * ventilation_heat_loss_constant,
@@ -313,6 +359,9 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
             + df["ventilation_heat_loss"],
             heat_loss_parameter=lambda df: df["heat_loss_coefficient"]
             / df["total_floor_area"],
+            heat_pump_ready=lambda df: pd.cut(
+                df["heat_loss_parameter"], bins=[0, 2.2, np.inf], labels=[True, False]
+            ),
         )
         .drop(columns=["cso_small_area", "geo_small_area"])
     )
@@ -412,6 +461,7 @@ def create_latest_stock(
             * 10 ** -3,
             heating_mwh_per_year=lambda df: df["heating_mwh_per_m2_year"]
             * df["estimated_floor_area"],
+            heat_pump_ready=lambda df: df["heat_pump_ready"].fillna(False),
         )
         .drop(
             columns=[
