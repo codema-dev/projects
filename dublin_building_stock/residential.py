@@ -4,6 +4,9 @@ import numpy as np
 import pandas as pd
 
 
+from dublin_building_stock.spatial_operations import get_geometries_within
+
+
 def _repeat_rows_on_column(df, on):
     return df.reindex(df.index.repeat(df[on])).drop(columns=on)
 
@@ -473,3 +476,21 @@ def create_latest_stock(
         )
     )
     dublin_indiv_hh.to_csv(data_dir / "dublin_indiv_hh.csv", index=False)
+
+
+def anonymise_census_2011_hh_indiv_to_routing_key_boundaries(
+    data_dir,
+    dublin_indiv_hh_2011,
+    dublin_routing_key_boundaries,
+    dublin_small_area_boundaries_2011,
+):
+    small_areas_linked_to_postcodes = get_geometries_within(
+        dublin_small_area_boundaries_2011,
+        dublin_routing_key_boundaries,
+    ).drop(columns="EDNAME")
+    dublin_indiv_hh_2011_anonymised = dublin_indiv_hh_2011.merge(
+        small_areas_linked_to_postcodes, on="SMALL_AREA"
+    ).drop(columns=["category_id", "SMALL_AREA", "EDNAME", "geometry"])
+    dublin_indiv_hh_2011_anonymised.to_csv(
+        data_dir / "dublin_indiv_hh_2011_anonymised.csv", index=False
+    )
