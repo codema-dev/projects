@@ -46,6 +46,11 @@ create_census_2016_hh_type(data_dir, dublin_small_area_boundaries_2016)
 create_census_2016_hh_boilers(data_dir, dublin_small_area_boundaries_2016)
 
 # %%
+boilers = pd.read_csv(data_dir / "census_2016_hh_boilers.csv").merge(
+    dublin_small_area_boundaries_2016[["SMALL_AREA"]]
+)
+
+# %%
 census_2016_hh_age = pd.read_csv(data_dir / "census_2016_hh_age.csv")
 create_census_2016_hh_age_indiv(data_dir, census_2016_hh_age)
 
