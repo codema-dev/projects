@@ -36,3 +36,5 @@ vo_public = gpd.read_file(data_dir / "valuation_office_public.gpkg", driver="GPK
 vo_private = gpd.read_file(data_dir / "valuation_office_private.gpkg", driver="GPKG")
 anonymise_valuation_office_private(data_dir, vo_private, vo_public)
 # %%
+vo_public = gpd.read_file(data_dir / "valuation_office_public.gpkg", driver="GPKG")
+# %%
