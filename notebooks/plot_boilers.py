@@ -50,7 +50,7 @@ dublin_small_area_boiler_totals = (
     .set_index("local_authority")
     .T.assign(Total=lambda df: df.sum(axis="columns"))
     .rename(columns={"Total": "All of Dublin"})
-    .index.rename("Boiler")
+    .rename_axis(index="Boiler")
     .pipe(pd.DataFrame)
     # .melt(id_vars="local_authority", var_name="boiler", value_name="total")
 )
@@ -137,6 +137,11 @@ dublin_small_area_boilers.plot_bokeh(
 
 # %% [markdown]
 # # Plot Small Area Boiler Breakdown Bar Chart
+
+# %%
+pandas_bokeh.output_file(html_dir / "dublin_boiler_totals.html")
+
+# %%
 dublin_small_area_boiler_totals.plot_bokeh.barh()
 
 # %%
