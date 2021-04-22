@@ -8,28 +8,55 @@ import pandas as pd
 
 import pandas_bokeh
 
+from dublin_building_stock.spatial_operations import get_geometries_within
+
 data_dir = Path("../data")
 html_dir = Path("../html")
 pandas_bokeh.output_notebook()
 
 # %% [markdown]
 # # Read Small Area Boundaries
-dublin_small_area_boundaries = gpd.read_file(
-    data_dir / "dublin_small_area_boundaries.geojson",
-    driver="GeoJSON",
+dublin_small_area_boundaries_2016 = gpd.read_file(
+    data_dir
+    / "Dublin_Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp"
 )
+
+
+# %% [markdown]
+# # Read Municipality Boundaries
+dublin_municipality_boundaries = gpd.read_file(
+    data_dir / "Dublin_Census2011_Admin_Counties_generalised20m"
+).rename(columns={"COUNTYNAME": "local_authority"})
+
 
 # %% [markdown]
 # # Read Dublin Census Small Area Stock
 dublin_small_area_boilers = (
     pd.read_csv(data_dir / "dublin_small_area_hh_boilers.csv")
-    .merge(dublin_small_area_boundaries)
+    .merge(dublin_small_area_boundaries_2016)
     .rename(columns=lambda name: re.sub(r"[ ()]", "_", name.lower()).replace(".", ""))
     .pipe(gpd.GeoDataFrame)
+    .pipe(get_geometries_within, dublin_municipality_boundaries.to_crs(epsg=2157))
+)
+
+# %%
+drop_columns = ["small_area", "total", "edname", "geometry"]
+dublin_small_area_boiler_totals = (
+    dublin_small_area_boilers.drop(columns=drop_columns)
+    .groupby("local_authority")
+    .sum()
+    .reset_index()
+    .rename(columns={"index": "Boiler", 0: "Total"})
+    .set_index("local_authority")
+    .T.assign(Total=lambda df: df.sum(axis="columns"))
+    .rename(columns={"Total": "All of Dublin"})
+    .index.rename("Boiler")
+    .pipe(pd.DataFrame)
+    # .melt(id_vars="local_authority", var_name="boiler", value_name="total")
 )
 
 # %% [markdown]
-# # Plot Small Area Boiler Breakdown
+# # Plot Small Area Boiler Breakdown Map
 
 # %%
 pandas_bokeh.output_file(html_dir / "dublin_small_area_boilers.html")
@@ -106,5 +133,10 @@ dublin_small_area_boilers.plot_bokeh(
     hovertool_string=hovertool_string,
     fill_alpha=0.5,
 )
+
+
+# %% [markdown]
+# # Plot Small Area Boiler Breakdown Bar Chart
+dublin_small_area_boiler_totals.plot_bokeh.barh()
 
 # %%
