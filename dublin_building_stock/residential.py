@@ -219,6 +219,50 @@ def create_dublin_ber_public(data_dir):
         ber_public[ber_public["CountyName"].str.contains("Dublin")]
         .compute()
         .assign(
+            BERBand=lambda df: df["EnergyRating"].str[0],
+            period_built=lambda df: pd.cut(
+                df["Year_of_Construction"],
+                bins=[
+                    -np.inf,
+                    1919,
+                    1945,
+                    1960,
+                    1970,
+                    1980,
+                    1990,
+                    2000,
+                    2005,
+                    2011,
+                    np.inf,
+                ],
+                labels=[
+                    "before 1919",
+                    "1919 - 1945",
+                    "1946 - 1960",
+                    "1961 - 1970",
+                    "1971 - 1980",
+                    "1981 - 1990",
+                    "1991 - 2000",
+                    "2001 - 2005",
+                    "2006 - 2010",
+                    "2011 or later",
+                ],
+            ),
+            dwelling_type=lambda df: df["DwellingTypeDescr"].replace(
+                {
+                    "Grnd floor apt.": "Apartment",
+                    "Mid floor apt.": "Apartment",
+                    "Top floor apt.": "Apartment",
+                    "Maisonette": "Apartment",
+                    "Apt.": "Apartment",
+                    "Det. house": "Detached house",
+                    "Semi-det. house": "Semi-detached house",
+                    "House": "Semi-detached house",
+                    "Mid terrc house": "Terraced house",
+                    "End terrc house": "Terraced house",
+                    None: "Not stated",
+                }
+            ),
             total_floor_area=lambda df: df["GroundFloorArea"]
             + df["FirstFloorArea"]
             + df["SecondFloorArea"]
@@ -253,7 +297,7 @@ def create_dublin_ber_public(data_dir):
             heat_loss_parameter=lambda df: df["heat_loss_coefficient"]
             / df["total_floor_area"],
             heat_pump_ready=lambda df: pd.cut(
-                df["heat_loss_parameter"], bins=[0, 2.2, np.inf], labels=[True, False]
+                df["heat_loss_parameter"], bins=[0, 2.3, np.inf], labels=[True, False]
             ),
         )
     )
@@ -363,7 +407,7 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
             heat_loss_parameter=lambda df: df["heat_loss_coefficient"]
             / df["total_floor_area"],
             heat_pump_ready=lambda df: pd.cut(
-                df["heat_loss_parameter"], bins=[0, 2.2, np.inf], labels=[True, False]
+                df["heat_loss_parameter"], bins=[0, 2.3, np.inf], labels=[True, False]
             ),
         )
         .drop(columns=["cso_small_area", "geo_small_area"])
@@ -371,23 +415,124 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
     dublin_ber_private.to_parquet(data_dir / "dublin_ber_private.parquet")
 
 
+def _infer_heat_pump_readiness(df):
+    return df.assign(
+        heat_pump_readiness_estimated_on_period_built=lambda df: df[
+            "period_built"
+        ].replace(
+            {
+                "before 1919": False,
+                "1919 - 1945": False,
+                "1946 - 1960": False,
+                "1961 - 1970": False,
+                "1971 - 1980": False,
+                "1981 - 1990": False,
+                "1991 - 2000": True,
+                "2001 - 2005": True,
+                "2006 - 2010": True,
+                "2011 or later": True,
+                "not stated": False,
+            }
+        ),
+        inferred_heat_pump_readiness=lambda df: df["heat_pump_ready"]
+        .fillna(df["heat_pump_readiness_estimated_on_period_built"])
+        .astype("bool"),
+    )
+
+
+def _infer_floor_area(df):
+    return df.assign(
+        category_floor_area=lambda df: df.groupby(["EDNAME", "dwelling_type"])[
+            "total_floor_area"
+        ]
+        .apply(lambda x: x.fillna(x.mean()))
+        .round(),
+        dwelling_type_floor_area=lambda df: df.groupby("dwelling_type")[
+            "total_floor_area"
+        ]
+        .apply(lambda x: x.fillna(x.mean()))
+        .round(),
+        inferred_floor_area=lambda df: df["total_floor_area"]
+        .fillna(df["category_floor_area"])
+        .fillna(df["dwelling_type_floor_area"]),
+    ).drop(
+        columns=[
+            "category_floor_area",
+            "dwelling_type_floor_area",
+        ]
+    )
+
+
+def _infer_ber_rating(df):
+    return df.assign(
+        ber_estimated_on_period_built=lambda df: df["period_built"].replace(
+            {
+                "before 1919": "E",
+                "1919 - 1945": "E",
+                "1946 - 1960": "E",
+                "1961 - 1970": "D",
+                "1971 - 1980": "D",
+                "1981 - 1990": "D",
+                "1991 - 2000": "D",
+                "2001 - 2005": "C",
+                "2006 - 2010": "B",
+                "2011 or later": "A",
+                "not stated": "unknown",
+            }
+        ),
+        inferred_ber=lambda df: np.where(
+            df["BERBand"].isnull(),
+            df["ber_estimated_on_period_built"],
+            df["BERBand"],
+        ),
+    )
+
+
+def _estimate_annual_heat_demand(df):
+    assumed_typical_boiler_efficiency = 0.85
+    kwh_to_mwh_conversion_factor = 10 ** -3
+    return df.assign(
+        energy_kwh_per_m2_year=lambda df: df["inferred_ber"]
+        .replace(
+            {
+                "A": 25,
+                "B": 100,
+                "C": 175,
+                "D": 240,
+                "E": 320,
+                "F": 380,
+                "G": 450,
+                "unknown": 240,
+            }
+        )
+        .astype(np.int32),
+        heating_mwh_per_m2_year=lambda df: df["energy_kwh_per_m2_year"]
+        * assumed_typical_boiler_efficiency
+        * kwh_to_mwh_conversion_factor,
+        heating_mwh_per_year=lambda df: df["heating_mwh_per_m2_year"]
+        * df["inferred_floor_area"],
+    )
+
+
 def create_latest_stock(
     data_dir,
     census_2011_hh_indiv,
     dublin_ber_private,
 ):
-    right_columns = [
+    ber_private_columns_to_keep = [
         "SMALL_AREA_2011",
         "EDNAME",
         "dwelling_type",
         "period_built",
-        "category_id",
         "Year of construction",
+        "category_id",
         "total_floor_area",
         "BERBand",
+        "Energy Rating",
+        "heat_pump_ready",
     ]
     dublin_indiv_hh_before_2011 = census_2011_hh_indiv.merge(
-        dublin_ber_private[right_columns],
+        dublin_ber_private.loc[:, ber_private_columns_to_keep],
         left_on=["SMALL_AREA", "dwelling_type", "period_built", "category_id"],
         right_on=["SMALL_AREA_2011", "dwelling_type", "period_built", "category_id"],
         how="left",
@@ -395,84 +540,27 @@ def create_latest_stock(
         suffixes=["", "_BER"],
     )
 
+    dublin_indiv_hh_2011_or_later = dublin_ber_private.loc[
+        :, ber_private_columns_to_keep
+    ].query("`Year of construction` >= 2011")
+
     dublin_indiv_hh = (
         pd.concat(
             [
                 dublin_indiv_hh_before_2011,
-                dublin_ber_private.query("`Year of construction` >= 2011"),
+                dublin_indiv_hh_2011_or_later,
             ]
         )
         .reset_index(drop=True)
+        .pipe(_infer_heat_pump_readiness)
+        .pipe(_infer_floor_area)
+        .pipe(_infer_ber_rating)
+        .pipe(_estimate_annual_heat_demand)
         .assign(
             SMALL_AREA=lambda df: df["SMALL_AREA"].fillna(
                 df["SMALL_AREA_2011"].astype(str)
             ),
             EDNAME=lambda df: df["EDNAME"].fillna(df["EDNAME_BER"]),
-            category_floor_area=lambda df: df.groupby(["EDNAME", "dwelling_type"])[
-                "total_floor_area"
-            ]
-            .apply(lambda x: x.fillna(x.mean()))
-            .round(),
-            dwelling_type_floor_area=lambda df: df.groupby("dwelling_type")[
-                "total_floor_area"
-            ]
-            .apply(lambda x: x.fillna(x.mean()))
-            .round(),
-            ed_floor_area=lambda df: df.groupby("EDNAME")["total_floor_area"]
-            .apply(lambda x: x.fillna(x.mean()))
-            .round(),
-            estimated_floor_area=lambda df: df["total_floor_area"]
-            .fillna(df["category_floor_area"])
-            .fillna(df["dwelling_type_floor_area"])
-            .fillna(df["ed_floor_area"]),
-            estimated_ber=lambda df: df["period_built"].replace(
-                {
-                    "before 1919": "E",
-                    "1919 - 1945": "E",
-                    "1946 - 1960": "E",
-                    "1961 - 1970": "D",
-                    "1971 - 1980": "D",
-                    "1981 - 1990": "D",
-                    "1991 - 2000": "D",
-                    "2001 - 2005": "C",
-                    "2006 - 2010": "B",
-                    "2011 or later": "A",
-                    "not stated": "unknown",
-                }
-            ),
-            inferred_ber=lambda df: np.where(
-                df["BERBand"].isnull(),
-                df["estimated_ber"],
-                df["BERBand"],
-            ),
-            energy_kwh_per_m2_year=lambda df: df["estimated_ber"]
-            .replace(
-                {
-                    "A": 25,
-                    "B": 100,
-                    "C": 175,
-                    "D": 240,
-                    "E": 320,
-                    "F": 380,
-                    "G": 450,
-                    "unknown": 240,
-                }
-            )
-            .astype(np.int32),
-            heating_mwh_per_m2_year=lambda df: df["energy_kwh_per_m2_year"]
-            * 0.8
-            * 10 ** -3,
-            heating_mwh_per_year=lambda df: df["heating_mwh_per_m2_year"]
-            * df["estimated_floor_area"],
-            heat_pump_ready=lambda df: df["heat_pump_ready"].fillna(False),
-        )
-        .drop(
-            columns=[
-                "total_floor_area",
-                "category_floor_area",
-                "dwelling_type_floor_area",
-                "ed_floor_area",
-            ]
         )
     )
     dublin_indiv_hh.to_csv(data_dir / "dublin_indiv_hh.csv", index=False)
