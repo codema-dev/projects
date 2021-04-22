@@ -37,7 +37,11 @@ def create_valuation_office_public(
         "Benchmark",
         "Typical fossil fuel [kWh/m²y]",
         "Industrial space heat [kWh/m²y]",
+        "Typical Area [m²]",
+        "Area Upper Bound [m²]",
+        "GIA to Sales",
     ]
+    kwh_to_mwh_conversion_factor = 10 ** -3
     vo_public_clean = (
         vo_public_raw.pipe(
             convert_to_geodataframe, x=" X ITM", y=" Y ITM", crs="EPSG:2157"
@@ -64,15 +68,29 @@ def create_valuation_office_public(
             left_on="benchmark_1",
             right_on="Benchmark",
         )
-        .merge(
-            benchmarks[benchmark_columns],
-            how="left",
-            left_on="benchmark_2",
-            right_on="Benchmark",
-            suffixes=["_1", "_2"],
+        .assign(
+            bounded_area_m2=lambda df: np.where(
+                (df["Area"] > 5) & (df["Area"] < df["Area Upper Bound [m²]"]),
+                df["Area"],
+                np.nan,
+            ),  # Remove all areas outside of 5 <= area <= Upper Bound
+            inferred_area_m2=lambda df: np.round(
+                df["bounded_area_m2"].fillna(df["Typical Area [m²]"])
+                * df["GIA to Sales"].fillna(1)
+            ),
+            area_is_estimated=lambda df: df["bounded_area_m2"].isnull(),
+            heating_mwh_per_year=lambda df: np.round(
+                (
+                    df["Typical fossil fuel [kWh/m²y]"].fillna(0)
+                    * df["inferred_area_m2"]
+                    + df["Industrial space heat [kWh/m²y]"].fillna(0)
+                    * df["inferred_area_m2"]
+                )
+                * kwh_to_mwh_conversion_factor
+            ),
         )
-        .drop(columns=["Benchmark_1", "Benchmark_2"])
         .pipe(gpd.sjoin, small_area_boundaries[["SMALL_AREA", "geometry"]], op="within")
+        .drop(columns="index_right")
     )
     vo_public_clean.to_file(data_dir / "valuation_office_public.gpkg", driver="GPKG")
 
