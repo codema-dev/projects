@@ -27,6 +27,13 @@ dublin_routing_key_boundaries = gpd.read_file(
 )
 
 # %%
+dublin_postcode_boundaries = (
+    dublin_routing_key_boundaries.dissolve(by="COUNTYNAME")
+    .drop(columns=["RoutingKey", "Descriptor"])
+    .to_crs(epsg=4326)  # keep in same crs as geocoded results
+)
+
+# %%
 small_area_boundaries_2011 = gpd.read_file(
     data_dir / "Dublin_Census2011_Small_Areas_generalised20m"
 )
@@ -58,22 +65,63 @@ create_m_and_r(data_dir)
 # %%
 m_and_r = pd.read_csv(data_dir / "m_and_r.csv")
 create_geocoded_m_and_r(
-    data_dir, m_and_r, dublin_boundary, dublin_routing_key_boundaries
-)
-
-# %%
-m_and_r_locations = gpd.read_file(
-    data_dir / "M&R_clean_addresses_geocoded_by_google_maps.geojson", driver="GeoJSON"
-)
-m_and_r_geocoded = m_and_r_locations.merge(
+    data_dir,
     m_and_r,
-    left_on="raw_address",
-    right_on="address",
-    how="right",
+    dublin_boundary,
+    dublin_routing_key_boundaries,
+    provider="nominatim",
+    domain="localhost:8080",
+    get_latest=True,
 )
 
 # %%
-m_and_r_geocoded.to_file(data_dir / "M&R_geocoded.geojson", driver="GeoJSON")
+# provider="google_maps"
+provider = "nominatim"
+m_and_r_locations = gpd.read_file(
+    data_dir / f"M&R_clean_addresses_geocoded_by_{provider}.geojson", driver="GeoJSON"
+)
+use_columns = [
+    "address",
+    "category",
+    "postcode",
+    "to_geocode",
+    f"{provider}_address",
+    "dataset",
+    "latitude",
+    "longitude",
+] + [c for c in m_and_r.columns if any(str(x) in c for x in range(2014, 2019, 1))]
+m_and_r_geocoded = (
+    m_and_r_locations.merge(
+        m_and_r,
+        how="right",
+    )
+    .set_index("postcode")
+    .combine_first(dublin_postcode_boundaries)
+    .pipe(gpd.GeoDataFrame, crs="EPSG:4326")
+    .drop_duplicates(subset="address")
+    .reset_index()
+    .rename(columns={"index": "postcode"})
+    .assign(
+        latitude=lambda gdf: gdf.geometry.representative_point().y,
+        longitude=lambda gdf: gdf.geometry.representative_point().x,
+    )
+    .loc[:, use_columns]
+)
 
 # %%
-create_epa_industrial_sites(data_dir)
+m_and_r_geocoded.to_csv(data_dir / f"FOI_Codema_24.1.20_{provider}.csv", index=False)
+
+# %%
+m_and_r_geocoded_none_missing = (
+    m_and_r_geocoded.assign(
+        google_maps_geocoding_was_successful=lambda gdf: gdf[
+            "google_maps_address"
+        ].notnull()
+    )
+    .drop(columns=["google_maps_address", "latitude", "longitude"])
+    .drop_duplicates()
+)
+
+m_and_r_geocoded_none_missing.to_csv(
+    data_dir / "FOI_Codema_24.1.20_none_missing.csv", index=False
+)
