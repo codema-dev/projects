@@ -1,10 +1,7 @@
 # dublin-building-stock
 
-Creates a live, open Dublin building stock at Postcode level by merging <2011 Census data with the BER Public Search.
+A collection of notebooks used in wrangling Dublin energy-related data into a mappable format for codema-dev/dublin-energy-webmaps
 
-## Download
-
-[Dublin Residential Building Stock up to 2011](https://zenodo.org/record/4552498) - Central Statistics Office (CSO) Small Area cross-tabulation of period built | dwelling type anonymised to Postcode level 
 ## Installation
 
 Clone a local copy
