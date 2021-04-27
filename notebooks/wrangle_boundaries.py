@@ -20,6 +20,8 @@ dublin_small_area_boundaries_2016 = gpd.read_file(
     data_dir
     / "Dublin_Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015-shp"
 )
+
+# %%
 small_areas_2011_vs_2011 = (
     get_geometries_within(
         dublin_small_area_boundaries_2016,
@@ -67,6 +69,18 @@ dublin_routing_key_boundaries = (
 dublin_routing_key_boundaries.to_file(
     data_dir / "dublin_routing_key_boundaries.geojson",
     driver="GeoJSON",
+)
+
+# %% [markdown]
+# # Link 2011 Small Areas to LAs
+dublin_municipality_boundaries = gpd.read_file(
+    data_dir / "Dublin_Census2011_Admin_Counties_generalised20m"
+)
+dublin_small_area_boundaries_2011_with_las = get_geometries_within(
+    dublin_small_area_boundaries_2011, dublin_municipality_boundaries.to_crs(epsg=2157)
+).rename(columns={"COUNTYNAME": "local_authority"})
+dublin_small_area_boundaries_2011_with_las.to_file(
+    data_dir / "dublin_small_area_boundaries_2011.geojson", driver="GeoJSON"
 )
 
 # %%
