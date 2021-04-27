@@ -78,8 +78,7 @@ create_latest_stock(data_dir, census_2011_hh_indiv, dublin_ber_private)
 # %%
 dublin_indiv_hh = pd.read_csv(data_dir / "dublin_indiv_hh.csv", low_memory=False)
 
-# %%
-# %%
+# %% [markdown]
 # Anonymise Census 2011 to share on Google Colab
 census_2011_hh_indiv = pd.read_parquet(data_dir / "census_2011_hh_indiv.parquet")
 anonymise_census_2011_hh_indiv_to_routing_key_boundaries(
@@ -89,7 +88,7 @@ anonymise_census_2011_hh_indiv_to_routing_key_boundaries(
     dublin_small_area_boundaries_2011,
 )
 
-# %%
+# %% [markdown]
 # Extract BER Public data to share on Google Colab
 ber_public = dd.read_parquet(data_dir / "BERPublicsearch_parquet")
 use_columns = [
@@ -122,5 +121,26 @@ dublin_ber_public = (
     .compute()
 )
 dublin_ber_public.to_csv(data_dir / "dublin_ber_public.csv", index=False)
+
+# %% [markdown]
+columns = [
+    "SMALL_AREA",
+    "period_built",
+    "inferred_floor_area",
+    "inferred_ber",
+    "energy_kwh_per_m2_year",
+]
+dublin_indiv_hh_streamlit = dublin_indiv_hh[columns].copy()
+
+# %%
+dublin_indiv_hh_streamlit = get_geometries_within(
+    dublin_small_area_boundaries_2011.merge(dublin_indiv_hh_streamlit),
+    dublin_municipality_boundaries.to_crs(epsg=2157),
+).drop(columns="geometry")
+
+# %%
+dublin_indiv_hh_streamlit.to_csv(
+    data_dir / "streamlit_dublin_indiv_hh.csv", index=False
+)
 
 # %%
