@@ -125,3 +125,59 @@ m_and_r_geocoded_none_missing = (
 m_and_r_geocoded_none_missing.to_csv(
     data_dir / "FOI_Codema_24.1.20_none_missing.csv", index=False
 )
+
+# %%
+from dublin_building_stock.spatial_operations import convert_to_geodataframe
+
+vo_public = gpd.read_file(
+    data_dir / "valuation_office_public.gpkg", driver="GPKG"
+).drop_duplicates(subset="ID")
+epa_industrial_sites = pd.read_excel(data_dir / "epa_industrial_sites.xlsx").pipe(
+    convert_to_geodataframe, y="Latitude", x="Longitude", crs="EPSG:4326"
+)
+
+# %%
+industrial_benchmarks = [
+    "Manufacturing (general)",
+    "Engineering",
+    "Laboratories",
+    "Food (cooked)",
+    "Food (cold)",
+    "Cold storage",
+    "Terminal",
+    "Data Centre",
+    "Paper",
+]
+vo_public_extract = (
+    vo_public.assign(
+        latitude=lambda gdf: gdf.to_crs(epsg=4326).geometry.y,
+        longitude=lambda gdf: gdf.to_crs(epsg=4326).geometry.x,
+    )
+    .query(f"Benchmark in {industrial_benchmarks}")
+    .loc[
+        :,
+        [
+            "ID",
+            "use_1",
+            "Benchmark",
+            " Address 1",
+            "Address 2",
+            "latitude",
+            "longitude",
+        ],
+    ]
+)
+
+# %%
+vo_public_extract.to_csv(data_dir / "VO_INDUSTRIAL_LOCATIONS.csv", index=False)
+
+# %%
+epa_industrial_sites_extract = epa_industrial_sites.assign(
+    latitude=lambda gdf: gdf.to_crs(epsg=4326).geometry.y,
+    longitude=lambda gdf: gdf.to_crs(epsg=4326).geometry.x,
+).loc[:, ["Name", "Address", "Use", "latitude", "longitude"]]
+
+# %%
+epa_industrial_sites_extract.to_csv(
+    data_dir / "EPA_INDUSTRIAL_LOCATIONS.csv", index=False
+)
