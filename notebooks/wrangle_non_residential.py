@@ -14,6 +14,8 @@ from dublin_building_stock.non_residential import (
     create_m_and_r,
     create_geocoded_m_and_r,
 )
+from dublin_building_stock.spatial_operations import convert_to_geodataframe
+
 
 data_dir = Path("../data")
 
@@ -127,13 +129,25 @@ m_and_r_geocoded_none_missing.to_csv(
 )
 
 # %%
-from dublin_building_stock.spatial_operations import convert_to_geodataframe
-
 vo_public = gpd.read_file(
     data_dir / "valuation_office_public.gpkg", driver="GPKG"
 ).drop_duplicates(subset="ID")
-epa_industrial_sites = pd.read_excel(data_dir / "epa_industrial_sites.xlsx").pipe(
-    convert_to_geodataframe, y="Latitude", x="Longitude", crs="EPSG:4326"
+
+# %%
+fossil_fuel_columns = [
+    "Diesel Use [kWh/y]",
+    "Gas Oil [kWh/y]",
+    "Light Fuel Oil Use [kWh/y]",
+    "Heavy Fuel Oil Use [kWh/y]",
+    "Natural Gas Use [kWh/y]",
+]
+epa_industrial_sites = (
+    pd.read_excel(data_dir / "epa_industrial_sites.xlsx")
+    .pipe(convert_to_geodataframe, y="Latitude", x="Longitude", crs="EPSG:4326")
+    .assign(
+        fossil_fuel_kwh_per_year=lambda gdf: gdf[fossil_fuel_columns].sum(axis=1),
+        electricity_kwh_per_year=lambda gdf: gdf["Electricity Use [kWh/y]"],
+    )
 )
 
 # %%
@@ -181,3 +195,6 @@ epa_industrial_sites_extract = epa_industrial_sites.assign(
 epa_industrial_sites_extract.to_csv(
     data_dir / "EPA_INDUSTRIAL_LOCATIONS.csv", index=False
 )
+
+# %% [markdown]
+# # Combine VO Private with valid EPA sites
