@@ -73,6 +73,8 @@ create_dublin_ber_private(data_dir, small_areas_2011_vs_2011)
 # %%
 census_2011_hh_indiv = pd.read_parquet(data_dir / "census_2011_hh_indiv.parquet")
 dublin_ber_private = pd.read_parquet(data_dir / "dublin_ber_private.parquet")
+
+# %%
 create_latest_stock(data_dir, census_2011_hh_indiv, dublin_ber_private)
 
 # %%
@@ -90,7 +92,11 @@ anonymise_census_2011_hh_indiv_to_routing_key_boundaries(
 
 # %% [markdown]
 # Extract BER Public data to share on Google Colab
+
+# %%
 ber_public = dd.read_parquet(data_dir / "BERPublicsearch_parquet")
+
+# %%
 use_columns = [
     "CountyName",
     "DwellingTypeDescr",

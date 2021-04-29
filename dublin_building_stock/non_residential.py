@@ -45,7 +45,10 @@ def create_valuation_office_public(
     benchmark_columns = [
         "Benchmark",
         "Typical fossil fuel [kWh/m²y]",
+        "Typical electricity [kWh/m²y]",
         "Industrial space heat [kWh/m²y]",
+        "Industrial building total [kWh/m²y]",
+        "Industrial process energy [kWh/m²y]",
         "Typical Area [m²]",
         "Area Upper Bound [m²]",
         "GIA to Sales",
@@ -61,7 +64,6 @@ def create_valuation_office_public(
         .drop(columns=[2, 3])  # both are empty columns
         .rename(columns={0: "use_1", 1: "use_2", "Property Number": "ID"})
         .assign(
-            # Benchmark=lambda gdf: gdf["use_1"].map(uses_linked_to_benchmarks),
             benchmark_1=lambda gdf: gdf["use_1"]
             .map(uses_linked_to_benchmarks)
             .astype(str),
@@ -70,7 +72,6 @@ def create_valuation_office_public(
             .astype(str),
             ID=lambda df: df["ID"].astype("int32"),
         )  # link uses to benchmarks so can merge on common benchmarks
-        # .merge(vo_benchmarks, how="left")
         .merge(
             benchmarks[benchmark_columns],
             how="left",
@@ -88,20 +89,9 @@ def create_valuation_office_public(
                 * df["GIA to Sales"].fillna(1)
             ),
             area_is_estimated=lambda df: df["bounded_area_m2"].isnull(),
-            heating_mwh_per_year=lambda df: np.round(
-                (
-                    df["Typical fossil fuel [kWh/m²y]"].fillna(0)
-                    * df["inferred_area_m2"]
-                    + df["Industrial space heat [kWh/m²y]"].fillna(0)
-                    * df["inferred_area_m2"]
-                )
-                * kwh_to_mwh_conversion_factor
-            ),
         )
-        .pipe(gpd.sjoin, small_area_boundaries[["SMALL_AREA", "geometry"]], op="within")
-        .drop(columns="index_right")
     )
-    vo_public_clean.to_file(data_dir / "valuation_office_public.gpkg", driver="GPKG")
+    vo_public_clean.to_csv(data_dir / "valuation_office_public.csv", index=False)
 
 
 def _load_dcc_vo_private(data_dir):
@@ -176,16 +166,16 @@ def create_valuation_office_private(
         "inferred_area_m2",
         "area_is_estimated",
         "Industrial",
-        "heating_mwh_per_year",
         "Typical Area [m²]",
         "area_conversion_factors",
         "Area (m2)",
-        "typical_ff",
-        "industrial_sh",
+        "Typical fossil fuel [kWh/m²y]",
+        "Typical electricity [kWh/m²y]",
+        "Industrial space heat [kWh/m²y]",
+        "Industrial building total [kWh/m²y]",
+        "Industrial process energy [kWh/m²y]",
         "latitude",
         "longitude",
-        "SMALL_AREA",
-        "geometry",
     ]
     valuation_office_private = (
         pd.concat([dcc_vo_private, dlrcc_vo_private, sdcc_vo_private, fcc_vo_private])
@@ -212,13 +202,6 @@ def create_valuation_office_private(
             area_conversion_factors=lambda df: df["to_gia"]
             * df["GIA to Sales"].fillna(1),
         )
-        .pipe(gpd.sjoin, small_area_boundaries, op="within")
-        .rename(
-            columns={
-                "Typical fossil fuel [kWh/m²y]": "typical_ff",
-                "Industrial space heat [kWh/m²y]": "industrial_sh",
-            }
-        )
         .assign(
             latitude=lambda gdf: gdf.to_crs(epsg=4326).geometry.y,
             longitude=lambda gdf: gdf.to_crs(epsg=4326).geometry.x,
@@ -227,22 +210,12 @@ def create_valuation_office_private(
                 * df["area_conversion_factors"]
             ),
             area_is_estimated=lambda df: df["bounded_area_m2"].isnull(),
-            heating_mwh_per_year=lambda df: np.round(
-                (
-                    df["typical_ff"].fillna(0) * df["inferred_area_m2"]
-                    + df["industrial_sh"].fillna(0) * df["inferred_area_m2"]
-                )
-                * 10 ** -3
-            ),
-            category_area_band_m2=lambda gdf: gdf.groupby("Benchmark")[
-                "inferred_area_m2"
-            ].transform(lambda x: str(x.min()) + " - " + str(x.max())),
             ID=lambda gdf: gdf["ID"].astype("int32"),
         )
         .loc[:, use_columns]
     )
-    valuation_office_private.to_file(
-        data_dir / "valuation_office_private.gpkg", driver="GPKG"
+    valuation_office_private.to_csv(
+        data_dir / "valuation_office_private.csv", index=False
     )
 
 

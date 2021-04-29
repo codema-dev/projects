@@ -471,8 +471,8 @@ def _infer_ber_rating(df):
                 "1919 - 1945": "E",
                 "1946 - 1960": "E",
                 "1961 - 1970": "D",
-                "1971 - 1980": "D",
-                "1981 - 1990": "D",
+                "1971 - 1980": "D",  # uncertain
+                "1981 - 1990": "D",  # uncertain
                 "1991 - 2000": "D",
                 "2001 - 2005": "C",
                 "2006 - 2010": "B",
@@ -484,6 +484,77 @@ def _infer_ber_rating(df):
             df["BERBand"].isnull(),
             df["ber_estimated_on_period_built"],
             df["BERBand"],
+        ),
+    )
+
+
+def _infer_uvalues(df):
+    return df.assign(
+        uvalue_wall_estimated_on_period_built=lambda df: df["period_built"].replace(
+            {
+                "before 1919": 1.5,  # 1.25-1.75
+                "1919 - 1945": 1.5,  # 0-0.5 & 1.25-2
+                "1946 - 1960": 1.5,  # 0-0.5 & 1.25-2
+                "1961 - 1970": 1.5,  # 0-0.5 & 1.25-2.5
+                "1971 - 1980": 1,  # 0-0.5 & 1-1.25 & 1.75-2
+                "1981 - 1990": 0.6,  # 0.5-0.75
+                "1991 - 2000": 0.6,  # 0.5-0.75
+                "2001 - 2005": 0.6,  # 0.5-0.75
+                "2006 - 2010": 0.4,  # 0-0.5
+                "2011 or later": 0.2,  # 0-0.25
+                "not stated": 1,  # estimated
+            }
+        ),
+        inferred_uvalue_wall=lambda df: df["Wall weighted Uvalue"].fillna(
+            df["uvalue_wall_estimated_on_period_built"]
+        ),
+        uvalue_roof_estimated_on_period_built=lambda df: df["period_built"].replace(
+            {
+                "before 1919": 0.5,  # 0-1
+                "1919 - 1945": 0.5,  # 0-1
+                "1946 - 1960": 0.5,  # 0-1
+                "1961 - 1970": 0.5,  # 0-1
+                "1971 - 1980": 0.5,  # 0-1
+                "1981 - 1990": 0.3,  # 0-0.5
+                "1991 - 2000": 0.3,  # 0-0.5
+                "2001 - 2005": 0.3,  # 0-0.5
+                "2006 - 2010": 0.15,  # 0-0.25
+                "2011 or later": 0.15,  # 0-0.25
+                "not stated": 0.5,  # estimated
+            }
+        ),
+        inferred_uvalue_roof=lambda df: df["Roof Weighted Uvalue"].fillna(
+            df["uvalue_roof_estimated_on_period_built"]
+        ),
+        uvalue_window_estimated_on_period_built=lambda df: df["period_built"].replace(
+            {
+                "before 1919": 3,  # 2.75-3.5
+                "1919 - 1945": 3,  # 2.5-3.25
+                "1946 - 1960": 3,  # 2.75-3.25
+                "1961 - 1970": 3,  # 2.75-3.25
+                "1971 - 1980": 3,  # 2.75-3.25
+                "1981 - 1990": 3,  # 2.75-3.25
+                "1991 - 2000": 3,  # 2.75-3.25
+                "2001 - 2005": 2.7,  # 2-3
+                "2006 - 2010": 2.2,  # 1-3
+                "2011 or later": 1.3,  # 1-1.5
+                "not stated": 3,  # estimated
+            }
+        ),
+        inferred_uvalue_window=lambda df: df["WindowsWeighted Uvalue"].fillna(
+            df["uvalue_window_estimated_on_period_built"]
+        ),
+    )
+
+
+def _infer_boiler_efficiencies(df):
+    return df.assign(
+        sh_boiler_efficiency=lambda df: df["HSMainSystemEfficiency"].fillna(
+            df[["HSMainSystemEfficiency"]]
+            .query("HSMainSystemEfficiency<100")
+            .squeeze()
+            .round()
+            .median()
         ),
     )
 
@@ -530,6 +601,12 @@ def create_latest_stock(
         "BERBand",
         "Energy Rating",
         "heat_pump_ready",
+        "heat_loss_parameter",
+        "HS Main System Efficiency",
+        "WH Main System Eff",
+        "Wall weighted Uvalue",
+        "Roof Weighted Uvalue",
+        "WindowsWeighted Uvalue",
     ]
     dublin_indiv_hh_before_2011 = census_2011_hh_indiv.merge(
         dublin_ber_private.loc[:, ber_private_columns_to_keep],
@@ -555,6 +632,8 @@ def create_latest_stock(
         .pipe(_infer_heat_pump_readiness)
         .pipe(_infer_floor_area)
         .pipe(_infer_ber_rating)
+        .pipe(_infer_uvalues)
+        .pipe(_infer_boiler_efficiencies)
         .pipe(_estimate_annual_heat_demand)
         .assign(
             SMALL_AREA=lambda df: df["SMALL_AREA"].fillna(
