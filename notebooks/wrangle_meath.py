@@ -108,6 +108,9 @@ meath_ber_public_extract = meath_ber_public[
         "DeliveredEnergySecondarySpace",
         "DeliveredEnergySupplementaryWater",
         "DeliveredEnergyBoilers",
+        "DeliveredLightingEnergy",
+        "DeliveredEnergyPumpsFans",
+        "TotalDeliveredEnergy",
     ]
 ]
 
@@ -158,6 +161,33 @@ median_boiler_energies = (
 )
 
 # %%
+median_lighting_energies = (
+    meath_ber_public_extract.groupby(["dwelling_type", "period_built"])[
+        "DeliveredLightingEnergy"
+    ]
+    .median()
+    .rename("MedianDeliveredLightingEnergy")
+)
+
+# %%
+median_pumpsfans_energies = (
+    meath_ber_public_extract.groupby(["dwelling_type", "period_built"])[
+        "DeliveredEnergyPumpsFans"
+    ]
+    .median()
+    .rename("MedianDeliveredEnergyPumpsFans")
+)
+
+# %%
+median_total_energies = (
+    meath_ber_public_extract.groupby(["dwelling_type", "period_built"])[
+        "TotalDeliveredEnergy"
+    ]
+    .median()
+    .rename("MedianTotalDeliveredEnergy")
+)
+
+# %%
 archetypes = pd.concat(
     [
         mode_ber_bands,
@@ -165,6 +195,9 @@ archetypes = pd.concat(
         mode_fuel,
         median_boiler_efficiencies,
         median_boiler_energies,
+        median_lighting_energies,
+        median_pumpsfans_energies,
+        median_total_energies,
     ],
     axis=1,
 )
