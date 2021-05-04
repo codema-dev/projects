@@ -1,5 +1,9 @@
 # %%
+from os import mkdir
 from pathlib import Path
+
+import loguru
+import pandas as pd
 
 from berpublicsearch.download import download_berpublicsearch_parquet
 from dublin_building_stock.download import (
@@ -53,4 +57,52 @@ download(
     url="https://www.autoaddress.ie/docs/default-source/default-document-library/routingkeys_mi_itm_2016_09_29.zip",
     filepath=data_dir / "routingkeys_mi_itm_2016_09_29.zip",
 )
+
+# %% [markdown]
+# # Download EPA listings of industrial sites
+
+# %%
+download(
+    url="http://www.epa.ie/terminalfour/ippc/ippc-search.jsp?class-of-activity=%25&status=%25&county=Dublin&Submit=Search+by+Combination",
+    filepath=data_dir / "epa_industrial_licenses.html",
+)
+
+# %%
+# TODO
+epa_industrial_licenses = pd.read_html(data_dir / "epa_ets_licenses.html")[0].rename(
+    columns={"Operator Name": "name", "Reg No": "license"}
+)
+
+# %% [markdown]
+# # Download EPA listings of ETS sites
+
+# %%
+download(
+    url="http://www.epa.ie/climate/emissionstradingoverview/etscheme/accesstocurrentpermits/#d.en.64017",
+    filepath=data_dir / "epa_ets_licenses.html",
+)
+
+# %%
+epa_ets_licenses = (
+    pd.read_html(data_dir / "epa_ets_licenses.html")[0]
+    .assign(
+        url_to_pdf=lambda df: "http://www.epa.ie/pubs/reports/air/etu/permit/"
+        + df["Reg No"]
+        + ".pdf"
+    )
+    .rename(columns={"Operator Name": "name", "Reg No": "license"})
+)
+
+# %%
+epa_ets_dirpath = data_dir / "EPA-ETS"
+mkdir(data_dir / "EPA-ETS")
+
+# %%
+for row in epa_ets_licenses.itertuples():
+    filename = row.license + ".pdf"
+    try:
+        download(row.url_to_pdf, epa_ets_dirpath / filename)
+    except:
+        loguru.error("." * 10 + "ERROR" + "." * 10 + "\n\n")
+
 # %%
