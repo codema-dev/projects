@@ -1,7 +1,7 @@
 from pathlib import Path
 from shutil import unpack_archive
 from typing import Union
-from urllib.request import urlopen
+import requests
 
 from loguru import logger
 from tqdm import tqdm
@@ -13,7 +13,14 @@ logger.add(lambda msg: tqdm.write(msg, end=""))
 
 
 def _download(url, filepath):
-    response = urlopen(url)
+
+    response = requests.get(url)
+    try:
+        response.raise_for_status()
+    except Exception as e:
+        logger.error(f"Request failed with {e}")
+
+    chunk_size = 1024  # i.e. 1 byte
     with tqdm.wrapattr(
         open(str(filepath), "wb"),
         "write",
@@ -21,7 +28,7 @@ def _download(url, filepath):
         desc=str(filepath),
         total=getattr(response, "length", None),
     ) as fout:
-        for chunk in response:
+        for chunk in response.iter_content(chunk_size=chunk_size):
             fout.write(chunk)
 
 
