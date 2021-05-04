@@ -84,7 +84,7 @@ use_columns = [
     "COUNTYNAME",
     "Benchmark",
     "address",
-    "uncertain_address",
+    "uncertain_lat_long",
     "metered_fossil_fuel_mwh_per_year",
     "metered_electricity_mwh_per_year",
     "latitude",
@@ -147,31 +147,52 @@ epa_industrial_sites = (
 )
 
 # %%
+# Eirgrid All Island Generation capacity statement 2020 - 2029
+twh_to_mwh_conversion_factor = 10 ** 6
+median_all_ireland_data_centre_demand_2021 = 32.5 * twh_to_mwh_conversion_factor
+data_centres = pd.DataFrame(
+    {
+        "building_type": ["data_centre"],
+        "metered_electricity_mwh_per_year": [all_ireland_data_centre_demand_2021],
+    }
+)
+
+# %%
 non_residential_stock = (
     pd.concat(
         [
             vo_private.merge(epa_industrial_sites, how="left"),
             m_and_r,
+            data_centres,
         ]
     )
     .assign(
-        estimated_energy_mwh_per_year=lambda df: df["metered_fossil_fuel_mwh_per_year"]
+        inferred_fossil_fuel_mwh_per_year=lambda df: df[
+            "metered_fossil_fuel_mwh_per_year"
+        ]
         .fillna(df["estimated_fossil_fuel_mwh_per_year"])
-        .fillna(0)
-        + df["metered_electricity_mwh_per_year"]
+        .fillna(0),
+        inferred_electricity_mwh_per_year=lambda df: df[
+            "metered_electricity_mwh_per_year"
+        ]
         .fillna(df["estimated_electricity_mwh_per_year"])
-        .fillna(0)
+        .fillna(0),
+        inferred_energy_mwh_per_year=lambda df: df["inferred_fossil_fuel_mwh_per_year"]
+        + df["inferred_electricity_mwh_per_year"],
     )
     .reset_index(drop=True)
 )
 
 # %%
-industrial_stock = non_residential_stock.query("Industrial == 1").assign(
-    building_type="industrial"
-)
+industrial_stock = non_residential_stock.query(
+    "Industrial == 1 and Benchmark != 'Data Centre'"
+).assign(building_type="industrial")
 
 # %%
 industrial_stock.to_csv(data_dir / "industrial_stock.csv", index=False)
+
+# %%
+data_centres = non_residential_stock.query("building_type == 'data_centre'")
 
 # %%
 public_sector_stock = non_residential_stock.query("building_type == 'public_sector'")
@@ -198,9 +219,9 @@ use_columns = [
     "inferred_floor_area_m2",
     "inferred_ber",
     "energy_kwh_per_m2_year",
-    "estimated_fossil_fuel_mwh_per_year",
-    "estimated_electricity_mwh_per_year",
-    "estimated_energy_mwh_per_year",
+    "inferred_fossil_fuel_mwh_per_year",
+    "inferred_electricity_mwh_per_year",
+    "inferred_energy_mwh_per_year",
     "SMALL_AREA_2011",
     "COUNTYNAME",
 ]
@@ -227,10 +248,18 @@ residential_stock = (
         * typical_boiler_efficiency
         * kwh_to_mwh_conversion_factor,
         estimated_electricity_mwh_per_year=5,
-        estimated_energy_mwh_per_year=lambda df: df.eval(
-            "estimated_fossil_fuel_mwh_per_year.fillna(0)"
-            "+ estimated_electricity_mwh_per_year.fillna(0)"
-        ).astype("float64"),
+        inferred_electricity_mwh_per_year=lambda df: df[
+            "estimated_electricity_mwh_per_year"
+        ]
+        .fillna(0)
+        .astype("float64"),
+        inferred_fossil_fuel_mwh_per_year=lambda df: df[
+            "estimated_fossil_fuel_mwh_per_year"
+        ]
+        .fillna(0)
+        .astype("float64"),
+        inferred_energy_mwh_per_year=lambda df: df["inferred_fossil_fuel_mwh_per_year"]
+        + df["inferred_electricity_mwh_per_year"],
         building_type="residential",
     )
     .loc[:, use_columns]
@@ -242,7 +271,13 @@ residential_stock.to_csv(data_dir / "residential_stock.csv", index=False)
 
 # %%
 all_stock = pd.concat(
-    [residential_stock, commercial_stock, industrial_stock, public_sector_stock]
+    [
+        residential_stock,
+        commercial_stock,
+        data_centres,
+        industrial_stock,
+        public_sector_stock,
+    ]
 )
 
 # %%
@@ -259,13 +294,71 @@ use_columns = [
     "metered_fossil_fuel_mwh_per_year",
     "estimated_electricity_mwh_per_year",
     "metered_electricity_mwh_per_year",
-    "estimated_energy_mwh_per_year",
+    "inferred_energy_mwh_per_year",
 ]
-seus = all_stock[use_columns].sort_values(
-    "estimated_energy_mwh_per_year", ascending=False
+seus = (
+    all_stock[use_columns]
+    .sort_values("inferred_energy_mwh_per_year", ascending=False)
+    .iloc[:200]
 )
 
 # %%
-seus.iloc[:200].to_csv(data_dir / "top_200_seus.csv", index=False)
+seus.to_csv(data_dir / "top_200_seus.csv", index=False)
+
+# %%
+all_stock_without_power_plants = all_stock.query(
+    "`Property Use` != 'GENERATING STATION'"
+)
+
+# %% [markdown]
+# # Plot sectoral breakdown
+
+# %%
+overview_electricity = all_stock_without_power_plants.groupby("building_type")[
+    "inferred_electricity_mwh_per_year"
+].sum()
+
+# %%
+overview_electricity.loc["rail"] = 46295 + 44668  # DART + LUAS
+
+# %%
+overview_fossil_fuel = all_stock.groupby("building_type")[
+    "inferred_fossil_fuel_mwh_per_year"
+].sum()
+
+# %%
+# Converting emissions from NTA Model to demand
+# ... assuming CO2_TFC = 0.00384527383473325, TFC_TPER = 1.1
+overview_fossil_fuel.loc["road_transport"] = 6444154.24
+
+# %%
+overview_fossil_fuel.loc["rail"] = 69047 + 15787  # Commuter + Intercity
+
+# %%
+overview = pd.concat([overview_electricity, overview_fossil_fuel], axis=1)
+
+# %%
+import matplotlib.patheffects as pe
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set()
+
+# %%
+f, ax = plt.subplots(figsize=(10, 10))
+total = overview_electricity.sum()
+percentages = [str(round((x / total) * 100, 1)) + "%" for x in overview_electricity]
+overview_electricity.plot.pie(ax=ax, labels=percentages, fontsize=15, legend=True)
+
+# %%
+f, ax = plt.subplots(figsize=(30, 30))
+overview_electricity.plot.pie(ax=ax, fontsize=20)
+
+# %%
+f, ax = plt.subplots(figsize=(30, 30))
+overview_fossil_fuel.plot.pie(ax=ax, fontsize=20)
+
+# %%
+overview.to_csv(data_dir / "overview.csv")
 
 # %%
