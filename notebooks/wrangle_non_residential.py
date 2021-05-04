@@ -1,9 +1,14 @@
 # %%
 from pathlib import Path
 
+import camelot
 import geopandas as gpd
+from loguru import logger
 import numpy as np
 import pandas as pd
+from PyPDF2 import PdfFileReader
+import tabula
+
 
 from dublin_building_stock.non_residential import (
     load_uses_benchmarks,
@@ -197,4 +202,41 @@ epa_industrial_sites_extract.to_csv(
 )
 
 # %% [markdown]
-# # Combine VO Private with valid EPA sites
+# # Wrangle ETS & EPA Industrial Sites
+
+# %%
+epa_ets_dirpath = data_dir / "EPA-ETS"
+
+# %%
+with open(filepaths[0], "rb") as f:
+    reader = PdfFileReader(f)
+    page_total = reader.getNumPages()
+    all_contents = []
+    for page in range(page_total):
+        contents = reader.getPage(page).extractText().split("\n")
+        all_contents.append(contents)
+
+# %%
+total_emissions_by_pdf = []
+all_pdf_tables = []
+for filepath in epa_ets_dirpath.iterdir():
+    try:
+        pdf_document_tables = tabula.read_pdf(str(filepath))
+    except:
+        logger.error(f"PDF reading failed for {filepath}...")
+    # total_emissions_in_pdf = [
+    #     table.df
+    #     for table in pdf_document_tables
+    #     if table.df.apply(
+    #         lambda x: x.str.contains("Total Estimated Emissions", na=False)
+    #     )
+    # ]
+    all_pdf_tables.append([table for table in pdf_document_tables])
+    total_emissions_by_pdf.append(total_emissions_in_pdf)
+
+# %%
+epa_industrial_licenses = pd.read_html(data_dir / "epa_industrial_licenses.html")[
+    0
+].query("`Documents?` == 'Yes'")
+
+# %%
