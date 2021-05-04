@@ -10,6 +10,7 @@ dependencies:
   - geopandas
   - pandas
   - pandas-bokeh
+  - requests
 
   # dev dependencies
   - poetry
