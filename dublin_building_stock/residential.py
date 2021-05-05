@@ -5,6 +5,7 @@ import pandas as pd
 
 
 from dublin_building_stock.spatial_operations import get_geometries_within
+from dublin_building_stock.deap import calculate_heat_loss_parameter
 
 
 def _repeat_rows_on_column(df, on):
@@ -305,10 +306,7 @@ def create_dublin_ber_public(data_dir):
 
 
 def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
-    thermal_bridging_factor = 0.15
-    ventilation_heat_loss_constant = 0.33
-    effective_air_rate_change = 0.5
-    typical_floor_height = 2.5  # 200,000 / 280,000 Dublin HH are (2.4, 2.6]
+    heat_loss_parameter_cutoff = 2.3  # SEAI, Tech Advisor Role Heat Pumps 2020
     dublin_ber_private = (
         pd.read_csv(data_dir / "BER.09.06.2020.csv")
         .query("CountyName2.str.contains('DUBLIN')")
@@ -316,7 +314,6 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
             small_areas_2011_vs_2016,
             left_on="cso_small_area",
             right_on="SMALL_AREA_2016",
-            indicator=True,
         )  # Link 2016 SAs to 2011 SAs as best census data is 2011
         .assign(
             BERBand=lambda df: df["Energy Rating"].str[0],
@@ -380,35 +377,40 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
             .str.replace(r"[,'.]", "", regex=True)
             .str.capitalize(),
             SMALL_AREA_2011=lambda df: df["SMALL_AREA_2011"].astype(str),
-            thermal_bridging=lambda df: (
-                df["Roof Total Area"]
-                + df["total_floor_area"]
-                + df["Door Total Area"]
-                + df["Wall Total Area"]
-                + df["Windows Total Area"]
-            )
-            * thermal_bridging_factor,
-            heat_loss_via_plane_elements=lambda df: df["Wall Total Area"]
-            * df["Wall weighted Uvalue"]
-            + df["Roof Total Area"] * df["Roof Weighted Uvalue"]
-            + df["total_floor_area"] * df["Floor Weighted Uvalue"]
-            + df["Windows Total Area"] * df["WindowsWeighted Uvalue"]
-            + df["Door Total Area"] * df["Door Weighted Uvalue"],
-            fabric_heat_loss=lambda df: df["thermal_bridging"]
-            + df["heat_loss_via_plane_elements"],
-            building_volume=lambda df: df["total_floor_area"]
-            * df["No Of Storeys"]
-            * typical_floor_height,
-            ventilation_heat_loss=lambda df: df["building_volume"]
-            * ventilation_heat_loss_constant
-            * ventilation_heat_loss_constant,
-            heat_loss_coefficient=lambda df: df["fabric_heat_loss"]
-            + df["ventilation_heat_loss"],
-            heat_loss_parameter=lambda df: df["heat_loss_coefficient"]
-            / df["total_floor_area"],
-            heat_pump_ready=lambda df: pd.cut(
-                df["heat_loss_parameter"], bins=[0, 2.3, np.inf], labels=[True, False]
+            effective_air_rate_change=lambda df: df[
+                "Ventilation Method Description"
+            ].replace(
+                {
+                    "Natural vent.": 0.52,
+                    "Bal.whole mech.vent heat recvry": 0.7,
+                    "Pos input vent.- loft": 0.51,
+                    "Bal.whole mech.vent no heat recvry": 0.7,
+                    "Whole house extract vent.": 0.5,
+                    "Pos input vent.- outside": 0.5,
+                    None: 0.5,
+                }
             ),
+            heat_loss_parameter=lambda df: calculate_heat_loss_parameter(
+                roof_area=df["Roof Total Area"],
+                roof_uvalue=df["Roof Weighted Uvalue"],
+                wall_area=df["Wall Total Area"],
+                wall_uvalue=df["Wall weighted Uvalue"],
+                floor_area=df["Floor Total Area"],
+                floor_uvalue=df["Floor Weighted Uvalue"],
+                window_area=df["Windows Total Area"],
+                window_uvalue=df["WindowsWeighted Uvalue"],
+                door_area=df["Door Total Area"],
+                door_uvalue=df["Door Weighted Uvalue"],
+                total_floor_area=df["total_floor_area"],
+                thermal_bridging_factor=0.05,
+                effective_air_rate_change=df["effective_air_rate_change"],
+                no_of_storeys=df["No Of Storeys"],
+            ),
+            heat_pump_ready=lambda df: pd.cut(
+                df["heat_loss_parameter"],
+                bins=[0, heat_loss_parameter_cutoff, np.inf],
+                labels=[True, False],
+            ).astype("bool"),
         )
         .drop(columns=["cso_small_area", "geo_small_area"])
     )
@@ -440,26 +442,54 @@ def _infer_heat_pump_readiness(df):
     )
 
 
-def _infer_floor_area(df):
+def _infer_dimensions(df):
     return df.assign(
-        category_floor_area=lambda df: df.groupby(["EDNAME", "dwelling_type"])[
-            "total_floor_area"
-        ]
-        .apply(lambda x: x.fillna(x.mean()))
-        .round(),
         dwelling_type_floor_area=lambda df: df.groupby("dwelling_type")[
             "total_floor_area"
         ]
-        .apply(lambda x: x.fillna(x.mean()))
+        .apply(lambda x: x.fillna(x.median()))
         .round(),
-        inferred_floor_area=lambda df: df["total_floor_area"]
-        .fillna(df["category_floor_area"])
-        .fillna(df["dwelling_type_floor_area"]),
-    ).drop(
-        columns=[
-            "category_floor_area",
-            "dwelling_type_floor_area",
+        inferred_floor_area=lambda df: df["total_floor_area"].fillna(
+            df["dwelling_type_floor_area"]
+        ),
+        dwelling_type_roof_area=lambda df: df.groupby("dwelling_type")[
+            "Roof Total Area"
         ]
+        .apply(lambda x: x.fillna(x.median()))
+        .round(),
+        inferred_roof_area=lambda df: df["Roof Total Area"].fillna(
+            df["dwelling_type_roof_area"]
+        ),
+        dwelling_type_door_area=lambda df: df.groupby("dwelling_type")[
+            "Door Total Area"
+        ]
+        .apply(lambda x: x.fillna(x.median()))
+        .round(),
+        inferred_door_area=lambda df: df["Door Total Area"].fillna(
+            df["dwelling_type_door_area"]
+        ),
+        dwelling_type_wall_area=lambda df: df.groupby("dwelling_type")[
+            "Wall Total Area"
+        ]
+        .apply(lambda x: x.fillna(x.median()))
+        .round(),
+        inferred_wall_area=lambda df: df["Wall Total Area"].fillna(
+            df["dwelling_type_wall_area"]
+        ),
+        dwelling_type_window_area=lambda df: df.groupby("dwelling_type")[
+            "Windows Total Area"
+        ]
+        .apply(lambda x: x.fillna(x.median()))
+        .round(),
+        inferred_window_area=lambda df: df["Windows Total Area"].fillna(
+            df["dwelling_type_window_area"]
+        ),
+        dwelling_type_no_storeys=lambda df: df.groupby("dwelling_type")["No Of Storeys"]
+        .apply(lambda x: x.fillna(x.median()))
+        .round(),
+        inferred_no_storeys=lambda df: df["No Of Storeys"].fillna(
+            df["dwelling_type_no_storeys"]
+        ),
     )
 
 
@@ -544,14 +574,50 @@ def _infer_uvalues(df):
         inferred_uvalue_window=lambda df: df["WindowsWeighted Uvalue"].fillna(
             df["uvalue_window_estimated_on_period_built"]
         ),
+        uvalue_floor_estimated_on_period_built=lambda df: df["period_built"].replace(
+            {
+                "before 1919": 0.6,  # 0.5-1
+                "1919 - 1945": 0.6,  # 0.5-1
+                "1946 - 1960": 0.6,  # 0.5-1
+                "1961 - 1970": 0.6,  # 0.5-1
+                "1971 - 1980": 0.6,  # 0.5-1
+                "1981 - 1990": 0.6,  # 0.5-1
+                "1991 - 2000": 0.4,  # 0-0.6
+                "2001 - 2005": 0.3,  # 0-0.4
+                "2006 - 2010": 0.2,  # 0-0.5
+                "2011 or later": 0.1,  # 0-0.2
+                "not stated": 0.6,  # estimated
+            }
+        ),  # all < 1990 strong mode at 0.6
+        inferred_uvalue_floor=lambda df: df["Floor Weighted Uvalue"].fillna(
+            df["uvalue_floor_estimated_on_period_built"]
+        ),
+        uvalue_door_estimated_on_period_built=lambda df: df["period_built"].replace(
+            {
+                "before 1919": 0.6,  # 0.5-1
+                "1919 - 1945": 3,  # 0 & 3
+                "1946 - 1960": 3,  # 0 & 3
+                "1961 - 1970": 3,  # 0 & 3
+                "1971 - 1980": 3,  # 0 & 3
+                "1981 - 1990": 3,  # 0 & 3
+                "1991 - 2000": 3,  # 0 & 1.5 & 3
+                "2001 - 2005": 3,  # 0 & 1.5 & 3
+                "2006 - 2010": 3,  # 0 & 1.5 & 3
+                "2011 or later": 1.5,  # 0 & 1.5 & 3
+                "not stated": 3,  # estimated
+            }
+        ),  # all strong mode at 3 except >2011
+        inferred_uvalue_door=lambda df: df["Door Weighted Uvalue"].fillna(
+            df["uvalue_door_estimated_on_period_built"]
+        ),
     )
 
 
 def _infer_boiler_efficiencies(df):
     return df.assign(
-        sh_boiler_efficiency=lambda df: df["HSMainSystemEfficiency"].fillna(
-            df[["HSMainSystemEfficiency"]]
-            .query("HSMainSystemEfficiency<100")
+        inferred_boiler_efficiency=lambda df: df["HS Main System Efficiency"].fillna(
+            df[["HS Main System Efficiency"]]
+            .query("`HS Main System Efficiency` < 100")
             .squeeze()
             .round()
             .median()
@@ -559,26 +625,37 @@ def _infer_boiler_efficiencies(df):
     )
 
 
-def _estimate_annual_heat_demand(df):
-    assumed_typical_boiler_efficiency = 0.85
-    kwh_to_mwh_conversion_factor = 10 ** -3
+def _estimate_energy_kwh_per_m2_year(df):
+
     return df.assign(
-        energy_kwh_per_m2_year=lambda df: df["inferred_ber"]
+        energy_estimated_on_ber_band=lambda df: df["inferred_ber"]
         .replace(
             {
-                "A": 25,
-                "B": 100,
-                "C": 175,
-                "D": 240,
-                "E": 320,
-                "F": 380,
-                "G": 450,
-                "unknown": 240,
+                "A": 25,  # -inf-0.75
+                "B": 100,  # 75-150
+                "C": 180,  # 150-225
+                "D": 260,  # 225-300
+                "E": 330,  # 300-360
+                "F": 400,  # 360-460
+                "G": 500,  # 450-inf
+                "unknown": 260,
             }
         )
         .astype(np.int32),
-        heating_mwh_per_m2_year=lambda df: df["energy_kwh_per_m2_year"]
-        * assumed_typical_boiler_efficiency
+        inferred_energy_kwh_per_m2_year=lambda df: df["Energy Value"].fillna(
+            df["energy_estimated_on_ber_band"]
+        ),
+    )
+
+
+def _estimate_annual_heat_demand(df):
+    deap_energy_used_for_heating = 0.8  # Energy in the Residential Sector, SEAI 2018
+    typical_boiler_efficiency = 0.85
+    kwh_to_mwh_conversion_factor = 10 ** -3
+    return df.assign(
+        heating_mwh_per_m2_year=lambda df: df["inferred_energy_kwh_per_m2_year"]
+        * typical_boiler_efficiency
+        * deap_energy_used_for_heating
         * kwh_to_mwh_conversion_factor,
         heating_mwh_per_year=lambda df: df["heating_mwh_per_m2_year"]
         * df["inferred_floor_area"],
@@ -590,26 +667,30 @@ def create_latest_stock(
     census_2011_hh_indiv,
     dublin_ber_private,
 ):
-    ber_private_columns_to_keep = [
+    keep_columns = [
+        "SMALL_AREA",
         "SMALL_AREA_2011",
         "EDNAME",
         "dwelling_type",
         "period_built",
-        "Year of construction",
-        "category_id",
         "total_floor_area",
+        "Wall Total Area",
+        "Roof Total Area",
+        "Windows Total Area",
+        "Door Total Area",
+        "No Of Storeys",
         "BERBand",
-        "Energy Rating",
-        "heat_pump_ready",
-        "heat_loss_parameter",
-        "HS Main System Efficiency",
-        "WH Main System Eff",
+        "Floor Weighted Uvalue",
         "Wall weighted Uvalue",
         "Roof Weighted Uvalue",
         "WindowsWeighted Uvalue",
+        "Door Weighted Uvalue",
+        "HS Main System Efficiency",
+        "heat_pump_ready",
+        "Energy Value",
     ]
     dublin_indiv_hh_before_2011 = census_2011_hh_indiv.merge(
-        dublin_ber_private.loc[:, ber_private_columns_to_keep],
+        dublin_ber_private,
         left_on=["SMALL_AREA", "dwelling_type", "period_built", "category_id"],
         right_on=["SMALL_AREA_2011", "dwelling_type", "period_built", "category_id"],
         how="left",
@@ -617,10 +698,31 @@ def create_latest_stock(
         suffixes=["", "_BER"],
     )
 
-    dublin_indiv_hh_2011_or_later = dublin_ber_private.loc[
-        :, ber_private_columns_to_keep
-    ].query("`Year of construction` >= 2011")
+    dublin_indiv_hh_2011_or_later = dublin_ber_private.query(
+        "`Year of construction` >= 2011"
+    )
 
+    keep_columns = [
+        "is_from_ber_sample",
+        "EDNAME",
+        "SMALL_AREA",
+        "dwelling_type",
+        "period_built",
+        "inferred_ber",
+        "inferred_energy_kwh_per_m2_year",
+        "inferred_floor_area",
+        "inferred_wall_area",
+        "inferred_roof_area",
+        "inferred_window_area",
+        "inferred_door_area",
+        "inferred_no_storeys",
+        "inferred_uvalue_floor",
+        "inferred_uvalue_wall",
+        "inferred_uvalue_roof",
+        "inferred_uvalue_window",
+        "inferred_uvalue_door",
+        "inferred_boiler_efficiency",
+    ]
     dublin_indiv_hh = (
         pd.concat(
             [
@@ -629,20 +731,21 @@ def create_latest_stock(
             ]
         )
         .reset_index(drop=True)
-        .pipe(_infer_heat_pump_readiness)
-        .pipe(_infer_floor_area)
+        .pipe(_infer_dimensions)
         .pipe(_infer_ber_rating)
         .pipe(_infer_uvalues)
         .pipe(_infer_boiler_efficiencies)
-        .pipe(_estimate_annual_heat_demand)
+        .pipe(_estimate_energy_kwh_per_m2_year)
         .assign(
             SMALL_AREA=lambda df: df["SMALL_AREA"].fillna(
                 df["SMALL_AREA_2011"].astype(str)
             ),
             EDNAME=lambda df: df["EDNAME"].fillna(df["EDNAME_BER"]),
+            is_from_ber_sample=lambda df: df["CountyName2"].notnull(),
         )
+        .loc[:, keep_columns]
     )
-    dublin_indiv_hh.to_csv(data_dir / "dublin_indiv_hh.csv", index=False)
+    dublin_indiv_hh.to_parquet(data_dir / "dublin_indiv_hh.parquet")
 
 
 def anonymise_census_2011_hh_indiv_to_routing_key_boundaries(
