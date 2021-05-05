@@ -210,13 +210,12 @@ def create_census_2011_hh_indiv(data_dir, census_2011_small_area_hhs):
     census_2011_hh_indiv.to_parquet(data_dir / "census_2011_hh_indiv.parquet")
 
 
-def create_dublin_ber_public(data_dir):
-    thermal_bridging_factor = 0.15
-    ventilation_heat_loss_constant = 0.33
-    effective_air_rate_change = 0.5
-    typical_floor_height = 2.5  # 200,000 / 280,000 Dublin HH are (2.4, 2.6]
-    ber_public = dd.read_parquet(data_dir / "BERPublicsearch_parquet")
-    dublin_ber_public = (
+def create_dublin_ber_public(filepath):
+    ber_public = dd.read_parquet(filepath)
+    # 90% of GroundFloorHeight within (2.25, 2.75) in BER Public
+    assumed_floor_height = 2.5
+    heat_loss_parameter_cutoff = 2.3  # SEAI, Tech Advisor Role Heat Pumps 2020
+    return (
         ber_public[ber_public["CountyName"].str.contains("Dublin")]
         .compute()
         .assign(
@@ -265,49 +264,61 @@ def create_dublin_ber_public(data_dir):
                 }
             ),
             total_floor_area=lambda df: df["GroundFloorArea"]
-            + df["FirstFloorArea"]
-            + df["SecondFloorArea"]
-            + df["ThirdFloorArea"],
-            thermal_bridging=lambda df: (
-                df["RoofArea"]
-                + df["total_floor_area"]
-                + df["DoorArea"]
-                + df["WallArea"]
-                + df["WindowArea"]
+            + df["FirstFloorArea"].fillna(0)
+            + df["SecondFloorArea"].fillna(0)
+            + df["ThirdFloorArea"].fillna(0),
+            effective_air_rate_change=lambda df: df["VentilationMethod"]
+            .replace(
+                {
+                    "Natural vent.": 0.52,
+                    "Pos input vent.- loft": 0.51,
+                    "Pos input vent.- outside": 0.5,
+                    "Bal.whole mech.vent no heat re": 0.7,
+                    "Bal.whole mech.vent heat recvr": 0.7,
+                    "Whole house extract vent.": 0.5,
+                    None: 0.5,
+                }
             )
-            * thermal_bridging_factor,
-            heat_loss_via_plane_elements=lambda df: df["WallArea"] * df["UValueWall"]
-            + df["RoofArea"] * df["UValueRoof"]
-            + df["total_floor_area"] * df["UValueFloor"]
-            + df["WindowArea"] * df["UValueWindow"]
-            + df["DoorArea"] * df["UvalueDoor"],
-            fabric_heat_loss=lambda df: df["thermal_bridging"]
-            + df["heat_loss_via_plane_elements"],
-            building_volume=lambda df: df["GroundFloorArea"] * df["GroundFloorHeight"]
-            + df["FirstFloorArea"] * df["FirstFloorHeight"]
-            + df["SecondFloorArea"] * df["SecondFloorHeight"]
-            + df["ThirdFloorArea"] * df["ThirdFloorHeight"],
-            building_volume_approx=lambda df: df["total_floor_area"]
-            * df["NoStoreys"]
-            * typical_floor_height,
-            ventilation_heat_loss=lambda df: df["building_volume"]
-            * ventilation_heat_loss_constant
-            * ventilation_heat_loss_constant,
-            heat_loss_coefficient=lambda df: df["fabric_heat_loss"]
-            + df["ventilation_heat_loss"],
-            heat_loss_parameter=lambda df: df["heat_loss_coefficient"]
-            / df["total_floor_area"],
-            heat_pump_ready=lambda df: pd.cut(
-                df["heat_loss_parameter"], bins=[0, 2.3, np.inf], labels=[True, False]
+            .astype("float32"),
+            heat_loss_parameter=lambda df: calculate_heat_loss_parameter(
+                roof_area=df["RoofArea"],
+                roof_uvalue=df["UValueRoof"],
+                wall_area=df["WallArea"],
+                wall_uvalue=df["UValueWall"],
+                floor_area=df["FloorArea"],
+                floor_uvalue=df["UValueFloor"],
+                window_area=df["WindowArea"],
+                window_uvalue=df["UValueWindow"],
+                door_area=df["DoorArea"],
+                door_uvalue=df["UvalueDoor"],
+                total_floor_area=df["total_floor_area"],
+                thermal_bridging_factor=df["ThermalBridgingFactor"],
+                effective_air_rate_change=df["effective_air_rate_change"],
+                ground_floor_area=df["GroundFloorArea"],
+                ground_floor_height=df["GroundFloorHeight"],
+                first_floor_area=df["FirstFloorArea"],
+                first_floor_height=df["FirstFloorHeight"],
+                second_floor_area=df["SecondFloorArea"],
+                second_floor_height=df["SecondFloorHeight"],
+                third_floor_area=df["ThirdFloorArea"],
+                third_floor_height=df["ThirdFloorHeight"],
+                assumed_floor_height=assumed_floor_height,
             ),
+            heat_pump_ready=lambda df: pd.cut(
+                df["heat_loss_parameter"],
+                bins=[0, heat_loss_parameter_cutoff, np.inf],
+                labels=[True, False],
+            ).astype("bool"),
         )
     )
-    dublin_ber_public.to_parquet(data_dir / "dublin_ber_public.parquet")
 
 
 def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
     heat_loss_parameter_cutoff = 2.3  # SEAI, Tech Advisor Role Heat Pumps 2020
-    dublin_ber_private = (
+    thermal_bridging_factor = 0.15  # 87% of ThermalBridgingFactor in BER Public
+    # 90% of GroundFloorHeight within (2.25, 2.75) in BER Publiczz
+    assumed_floor_height = 2.5
+    return (
         pd.read_csv(data_dir / "BER.09.06.2020.csv")
         .query("CountyName2.str.contains('DUBLIN')")
         .merge(
@@ -377,9 +388,8 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
             .str.replace(r"[,'.]", "", regex=True)
             .str.capitalize(),
             SMALL_AREA_2011=lambda df: df["SMALL_AREA_2011"].astype(str),
-            effective_air_rate_change=lambda df: df[
-                "Ventilation Method Description"
-            ].replace(
+            effective_air_rate_change=lambda df: df["Ventilation Method Description"]
+            .replace(
                 {
                     "Natural vent.": 0.52,
                     "Bal.whole mech.vent heat recvry": 0.7,
@@ -389,7 +399,8 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
                     "Pos input vent.- outside": 0.5,
                     None: 0.5,
                 }
-            ),
+            )
+            .astype("float32"),
             heat_loss_parameter=lambda df: calculate_heat_loss_parameter(
                 roof_area=df["Roof Total Area"],
                 roof_uvalue=df["Roof Weighted Uvalue"],
@@ -402,9 +413,10 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
                 door_area=df["Door Total Area"],
                 door_uvalue=df["Door Weighted Uvalue"],
                 total_floor_area=df["total_floor_area"],
-                thermal_bridging_factor=0.05,
+                thermal_bridging_factor=thermal_bridging_factor,
                 effective_air_rate_change=df["effective_air_rate_change"],
                 no_of_storeys=df["No Of Storeys"],
+                assumed_floor_height=assumed_floor_height,
             ),
             heat_pump_ready=lambda df: pd.cut(
                 df["heat_loss_parameter"],
@@ -414,7 +426,6 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
         )
         .drop(columns=["cso_small_area", "geo_small_area"])
     )
-    dublin_ber_private.to_parquet(data_dir / "dublin_ber_private.parquet")
 
 
 def _infer_heat_pump_readiness(df):
