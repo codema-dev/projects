@@ -13,8 +13,6 @@ from dublin_building_stock.residential import (
     create_census_2016_hh_age_indiv,
     create_census_2016_hh_boilers,
     create_census_2016_hh_type,
-    create_dublin_ber_private,
-    create_dublin_ber_public,
     create_latest_stock,
 )
 from dublin_building_stock.spatial_operations import get_geometries_within
@@ -64,21 +62,15 @@ census_2011_small_area_hhs = pd.read_parquet(
 create_census_2011_hh_indiv(data_dir, census_2011_small_area_hhs)
 
 # %%
-create_dublin_ber_public(data_dir)
-
-# %%
-small_areas_2011_vs_2011 = pd.read_csv(data_dir / "small_areas_2011_vs_2011.csv")
-create_dublin_ber_private(data_dir, small_areas_2011_vs_2011)
-
-# %%
 census_2011_hh_indiv = pd.read_parquet(data_dir / "census_2011_hh_indiv.parquet")
+# see notebooks/wrangle_ber_private.py
 dublin_ber_private = pd.read_parquet(data_dir / "dublin_ber_private.parquet")
 
 # %%
 create_latest_stock(data_dir, census_2011_hh_indiv, dublin_ber_private)
 
 # %%
-dublin_indiv_hh = pd.read_csv(data_dir / "dublin_indiv_hh.csv", low_memory=False)
+dublin_indiv_hh = pd.read_parquet(data_dir / "dublin_indiv_hh.parquet")
 
 # %% [markdown]
 # Anonymise Census 2011 to share on Google Colab
@@ -128,25 +120,22 @@ dublin_ber_public = (
 )
 dublin_ber_public.to_csv(data_dir / "dublin_ber_public.csv", index=False)
 
-# %% [markdown]
-columns = [
-    "SMALL_AREA",
-    "period_built",
-    "inferred_floor_area",
-    "inferred_ber",
-    "energy_kwh_per_m2_year",
-]
-dublin_indiv_hh_streamlit = dublin_indiv_hh[columns].copy()
-
 # %%
-dublin_indiv_hh_streamlit = get_geometries_within(
-    dublin_small_area_boundaries_2011.merge(dublin_indiv_hh_streamlit),
+small_areas_2011_with_las = get_geometries_within(
+    dublin_small_area_boundaries_2011,
     dublin_municipality_boundaries.to_crs(epsg=2157),
-).drop(columns="geometry")
+).drop(columns="EDNAME")
 
 # %%
-dublin_indiv_hh_streamlit.to_csv(
-    data_dir / "streamlit_dublin_indiv_hh.csv", index=False
+dublin_indiv_hh_streamlit = (
+    dublin_indiv_hh.merge(small_areas_2011_with_las, on="SMALL_AREA")
+    .drop(columns="geometry")
+    .rename(columns={"COUNTYNAME": "local_authority"})
+)
+
+# %%
+dublin_indiv_hh_streamlit.to_parquet(
+    data_dir / "streamlit_dublin_indiv_hh.parquet",
 )
 
 # %%
