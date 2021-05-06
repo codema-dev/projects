@@ -6,6 +6,7 @@ import requests
 from loguru import logger
 from tqdm import tqdm
 from valuation_office_ireland.download import download_valuation_office_categories
+from berpublicsearch.download import download_berpublicsearch_parquet
 
 FilePath = Union[Path, str]
 logger.remove()
