@@ -42,7 +42,7 @@ download(
     filepath=data_dir / "SAPS2016_SA2017.csv",
 )
 # %%
-download_ber_public(
+download_ber_public_parquet(
     data_dir=data_dir,
     email_address="rowan.molony@codema.ie",
 )
