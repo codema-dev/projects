@@ -61,17 +61,6 @@ census_2011_small_area_hhs = pd.read_parquet(
 )
 create_census_2011_hh_indiv(data_dir, census_2011_small_area_hhs)
 
-# %%
-census_2011_hh_indiv = pd.read_parquet(data_dir / "census_2011_hh_indiv.parquet")
-# see notebooks/wrangle_ber_private.py
-dublin_ber_private = pd.read_parquet(data_dir / "dublin_ber_private.parquet")
-
-# %%
-create_latest_stock(data_dir, census_2011_hh_indiv, dublin_ber_private)
-
-# %%
-dublin_indiv_hh = pd.read_parquet(data_dir / "dublin_indiv_hh.parquet")
-
 # %% [markdown]
 # Anonymise Census 2011 to share on Google Colab
 census_2011_hh_indiv = pd.read_parquet(data_dir / "census_2011_hh_indiv.parquet")

@@ -380,13 +380,6 @@ def create_dublin_ber_private(data_dir, small_areas_2011_vs_2016):
             + df["First Floor Area"]
             + df["Second Floor Area"]
             + df["Third Floor Area"],
-            EDNAME=lambda df: df["EDNAME"]
-            .str.normalize("NFKD")
-            .str.encode("ascii", errors="ignore")
-            .str.decode("utf-8")
-            .str.replace(r"[-]", " ", regex=True)
-            .str.replace(r"[,'.]", "", regex=True)
-            .str.capitalize(),
             SMALL_AREA_2011=lambda df: df["SMALL_AREA_2011"].astype(str),
             effective_air_rate_change=lambda df: df["Ventilation Method Description"]
             .replace(
