@@ -1,5 +1,11 @@
 # %%
+from os import mkdir
 from pathlib import Path
+from urllib.request import urlretrieve
+
+from loguru import logger
+import pandas as pd
+from tqdm import tqdm
 
 from berpublicsearch.download import download_berpublicsearch_parquet
 from dublin_building_stock.download import (
@@ -53,4 +59,3 @@ download(
     url="https://www.autoaddress.ie/docs/default-source/default-document-library/routingkeys_mi_itm_2016_09_29.zip",
     filepath=data_dir / "routingkeys_mi_itm_2016_09_29.zip",
 )
-# %%
