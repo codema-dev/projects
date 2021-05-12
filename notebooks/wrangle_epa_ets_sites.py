@@ -65,7 +65,7 @@ epa_ets_listings.to_excel(data_dir / "epa_ets_sites.xlsx")
 epa_ets_listings_dublin = epa_ets_listings[epa_ets_listings["Address"].str.contains("Dublin")].query("Name != 'Aurivo Dairy Ingredients Ltd'")
 
 # Manually match EPA ETS sites to Valuation Office Locations
-with open(data_dir / "epa_ets_site_valuation_office_ids.json", "r") as file:
+with open(data_dir / "data/epa_ets_site_data.json.json", "r") as file:
     epa_ets_site_manual_data = json.load(file)
 
 epa_ets_site_valuation_office_id = {k: v["ID"] for k,v in epa_ets_site_manual_data.items()}
