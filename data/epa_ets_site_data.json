@@ -1,0 +1,212 @@
+{
+    "IE-GHG182-10506-1": {
+        "Name": "Alexion Pharma International",
+        "Use": "Laboratory",
+        "ID": 5008919,
+        "Latitude": 53.4092154,
+        "Longitude": -6.3791155
+    },
+    "IE-GHG171-10464-5": {
+        "Name": "Amazon Data Services Ire Ltd",
+        "Use": "Data Centre",
+        "ID": 300449,
+        "Latitude": 53.3937424,
+        "Longitude": -6.3769794
+    },
+    "IE-GHG172-10469-4": {
+        "Name": "Amazon Data Services Ire Ltd",
+        "Use": "Data Centre",
+        "ID": 477958,
+        "Latitude": 53.2938632,
+        "Longitude": -6.3497925
+    },
+    "IE-GHG173-10466-3": {
+        "Name": "Amazon Data Services Ire Ltd",
+        "Use": "Data Centre",
+        "ID": 733246,
+        "Latitude": 53.4003743,
+        "Longitude": -6.220572
+    },
+    "IE-GHG183-10507-4": {
+        "Name": "Amazon Data Services Ire Ltd",
+        "Use": "Data Centre",
+        "ID": 733248,
+        "Latitude": 53.4002689,
+        "Longitude": -6.2178586
+    },
+    "IE-GHG184-10508-4": {
+        "Name": "Amazon Data Services Ire Ltd",
+        "Use": "Data Centre",
+        "ID": 5015885,
+        "Latitude": 53.2948119,
+        "Longitude": -6.3670737
+    },
+    "IE-GHG197-10524-1": {
+        "Name": "Amazon Data Services Ire Ltd",
+        "Use": "Data Centre",
+        "ID": 2163445,
+        "Latitude": 53.4123088,
+        "Longitude": -6.3705077
+    },
+    "IE-GHG191-10517-2": {
+        "Name": "BT Communications Ireland Limited",
+        "Use": "Data Centre",
+        "ID": 0,
+        "Latitude": 53.2946376,
+        "Longitude": -6.4163372
+    },
+    "IE-GHG201-10528-1": {
+        "Name": "CyrusOne Irish Datacentres Holdings Limited",
+        "Use": "Data Centre",
+        "ID": 0,
+        "Latitude": 53.3159828,
+        "Longitude": -6.4521002
+    },
+    "IE-GHG024-10353-3": {
+        "Name": "Diageo Ireland",
+        "Use": "Brewery",
+        "ID": 854062,
+        "Latitude": 53.3432474,
+        "Longitude": -6.284157
+    },
+    "IE-GHG094-10395-7": {
+        "Name": "DAA Public Limited Company",
+        "Use": "Airport",
+        "ID": 0,
+        "Latitude": 53.4264481,
+        "Longitude": -6.2499098
+    },
+    "IE-GHG190-10516-1": {
+        "Name": "Digital Netherlands VIII B.V.",
+        "Use": "Data Centre",
+        "ID": 0,
+        "Latitude": 53.3280594,
+        "Longitude": -6.4363263
+    },
+    "IE-GHG186-10510-3": {
+        "Name": "EdgeConneX Ireland Limited",
+        "Use": "Data Centre",
+        "ID": 5015886,
+        "Latitude": 53.3281495,
+        "Longitude": -6.4529206
+    },
+    "IE-GHG192-10518-2": {
+        "Name": "Equinix (Ireland) Limited",
+        "Use": "Data Centre",
+        "ID": 2163452,
+        "Latitude": 53.4112159,
+        "Longitude": -6.3467703
+    },
+    "IE-GHG160-10425-2": {
+        "Name": "Electricity Supply Board",
+        "Use": "Generation Station",
+        "ID": 5015886,
+        "Latitude": 53.3281495,
+        "Longitude": -6.4529206
+    },
+    "IE-GHG152-10421-6": {
+        "Name": "Energia Power Generation Limited",
+        "Use": "Generation Station",
+        "ID": 2163452,
+        "Latitude": 53.4112159,
+        "Longitude": -6.3467703
+    },
+    "IE-GHG170-10431-4": {
+        "Name": "Google Ireland Limited",
+        "Use": "Data Centre",
+        "ID": 5009084,
+        "Latitude": 53.3159656,
+        "Longitude": -6.4613804
+    },
+    "IE-GHG019-10349-3": {
+        "Name": "Guerbet Ireland Unlimited Company",
+        "Use": "Laboratory",
+        "ID": 570300,
+        "Latitude": 53.4136147,
+        "Longitude": -6.4251118
+    },
+    "IE-GHG080-10388-4": {
+        "Name": "Huntstown Power Company Limited",
+        "Use": "Generation Station",
+        "ID": 2168461,
+        "Latitude": 53.4110295,
+        "Longitude": -6.3249369
+    },
+    "IE-GHG188-10512-3": {
+        "Name": "K2 Critical Facilities Management (Ire) Ltd",
+        "Use": "Data Centre",
+        "ID": 0,
+        "Latitude": 53.407172,
+        "Longitude": -6.3582609
+    }, 
+    "IE-GHG195-10522-1": {
+        "Name": "KDCR (Ireland) Limited",
+        "Use": "Data Centre",
+        "ID": 2164437,
+        "Latitude": 53.2915483,
+        "Longitude": -6.4151534
+    },
+    "IE-GHG196-10523-1": {
+        "Name": "KDCR (Ireland) 2 Limited",
+        "Use": "Data Centre",
+        "ID": 0,
+        "Latitude": 53.4070653,
+        "Longitude": -6.3737734
+    },
+    "IE-GHG179-10502-3": {
+        "Name": "Microsoft Ireland Operations Limited",
+        "Use": "Data Centre",
+        "ID": 0,
+        "Latitude": 53.3280594,
+        "Longitude": -6.4341376
+    },
+    "IE-GHG193-10519-1": {
+        "Name": "MSD International GmbH (t/a MSD Ireland -Biotech Dublin)",
+        "Use": "Laboratory",
+        "ID": 359268,
+        "Latitude": 53.4494776,
+        "Longitude": -6.2076251
+    },
+    "IE-GHG026-10355-3": {
+        "Name": "Pfizer Ireland Pharmaceuticals",
+        "Use": "Laboratory",
+        "ID": 2170886,
+        "Latitude": 53.3261499,
+        "Longitude": -6.4359968
+    },
+    "IE-GHG198-10525-1": {
+        "Name": "Swords Laboratories",
+        "Use": "Laboratory",
+        "ID": 2171054,
+        "Latitude": 53.3261499,
+        "Longitude": -6.4359968
+    },
+    "IE-GHG016-10346-4": {
+        "Name": "Synergen Power Limited",
+        "Use": "Generation Station",
+        "ID": 2171082,
+        "Latitude": 53.3398149,
+        "Longitude": -6.2055464
+    },
+    "IE-GHG041-10362-2": {
+        "Name": "St James's Hospital",
+        "Use": "Hospital",
+        "ID": 0,
+        "Latitude": 53.339302,
+        "Longitude": -6.2965131
+    },
+    "IE-GHG181-40505-1": {
+        "Name": "Vodafone Group Services Ireland",
+        "Use": "Data Centre",
+        "ID": 733246,
+        "Latitude": 53.4003743,
+        "Longitude": -6.220572
+    },
+    "IE-GHG176-10473-3": {
+        "Name": "Waspar Limited",
+        "Use": "Data Centre",
+        "ID": 0,
+        "Latitude": 53.4129594,
+        "Longitude": -6.3732116
+    }
+}
