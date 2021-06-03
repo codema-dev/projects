@@ -21,7 +21,7 @@ dublin_local_authorities = [
     "Dún Laoghaire-Rathdown",
 ]
 dublin_local_authority_boundaries = ireland_local_authority_boundaries.query(
-    f"COUNTYNAME in {dublin_municipalities}"
+    f"COUNTYNAME in {dublin_local_authorities}"
 )[["COUNTYNAME", "geometry"]]
 
 dublin_local_authority_boundaries.to_file(
