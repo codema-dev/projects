@@ -9,11 +9,15 @@ data_dir = Path("../data")
 
 
 dublin_boundary = gpd.read_file(data_dir / "dublin_boundary.geojson", driver="GeoJSON")
+
 dublin_routing_key_boundaries = gpd.read_file(
     data_dir / "dublin_routing_key_boundaries.geojson",
     driver="GeoJSON",
 )
 
+dublin_local_authority_boundaries = gpd.read_file(
+    data_dir / "dublin_local_authority_boundaries.geojson", driver="GeoJSON"
+).rename(columns={"COUNTYNAME": "local_authority"})
 
 use_columns = ["SMALL_AREA", "EDNAME", "geometry"]
 ireland_small_area_boundaries = gpd.read_file(
@@ -24,6 +28,7 @@ dublin_small_area_boundaries = (
     ireland_small_area_boundaries.to_crs(epsg=2157)
     .pipe(get_geometries_within, dublin_boundary.to_crs(epsg=2157))
     .pipe(get_geometries_within, dublin_routing_key_boundaries.to_crs(epsg=2157))
+    .pipe(get_geometries_within, dublin_local_authority_boundaries.to_crs(epsg=2157))
 )
 
 dublin_small_area_boundaries.to_file(
