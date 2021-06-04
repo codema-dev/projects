@@ -30,7 +30,10 @@ m_to_km = 1 / 1000
 dublin_small_area_boundaries = (
     ireland_small_area_boundaries.to_crs(epsg=2157)
     .pipe(get_geometries_within, dublin_boundary.to_crs(epsg=2157))
-    .pipe(get_geometries_within, dublin_routing_key_boundaries.to_crs(epsg=2157))
+    .pipe(
+        get_geometries_within,
+        dublin_routing_key_boundaries.drop(columns="local_authority").to_crs(epsg=2157),
+    )
     .pipe(get_geometries_within, dublin_local_authority_boundaries.to_crs(epsg=2157))
     .assign(
         distance_to_city_centre_in_km=lambda gdf: gdf.geometry.representative_point()
