@@ -1,4 +1,3 @@
-# %%
 from pathlib import Path
 
 import geopandas as gpd
@@ -14,7 +13,7 @@ def repeat_rows_on_column(df, on):
 
 
 dublin_small_area_boundaries_2011 = gpd.read_file(
-    data_dir / "Dublin_Census2011_Small_Areas_generalised20m"
+    data_dir / "dublin_small_area_boundaries_2011.geojson"
 )
 
 filepaths = [
@@ -51,7 +50,9 @@ census_2011_small_area_hhs = (
         ),
     )
     .merge(
-        dublin_small_area_boundaries_2011[["SMALL_AREA", "EDNAME"]],
+        dublin_small_area_boundaries_2011[
+            ["SMALL_AREA", "EDNAME", "distance_to_city_centre_in_km"]
+        ],
         how="outer",
     )
     .reset_index(drop=True)
@@ -70,4 +71,4 @@ census_2011_indiv_hhs = (
     )
 )
 
-census_2011_indiv_hhs.to_parquet(data_dir / "census_2011_indiv_hhs.csv")
+census_2011_indiv_hhs.to_parquet(data_dir / "census_2011_indiv_hhs.parquet")
