@@ -14,7 +14,7 @@ dublin_boundary = gpd.read_file(data_dir / "dublin_boundary.geojson", driver="Ge
 
 dublin_local_authority_boundaries = gpd.read_file(
     data_dir / "dublin_local_authority_boundaries.geojson", driver="GeoJSON"
-)
+).rename(columns={"COUNTYNAME": "local_authority"})
 
 dublin_routing_key_boundaries = (
     get_geometries_within(
@@ -23,7 +23,7 @@ dublin_routing_key_boundaries = (
     .assign(
         CountyName=lambda gdf: gdf["Descriptor"]
         .str.title()
-        .str.replace(r"^(?!Dublin \d+)(.*)$", "Co. Dublin", regex=True)
+        .str.replace(r"^(?!Dublin \d+)(.*)$", "Co. Dublin", regex=True),
     )
     .pipe(get_geometries_within, dublin_local_authority_boundaries.to_crs(epsg=2157))
 )
