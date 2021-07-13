@@ -1,0 +1,8 @@
+name: ireland-small-area-statistics
+channels:
+  - conda-forge
+dependencies:
+  - ipykernel
+  - pandas
+  - numpy
+  - prefect
