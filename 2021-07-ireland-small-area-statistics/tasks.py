@@ -89,7 +89,7 @@ def map_routing_keys_to_countyname(
     routing_key_boundaries: gpd.GeoDataFrame, counties: Dict[str, str]
 ) -> pd.DataFrame:
     return routing_key_boundaries.assign(
-        countyname=lambda df: df["Descriptor"].replace(counties)
+        countyname=lambda df: df["Descriptor"].map(counties)
     )
 
 

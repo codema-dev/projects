@@ -16,10 +16,10 @@ from prefect.engine.serializers import PandasSerializer
 
 import tasks
 
-
+HERE = Path(__name__).parent
 CONFIG = ConfigParser()
-CONFIG.read("config.ini")
-DATA_DIR = Path(__name__).parent / "data"
+CONFIG.read(HERE / "config.ini")
+DATA_DIR = HERE / "data"
 
 
 def main(config: ConfigParser = CONFIG, data_dir: Path = DATA_DIR):
@@ -37,10 +37,10 @@ def main(config: ConfigParser = CONFIG, data_dir: Path = DATA_DIR):
         "routing_key_boundaries": str(
             data_dir / config["filenames"]["routing_key_boundaries"]
         ),
-        "counties": str(data_dir.parent / "counties.json"),
-        "inferred_building_ages": str(
-            data_dir / config["filenames"]["inferred_building_ages_2016"]
+        "routing_key_descriptors_to_postcodes": str(
+            data_dir / "routing_key_descriptors_to_postcodes.json"
         ),
+        "building_ages": str(data_dir / "building_ages_2016.parquet"),
     }
 
     ## Transform functions into prefect tasks
@@ -53,9 +53,6 @@ def main(config: ConfigParser = CONFIG, data_dir: Path = DATA_DIR):
     )
     melt_small_area_statistics_to_individual_buildings = prefect.task(
         tasks.melt_small_area_statistics_to_individual_buildings,
-    )
-    replace_not_stated_period_built_with_mode = prefect.task(
-        tasks.replace_not_stated_period_built_with_mode,
     )
     map_routing_keys_to_countyname = prefect.task(tasks.map_routing_keys_to_countyname)
     link_small_areas_to_routing_keys = prefect.task(
@@ -79,6 +76,10 @@ def main(config: ConfigParser = CONFIG, data_dir: Path = DATA_DIR):
             url=config["urls"]["routing_key_boundaries"],
             filename=filepaths["routing_key_boundaries"],
         )
+        download_routing_key_descriptors_to_postcodes = download(
+            url=config["urls"]["routing_key_descriptors_to_postcodes"],
+            filename=filepaths["routing_key_descriptors_to_postcodes"],
+        )
 
         small_areas_statistics = read_csv(filepaths["small_area_statistics"])
         small_areas_building_ages = extract_period_built_statistics(
@@ -87,32 +88,35 @@ def main(config: ConfigParser = CONFIG, data_dir: Path = DATA_DIR):
         buildings_ages = melt_small_area_statistics_to_individual_buildings(
             small_areas_building_ages
         )
-        inferred_building_ages = replace_not_stated_period_built_with_mode(
-            buildings_ages
-        )
 
-        counties = read_json(filepaths["counties"])
+        routing_key_descriptors_to_postcodes = read_json(
+            filepaths["routing_key_descriptors_to_postcodes"]
+        )
         routing_key_boundaries = map_routing_keys_to_countyname(
-            read_shp(filepaths["routing_key_boundaries"]), counties
+            read_shp(filepaths["routing_key_boundaries"]),
+            routing_key_descriptors_to_postcodes,
         )
         small_area_boundaries = read_shp(filepaths["small_area_boundaries"])
         small_areas_in_routing_keys = link_small_areas_to_routing_keys(
             small_area_boundaries, routing_key_boundaries
         )
 
-        inferred_building_ages_in_countyname = merge(
-            left=inferred_building_ages, right=small_areas_in_routing_keys
+        building_ages_in_countyname = merge(
+            left=buildings_ages, right=small_areas_in_routing_keys
         )
 
         to_parquet(
-            inferred_building_ages_in_countyname,
-            path=filepaths["inferred_building_ages"],
+            building_ages_in_countyname,
+            path=filepaths["building_ages"],
         )
 
         ## Manually set dependencies where prefect can't infer run-order
         small_areas_statistics.set_upstream(download_small_areas_statistics)
         small_area_boundaries.set_upstream(download_small_area_boundaries)
         routing_key_boundaries.set_upstream(download_routing_key_boundaries)
+        routing_key_descriptors_to_postcodes.set_upstream(
+            download_routing_key_descriptors_to_postcodes
+        )
 
     ## Run flow!
     from prefect.utilities.debug import raise_on_exception
