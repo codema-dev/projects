@@ -1,14 +1,31 @@
+import json
 from pathlib import Path
 import re
+from shutil import unpack_archive
+from typing import Any
+from typing import Dict
 from urllib.request import urlretrieve
 
 import numpy as np
+import geopandas as gpd
 import pandas as pd
+from shapely import geometry
 
 
 def download(url: str, filename: str) -> None:
     if not Path(filename).exists():
         urlretrieve(url=url, filename=filename)
+
+
+def unzip(filename: str) -> None:
+    unzipped_filepath = Path(filename).with_suffix("")
+    if not Path(unzipped_filepath).exists():
+        unpack_archive(filename=filename, extract_dir=unzipped_filepath)
+
+
+def read_json(filename: str) -> Dict[str, Any]:
+    with open(filename, "r") as f:
+        return json.load(f)
 
 
 def _repeat_rows_on_column(df, on):
@@ -68,10 +85,27 @@ def replace_not_stated_period_built_with_mode(stock: pd.DataFrame) -> pd.Series:
     )
 
 
-def link_small_areas_to_countyname(
-    stock: pd.DataFrame, routing_keys: pd.DataFrame
+def map_routing_keys_to_countyname(
+    routing_key_boundaries: gpd.GeoDataFrame, counties: Dict[str, str]
 ) -> pd.DataFrame:
-    breakpoint()
+    return routing_key_boundaries.assign(
+        countyname=lambda df: df["Descriptor"].replace(counties)
+    )
+
+
+def link_small_areas_to_routing_keys(
+    small_area_boundaries: gpd.GeoDataFrame, routing_key_boundaries: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    representative_points = small_area_boundaries.assign(
+        geometry=lambda gdf: gdf.to_crs(epsg=2157).geometry.representative_point(),
+    )[["SMALL_AREA", "geometry"]].rename(columns={"SMALL_AREA": "small_area"})
+    small_areas_in_routing_keys = gpd.sjoin(
+        representative_points,
+        routing_key_boundaries.to_crs(epsg=2157),
+        op="within",
+        how="left",
+    )
+    return small_areas_in_routing_keys[["small_area", "countyname"]]
 
 
 def to_parquet(df: pd.DataFrame, path: str) -> None:
