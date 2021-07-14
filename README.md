@@ -1,18 +1,14 @@
-# dublin-building-stock
+# `codema-dev` projects
 
-A collection of notebooks used in wrangling Dublin energy-related data into a mappable format for codema-dev/dublin-energy-webmaps
+A collection of projects used to Extract, Transfrom & Load (ETL) various Irish energy-related datasets.
 
-## Installation
+## Running projects
 
-Clone a local copy
+Locally:
 ```bash
-git clone https://github.com/codema-dev/notebooks
+git clone https://github.com/codema-dev/projects
 ```
 
-> If you're using Windows use [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/) to avoid having to install any compilers (some of this repo's dependencies on are written in C)
+## Index
 
-```bash
-conda env create --file environment.yml
-pip install -e .
-```
-
+[2021-07-ireland-small-area-statistics/](2021-07-ireland-small-area-statistics/) - Link 2016 Census buildings to postcodes
