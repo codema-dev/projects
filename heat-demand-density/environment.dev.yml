@@ -1,0 +1,15 @@
+name: hdd
+channels:
+  - conda-forge
+dependencies:
+  # DAG
+  - prefect
+
+  # Filesystem
+  - fsspec
+
+  # Dev
+  - mypy
+  - black
+  - isort
+  - flake8
