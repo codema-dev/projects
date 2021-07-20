@@ -5,9 +5,12 @@ from typing import Any
 from typing import Dict
 
 import dotenv
+from fsspec.registry import filesystem
 
 dotenv.load_dotenv(".prefect")  # local local prefect configuration
 import prefect
+from prefect.engine import results
+from prefect.engine import serializers
 
 import tasks
 
@@ -18,10 +21,17 @@ DATA_DIR = HERE / "data"
 dotenv.load_dotenv()  # load s3 credentials
 
 
-def get_local_parquet_result(data_dir: Path) -> prefect.engine.results.LocalResult:
-    return prefect.engine.results.LocalResult(
+def get_json_result(data_dir: Path) -> results.LocalResult:
+    return results.LocalResult(
         dir=data_dir,
-        serializer=prefect.engine.serializers.PandasSerializer("parquet"),
+        serializer=serializers.JSONSerializer(),
+    )
+
+
+def get_parquet_result(data_dir: Path) -> results.LocalResult:
+    return results.LocalResult(
+        dir=data_dir,
+        serializer=serializers.PandasSerializer("parquet"),
     )
 
 
@@ -41,13 +51,19 @@ def estimate_heat_demand_density(
         tasks.load_valuation_office,
         target="raw_valuation_office.parquet",
         checkpoint=True,
-        result=get_local_parquet_result(data_dir / "interim"),
+        result=get_parquet_result(data_dir / "interim"),
     )
     load_bers = prefect.task(
         tasks.load_bers,
         target="small_area_bers.parquet",
         checkpoint=True,
-        result=get_local_parquet_result(data_dir / "external"),
+        result=get_parquet_result(data_dir / "external"),
+    )
+    load_benchmarks = prefect.task(
+        tasks.load_benchmark_uses,
+        target="benchmark_uses.json",
+        checkpoint=True,
+        result=get_json_result(data_dir / "external"),
     )
 
     with prefect.Flow("Estimate Heat Demand Density") as flow:
@@ -55,6 +71,9 @@ def estimate_heat_demand_density(
             urls=list(filepaths["valuation_office"].values()), filesystem_name="file"
         )
         bers = load_bers(url=config["bers"]["url"], filesystem_name="s3")
+        benchmarks = load_benchmarks(
+            url=config["benchmarks"]["url"], filesystem_name="s3"
+        )
 
     ## Run flow!
     from prefect.utilities.debug import raise_on_exception
