@@ -72,8 +72,13 @@ def estimate_heat_demand_density(
         result=get_parquet_result(data_dir / "external"),
     )
 
+    apply_benchmarks_to_valuation_office_floor_areas = prefect.task(
+        tasks.apply_benchmarks_to_valuation_office_floor_areas
+    )
+
     with prefect.Flow("Estimate Heat Demand Density") as flow:
-        raw_valuation_office = load_valuation_office(
+        # Extract
+        valuation_office = load_valuation_office(
             urls=list(filepaths["valuation_office"].values()), filesystem_name="file"
         )
         bers = load_bers(url=config["bers"]["url"], filesystem_name="s3")
@@ -82,6 +87,13 @@ def estimate_heat_demand_density(
         )
         benchmarks = load_benchmarks(
             url=config["benchmarks"]["url"], filesystem_name="s3"
+        )
+
+        # Transform
+        non_residential_demand = apply_benchmarks_to_valuation_office_floor_areas(
+            valuation_office=valuation_office,
+            benchmark_uses=benchmark_uses,
+            benchmarks=benchmarks,
         )
 
     ## Run flow!
