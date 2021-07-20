@@ -4,3 +4,5 @@ channels:
 dependencies:
   - prefect
   - fsspec
+  - odfpy
+  - openpyxl
