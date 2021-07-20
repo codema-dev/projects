@@ -32,3 +32,9 @@ def load_benchmark_uses(url: str, filesystem_name: str) -> pd.DataFrame:
         with fs.open(file, "r") as f:
             uses_grouped_by_category[name] = [line.rstrip() for line in f]
     return {i: k for k, v in uses_grouped_by_category.items() for i in v}
+
+
+def load_benchmarks(url: str, filesystem_name: str) -> pd.DataFrame:
+    fs = fsspec.filesystem(filesystem_name)
+    with fs.open(url) as f:
+        return pd.read_excel(f)

@@ -59,11 +59,17 @@ def estimate_heat_demand_density(
         checkpoint=True,
         result=get_parquet_result(data_dir / "external"),
     )
-    load_benchmarks = prefect.task(
+    load_benchmark_uses = prefect.task(
         tasks.load_benchmark_uses,
         target="benchmark_uses.json",
         checkpoint=True,
         result=get_json_result(data_dir / "external"),
+    )
+    load_benchmarks = prefect.task(
+        tasks.load_benchmarks,
+        target="benchmarks.parquet",
+        checkpoint=True,
+        result=get_parquet_result(data_dir / "external"),
     )
 
     with prefect.Flow("Estimate Heat Demand Density") as flow:
@@ -71,6 +77,9 @@ def estimate_heat_demand_density(
             urls=list(filepaths["valuation_office"].values()), filesystem_name="file"
         )
         bers = load_bers(url=config["bers"]["url"], filesystem_name="s3")
+        benchmark_uses = load_benchmark_uses(
+            url=config["benchmark_uses"]["url"], filesystem_name="s3"
+        )
         benchmarks = load_benchmarks(
             url=config["benchmarks"]["url"], filesystem_name="s3"
         )
