@@ -5,6 +5,7 @@ from typing import Callable
 from typing import List
 
 import fsspec
+import geopandas as gpd
 import pandas as pd
 
 
@@ -30,11 +31,17 @@ def read_excel(url: str, filesystem_name: str) -> pd.DataFrame:
         return pd.read_excel(f)
 
 
+def link_valuation_office_to_small_areas(
+    valuation_office: pd.DataFrame, small_area_boundaries: gpd.GeoDataFrame
+) -> pd.DataFrame:
+    pass
+
+
 def apply_benchmarks_to_valuation_office_floor_areas(
     valuation_office: pd.DataFrame,
     benchmark_uses: pd.DataFrame,
     benchmarks: pd.DataFrame,
-) -> pd.DataFrame:
+) -> pd.Series:
     valuation_office["use"] = valuation_office["Use1"].map(benchmark_uses)
     with_benchmarks = valuation_office.merge(
         benchmarks, left_on="use", right_on="Benchmark", how="left", indicator=True

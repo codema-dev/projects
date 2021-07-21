@@ -52,24 +52,35 @@ def estimate_heat_demand_density(
         target="raw_valuation_office.parquet",
         checkpoint=True,
         result=get_parquet_result(data_dir / "interim"),
+        name="Load Dublin Valuation Office",
     )
     load_bers = prefect.task(
         tasks.read_parquet,
         target="small_area_bers.parquet",
         checkpoint=True,
         result=get_parquet_result(data_dir / "external"),
+        name="Load Dublin Small Area BERs",
     )
     load_benchmark_uses = prefect.task(
         tasks.read_benchmark_uses,
         target="benchmark_uses.json",
         checkpoint=True,
         result=get_json_result(data_dir / "external"),
+        name="Load Valuation Office Benchmark Uses",
     )
     load_benchmarks = prefect.task(
         tasks.read_excel,
         target="benchmarks.parquet",
         checkpoint=True,
         result=get_parquet_result(data_dir / "external"),
+        name="Load Energy Benchmarks",
+    )
+    load_small_area_boundaries = prefect.task(
+        tasks.read_parquet,
+        target="small_area_boundaries.parquet",
+        checkpoint=True,
+        result=get_parquet_result(data_dir / "external"),
+        name="Load Dublin Small Area Boundaries",
     )
 
     apply_benchmarks_to_valuation_office_floor_areas = prefect.task(
@@ -87,6 +98,9 @@ def estimate_heat_demand_density(
         )
         benchmarks = load_benchmarks(
             url=config["benchmarks"]["url"], filesystem_name="s3"
+        )
+        small_area_boundaries = load_small_area_boundaries(
+            url=config["small_area_boundaries"]["url"], filesystem_name="s3"
         )
 
         # Transform
