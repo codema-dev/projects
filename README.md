@@ -11,4 +11,5 @@ git clone https://github.com/codema-dev/projects
 
 ## Index
 
-[2021-07-ireland-small-area-statistics/](2021-07-ireland-small-area-statistics/) - Link 2016 Census buildings to postcodes
+- [ireland-small-area-statistics/](ireland-small-area-statistics/) - Link 2016 Census buildings to postcodes
+- [heat-demand-density](heat-demand-density/) - Estimate Dublin Heat Demand Density to generate a District Heating Viability Map 
