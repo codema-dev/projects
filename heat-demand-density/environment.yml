@@ -1,4 +1,4 @@
-name: projects
+name: hdd
 channels:
   - conda-forge
 dependencies:
