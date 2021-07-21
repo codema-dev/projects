@@ -1,0 +1,8 @@
+name: projects
+channels:
+  - conda-forge
+dependencies:
+  - prefect
+  - fsspec
+  - odfpy
+  - openpyxl
