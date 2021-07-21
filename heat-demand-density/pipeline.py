@@ -123,6 +123,10 @@ def estimate_heat_demand_density(
         result=get_parquet_result(data_dir / "processed"),
         name="Convert Heat Demands from MWh/year to TJ/km2",
     )
+    map_demand = prefect.task(
+        tasks.map_demand,
+        name="Map Small Area Heat Demands",
+    )
 
     with prefect.Flow("Estimate Heat Demand Density") as flow:
         # Set Config
@@ -144,7 +148,7 @@ def estimate_heat_demand_density(
             url=config["local_authority_boundaries"]["url"]
         )
 
-        # Transform
+        # Estimate Demand
         valuation_office_map = link_valuation_office_to_small_areas(
             valuation_office=valuation_office,
             small_area_boundaries=small_area_boundaries,
@@ -162,9 +166,18 @@ def estimate_heat_demand_density(
         demand_tj_per_km2 = convert_from_mwh_per_y_to_tj_per_km2(
             demand=demand_mwh_per_y, small_area_boundaries=small_area_boundaries
         )
+
+        # Map Demand
         boundaries = link_small_areas_to_local_authorities(
             small_area_boundaries=small_area_boundaries,
             local_authority_boundaries=local_authority_boundaries,
+        )
+        map_demand(
+            demand=demand_tj_per_km2,
+            boundaries=boundaries,
+            filepath=data_dir
+            / "processed"
+            / "dublin_small_area_demand_tj_per_km2.geojson",
         )
 
     ## Run flow!

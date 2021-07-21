@@ -1,11 +1,5 @@
 from collections import defaultdict
-from configparser import ConfigParser
-from io import BytesIO
 from pathlib import Path
-from typing import Callable
-from typing import List
-from zipfile import ZipFile
-import zipfile
 
 import fsspec
 import geopandas as gpd
@@ -159,6 +153,9 @@ def convert_from_mwh_per_y_to_tj_per_km2(
 
 
 def map_demand(
-    demand: pd.DataFrame, small_area_boundaries: gpd.GeoDataFrame
-) -> gpd.GeoDataFrame:
-    pass
+    demand: pd.DataFrame, boundaries: gpd.GeoDataFrame, filepath: Path
+) -> None:
+    mapped_demands = boundaries.merge(
+        demand, left_on="small_area", right_index=True, how="left"
+    )
+    mapped_demands.to_file(filepath, driver="GeoJSON")
