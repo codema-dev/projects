@@ -56,6 +56,31 @@ def link_valuation_office_to_small_areas(
     ).drop(columns="index_right")
 
 
+def link_small_areas_to_local_authorities(
+    small_area_boundaries: gpd.GeoDataFrame,
+    local_authority_boundaries: gpd.GeoDataFrame,
+) -> gpd.GeoDataFrame:
+    small_area_points = small_area_boundaries.copy()
+    small_area_points[
+        "geometry"
+    ] = small_area_boundaries.geometry.representative_point()
+
+    # NOTE: fiona infers an incorrect encoding for the local authority boundaries
+    small_areas_in_local_authorities = (
+        gpd.sjoin(
+            small_area_points,
+            local_authority_boundaries[["COUNTYNAME", "geometry"]],
+            op="within",
+        )
+        .drop(columns="index_right")
+        .rename(columns={"COUNTYNAME": "local_authority"})
+        .assign(local_authority=lambda df: df["local_authority"].str.decode("latin-1"))
+    )
+    return small_area_boundaries.merge(
+        small_areas_in_local_authorities.drop(columns="geometry")
+    )
+
+
 def apply_benchmarks_to_valuation_office_floor_areas(
     valuation_office: pd.DataFrame,
     benchmark_uses: pd.DataFrame,
@@ -124,8 +149,16 @@ def convert_from_mwh_per_y_to_tj_per_km2(
     )
     mwh_to_tj = 0.0036
     demand_tj_per_y = (mwh_to_tj * demand).squeeze()
+    # TODO: resolve  erroneous small areas in demands upstream...
     return (
         (demand_tj_per_y / polygon_area_km2_by_small_area)
         .rename("heat_demand_tj_per_km2y")
         .to_frame()
+        .query("heat_demand_tj_per_km2y.notnull()")
     )
+
+
+def map_demand(
+    demand: pd.DataFrame, small_area_boundaries: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    pass

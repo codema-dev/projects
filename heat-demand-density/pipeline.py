@@ -90,6 +90,10 @@ def estimate_heat_demand_density(
         name="Load Dublin Local Authority Boundaries",
     )
 
+    link_small_areas_to_local_authorities = prefect.task(
+        tasks.link_small_areas_to_local_authorities,
+        name="Link Each Small Areas to their Corresponding Local Authority",
+    )
     apply_benchmarks_to_valuation_office_floor_areas = prefect.task(
         tasks.apply_benchmarks_to_valuation_office_floor_areas,
         name="Apply Energy Benchmarks to Valuation Office Floor Areas",
@@ -157,6 +161,10 @@ def estimate_heat_demand_density(
         )
         demand_tj_per_km2 = convert_from_mwh_per_y_to_tj_per_km2(
             demand=demand_mwh_per_y, small_area_boundaries=small_area_boundaries
+        )
+        boundaries = link_small_areas_to_local_authorities(
+            small_area_boundaries=small_area_boundaries,
+            local_authority_boundaries=local_authority_boundaries,
         )
 
     ## Run flow!
