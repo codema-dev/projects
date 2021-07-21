@@ -5,9 +5,12 @@ dependencies:
   # DAG
   - prefect
 
+  # Data Wrangling
+  - pandas
+  - geopandas
+
   # Filesystem
   - fsspec
-  - odfpy
   - openpyxl
 
   # Dev

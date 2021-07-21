@@ -2,7 +2,8 @@ name: projects
 channels:
   - conda-forge
 dependencies:
+  - pandas
+  - geopandas
   - prefect
   - fsspec
-  - odfpy
   - openpyxl
