@@ -101,3 +101,26 @@ def amalgamate_heat_demands_to_small_areas(
         .fillna(0)
     )
     return (residential_small_areas + non_residential_small_areas).to_frame()
+
+
+def convert_from_mwh_per_y_to_tj_per_km2(
+    demand: pd.DataFrame, small_area_boundaries: gpd.GeoDataFrame
+) -> pd.DataFrame:
+    index = demand.index
+    m2_to_km2 = 1e-6
+    small_area_boundaries["polygon_area_km2"] = (
+        small_area_boundaries.geometry.area * m2_to_km2
+    )
+    polygon_area_km2_by_small_area = (
+        small_area_boundaries[["small_area", "polygon_area_km2"]]
+        .set_index("small_area")
+        .squeeze()
+        .reindex(index)
+    )
+    mwh_to_tj = 0.0036
+    demand_tj_per_y = (mwh_to_tj * demand).squeeze()
+    return (
+        (demand_tj_per_y / polygon_area_km2_by_small_area)
+        .rename("heat_demand_tj_per_km2y")
+        .to_frame()
+    )

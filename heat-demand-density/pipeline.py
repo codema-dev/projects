@@ -114,6 +114,13 @@ def estimate_heat_demand_density(
         result=get_parquet_result(data_dir / "processed"),
         name="Amalgamate Heat Demands to Small Areas",
     )
+    convert_from_mwh_per_y_to_tj_per_km2 = prefect.task(
+        tasks.convert_from_mwh_per_y_to_tj_per_km2,
+        target="dublin_small_area_demand_tj_per_km2.parquet",
+        checkpoint=True,
+        result=get_parquet_result(data_dir / "processed"),
+        name="Convert Heat Demands from MWh/year to TJ/km2",
+    )
 
     with prefect.Flow("Estimate Heat Demand Density") as flow:
         # Set Config
@@ -150,6 +157,9 @@ def estimate_heat_demand_density(
         residential_demand = extract_residential_heat_demand(bers)
         demand_mwh_per_y = amalgamate_heat_demands_to_small_areas(
             residential=residential_demand, non_residential=non_residential_demand
+        )
+        demand_tj_per_km2 = convert_from_mwh_per_y_to_tj_per_km2(
+            demand=demand_mwh_per_y, small_area_boundaries=small_area_boundaries
         )
 
     ## Run flow!
