@@ -47,15 +47,6 @@ def get_geoparquet_result(data_dir: Path) -> results.LocalResult:
 def estimate_heat_demand_density(
     config: ConfigParser = CONFIG, data_dir: Path = DATA_DIR
 ):
-    filepaths: Dict[str, Any] = {
-        "valuation_office": {
-            "dcc": data_dir / "raw" / "dcc.ods",
-            "dlrcc": data_dir / "raw" / "dlrcc.ods",
-            "fcc": data_dir / "raw" / "fcc.ods",
-            "sdcc": data_dir / "raw" / "sdcc.ods",
-        },
-    }
-
     load_valuation_office = prefect.task(
         tasks.read_parquet,
         target="raw_valuation_office.parquet",
@@ -90,6 +81,13 @@ def estimate_heat_demand_density(
         checkpoint=True,
         result=get_geoparquet_result(data_dir / "external"),
         name="Load Dublin Small Area Boundaries",
+    )
+    load_local_authority_boundaries = prefect.task(
+        tasks.read_zipped_shp,
+        target="local_authority_boundaries.parquet",
+        checkpoint=True,
+        result=get_geoparquet_result(data_dir / "external"),
+        name="Load Dublin Local Authority Boundaries",
     )
 
     apply_benchmarks_to_valuation_office_floor_areas = prefect.task(
@@ -137,6 +135,9 @@ def estimate_heat_demand_density(
         benchmarks = load_benchmarks(url=config["benchmarks"]["url"])
         small_area_boundaries = load_small_area_boundaries(
             url=config["small_area_boundaries"]["url"]
+        )
+        local_authority_boundaries = load_local_authority_boundaries(
+            url=config["local_authority_boundaries"]["url"]
         )
 
         # Transform
