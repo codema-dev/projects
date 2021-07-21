@@ -13,6 +13,8 @@ from prefect.engine import results
 from prefect.engine import serializers
 
 import tasks
+from serializers import GeoPandasSerializer
+
 
 HERE = Path(__name__).parent
 CONFIG = ConfigParser()
@@ -32,6 +34,13 @@ def get_parquet_result(data_dir: Path) -> results.LocalResult:
     return results.LocalResult(
         dir=data_dir,
         serializer=serializers.PandasSerializer("parquet"),
+    )
+
+
+def get_geoparquet_result(data_dir: Path) -> results.LocalResult:
+    return results.LocalResult(
+        dir=data_dir,
+        serializer=GeoPandasSerializer("parquet"),
     )
 
 
@@ -76,16 +85,20 @@ def estimate_heat_demand_density(
         name="Load Energy Benchmarks",
     )
     load_small_area_boundaries = prefect.task(
-        tasks.read_parquet,
+        tasks.read_geoparquet,
         target="small_area_boundaries.parquet",
         checkpoint=True,
-        result=get_parquet_result(data_dir / "external"),
+        result=get_geoparquet_result(data_dir / "external"),
         name="Load Dublin Small Area Boundaries",
     )
 
     apply_benchmarks_to_valuation_office_floor_areas = prefect.task(
         tasks.apply_benchmarks_to_valuation_office_floor_areas,
-        name="Apply Energy Benchmarks to Valuation Office Floor Areas"
+        name="Apply Energy Benchmarks to Valuation Office Floor Areas",
+    )
+    link_valuation_office_to_small_areas = prefect.task(
+        tasks.link_valuation_office_to_small_areas,
+        name="Link Valuation Office to Small Area Boundaries",
     )
 
     with prefect.Flow("Estimate Heat Demand Density") as flow:
@@ -110,8 +123,12 @@ def estimate_heat_demand_density(
         )
 
         # Transform
-        non_residential_demand = apply_benchmarks_to_valuation_office_floor_areas(
+        valuation_office_map = link_valuation_office_to_small_areas(
             valuation_office=valuation_office,
+            small_area_boundaries=small_area_boundaries,
+        )
+        non_residential_demand = apply_benchmarks_to_valuation_office_floor_areas(
+            valuation_office=valuation_office_map,
             benchmark_uses=benchmark_uses,
             benchmarks=benchmarks,
             assumed_boiler_efficiency=assumed_boiler_efficiency,
