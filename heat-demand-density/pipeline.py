@@ -1,3 +1,5 @@
+import os
+
 import dotenv
 
 dotenv.load_dotenv(".prefect")  # load local prefect configuration prior to import!
@@ -9,6 +11,7 @@ import tasks
 
 
 dotenv.load_dotenv()  # load s3 credentials
+tasks.check_if_s3_keys_are_defined()
 
 with prefect.Flow("Estimate Heat Demand Density") as flow:
     # Set CONFIG

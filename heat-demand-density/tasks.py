@@ -1,3 +1,4 @@
+from os import getenv
 from pathlib import Path
 
 import prefect
@@ -5,8 +6,25 @@ from prefect.engine import results
 from prefect.engine import serializers
 
 import functions
+from globals import BASE_DIR
 from globals import DATA_DIR
 from serializers import GeoPandasSerializer
+
+
+def check_if_s3_keys_are_defined() -> None:
+    message = f"""
+
+        Please create a .env file
+        
+        In this directory: {BASE_DIR.resolve()}
+
+        With the following contents:
+        
+        AWS_ACCESS_KEY_ID=YOUR_KEY
+        AWS_SECRET_ACCESS_KEY=YOUR_SECRET_KEY
+    """
+    assert getenv("AWS_ACCESS_KEY_ID") is not None, message
+    assert getenv("AWS_SECRET_ACCESS_KEY") is not None, message
 
 
 def get_json_result(data_dir: Path) -> results.LocalResult:
