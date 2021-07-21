@@ -74,3 +74,14 @@ def apply_benchmarks_to_valuation_office_floor_areas(
         + industrial_heat_demand_kwh_per_y.fillna(0)
     ) * kwh_to_mwh
     return with_benchmarks[["small_area", "heat_demand_mwh_per_y"]]
+
+
+def extract_residential_heat_demand(bers: pd.DataFrame) -> pd.Series:
+    kwh_to_mwh = 1e-3
+    bers["heat_demand_mwh_per_y"] = (
+        bers["main_sh_demand"]
+        + bers["suppl_sh_demand"]
+        + bers["main_hw_demand"]
+        + bers["suppl_hw_demand"]
+    ) * kwh_to_mwh
+    return bers[["small_area", "heat_demand_mwh_per_y"]]
