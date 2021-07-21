@@ -8,23 +8,13 @@ import fsspec
 import pandas as pd
 
 
-def load_valuation_office(urls: List[Path], filesystem_name: str) -> pd.DataFrame:
-    dfs: List[pd.DataFrame] = []
-    fs = fsspec.filesystem(filesystem_name)
-    for url in urls:
-        with fs.open(url) as f:
-            df = pd.read_excel(url)
-        dfs.append(df)
-    return pd.concat(dfs).reset_index(drop=True)
-
-
-def load_bers(url: str, filesystem_name: str) -> pd.DataFrame:
+def read_parquet(url: str, filesystem_name: str) -> pd.DataFrame:
     fs = fsspec.filesystem(filesystem_name)
     with fs.open(url) as f:
         return pd.read_parquet(url)
 
 
-def load_benchmark_uses(url: str, filesystem_name: str) -> pd.DataFrame:
+def read_benchmark_uses(url: str, filesystem_name: str) -> pd.DataFrame:
     fs = fsspec.filesystem(filesystem_name)
     uses_grouped_by_category = defaultdict()
     for file in fs.glob(url + "/*.txt"):
@@ -34,7 +24,7 @@ def load_benchmark_uses(url: str, filesystem_name: str) -> pd.DataFrame:
     return {i: k for k, v in uses_grouped_by_category.items() for i in v}
 
 
-def load_benchmarks(url: str, filesystem_name: str) -> pd.DataFrame:
+def read_excel(url: str, filesystem_name: str) -> pd.DataFrame:
     fs = fsspec.filesystem(filesystem_name)
     with fs.open(url) as f:
         return pd.read_excel(f)
