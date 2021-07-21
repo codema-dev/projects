@@ -85,3 +85,19 @@ def extract_residential_heat_demand(bers: pd.DataFrame) -> pd.Series:
         + bers["suppl_hw_demand"]
     ) * kwh_to_mwh
     return bers[["small_area", "heat_demand_mwh_per_y"]]
+
+
+def amalgamate_heat_demands_to_small_areas(
+    residential: pd.DataFrame, non_residential: pd.DataFrame
+) -> pd.DataFrame:
+    residential_small_areas = residential.groupby("small_area")[
+        "heat_demand_mwh_per_y"
+    ].sum()
+    index = residential_small_areas.index
+    non_residential_small_areas = (
+        non_residential.groupby("small_area")["heat_demand_mwh_per_y"]
+        .sum()
+        .reindex(index)
+        .fillna(0)
+    )
+    return (residential_small_areas + non_residential_small_areas).to_frame()

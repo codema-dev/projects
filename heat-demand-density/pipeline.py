@@ -107,6 +107,13 @@ def estimate_heat_demand_density(
         tasks.extract_residential_heat_demand,
         name="Extract DEAP Residential Heat Demand",
     )
+    amalgamate_heat_demands_to_small_areas = prefect.task(
+        tasks.amalgamate_heat_demands_to_small_areas,
+        target="dublin_small_area_demand_mwh_per_y.parquet",
+        checkpoint=True,
+        result=get_parquet_result(data_dir / "processed"),
+        name="Amalgamate Heat Demands to Small Areas",
+    )
 
     with prefect.Flow("Estimate Heat Demand Density") as flow:
         # Set Config
@@ -141,6 +148,9 @@ def estimate_heat_demand_density(
             assumed_boiler_efficiency=assumed_boiler_efficiency,
         )
         residential_demand = extract_residential_heat_demand(bers)
+        demand_mwh_per_y = amalgamate_heat_demands_to_small_areas(
+            residential=residential_demand, non_residential=non_residential_demand
+        )
 
     ## Run flow!
     from prefect.utilities.debug import raise_on_exception
