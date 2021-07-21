@@ -129,18 +129,14 @@ def estimate_heat_demand_density(
         )
 
         # Extract
-        valuation_office = load_valuation_office(
-            url=config["valuation_office"]["url"], filesystem_name="s3"
-        )
-        bers = load_bers(url=config["bers"]["url"], filesystem_name="s3")
+        valuation_office = load_valuation_office(url=config["valuation_office"]["url"])
+        bers = load_bers(url=config["bers"]["url"])
         benchmark_uses = load_benchmark_uses(
             url=config["benchmark_uses"]["url"], filesystem_name="s3"
         )
-        benchmarks = load_benchmarks(
-            url=config["benchmarks"]["url"], filesystem_name="s3"
-        )
+        benchmarks = load_benchmarks(url=config["benchmarks"]["url"])
         small_area_boundaries = load_small_area_boundaries(
-            url=config["small_area_boundaries"]["url"], filesystem_name="s3"
+            url=config["small_area_boundaries"]["url"]
         )
 
         # Transform

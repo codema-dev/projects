@@ -3,22 +3,31 @@ from configparser import ConfigParser
 from pathlib import Path
 from typing import Callable
 from typing import List
+from zipfile import ZipFile
 
 import fsspec
 import geopandas as gpd
 import pandas as pd
 
 
-def read_parquet(url: str, filesystem_name: str) -> pd.DataFrame:
-    fs = fsspec.filesystem(filesystem_name)
-    with fs.open(url) as f:
-        return pd.read_parquet(url)
+def read_excel(url: str) -> pd.DataFrame:
+    with fsspec.open(url) as f:
+        return pd.read_excel(f)
 
 
-def read_geoparquet(url: str, filesystem_name: str) -> pd.DataFrame:
-    fs = fsspec.filesystem(filesystem_name)
-    with fs.open(url) as f:
-        return gpd.read_parquet(url)
+def read_parquet(url: str) -> pd.DataFrame:
+    with fsspec.open(url) as f:
+        return pd.read_parquet(f)
+
+
+def read_geoparquet(url: str) -> pd.DataFrame:
+    with fsspec.open(url) as f:
+        return gpd.read_parquet(f)
+
+
+def read_zipped_shp(url: str) -> pd.DataFrame:
+    with fsspec.open(url) as f:
+        return gpd.read_file(f)
 
 
 def read_benchmark_uses(url: str, filesystem_name: str) -> pd.DataFrame:
@@ -29,12 +38,6 @@ def read_benchmark_uses(url: str, filesystem_name: str) -> pd.DataFrame:
         with fs.open(file, "r") as f:
             uses_grouped_by_category[name] = [line.rstrip() for line in f]
     return {i: k for k, v in uses_grouped_by_category.items() for i in v}
-
-
-def read_excel(url: str, filesystem_name: str) -> pd.DataFrame:
-    fs = fsspec.filesystem(filesystem_name)
-    with fs.open(url) as f:
-        return pd.read_excel(f)
 
 
 def link_valuation_office_to_small_areas(
