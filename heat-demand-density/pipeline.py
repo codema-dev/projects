@@ -60,7 +60,7 @@ def estimate_heat_demand_density(
         tasks.read_parquet,
         target="raw_valuation_office.parquet",
         checkpoint=True,
-        result=get_parquet_result(data_dir / "interim"),
+        result=get_parquet_result(data_dir / "external"),
         name="Load Dublin Valuation Office",
     )
     load_bers = prefect.task(

@@ -15,6 +15,12 @@ def read_parquet(url: str, filesystem_name: str) -> pd.DataFrame:
         return pd.read_parquet(url)
 
 
+def read_geoparquet(url: str, filesystem_name: str) -> pd.DataFrame:
+    fs = fsspec.filesystem(filesystem_name)
+    with fs.open(url) as f:
+        return gpd.read_parquet(url)
+
+
 def read_benchmark_uses(url: str, filesystem_name: str) -> pd.DataFrame:
     fs = fsspec.filesystem(filesystem_name)
     uses_grouped_by_category = defaultdict()
@@ -34,7 +40,15 @@ def read_excel(url: str, filesystem_name: str) -> pd.DataFrame:
 def link_valuation_office_to_small_areas(
     valuation_office: pd.DataFrame, small_area_boundaries: gpd.GeoDataFrame
 ) -> pd.DataFrame:
-    pass
+    valuation_office_map = gpd.GeoDataFrame(
+        valuation_office,
+        geometry=gpd.points_from_xy(
+            x=valuation_office["X_ITM"], y=valuation_office["Y_ITM"], crs="EPSG:2157"
+        ),
+    )
+    return gpd.sjoin(
+        valuation_office_map, small_area_boundaries.to_crs(epsg=2157), op="within"
+    ).drop(columns="index_right")
 
 
 def apply_benchmarks_to_valuation_office_floor_areas(
@@ -59,4 +73,4 @@ def apply_benchmarks_to_valuation_office_floor_areas(
         non_industrial_heat_demand_kwh_per_y.fillna(0)
         + industrial_heat_demand_kwh_per_y.fillna(0)
     ) * kwh_to_mwh
-    return with_benchmarks[["PropertyNo", "Use1", "Benchmark", "heat_demand_mwh_per_y"]]
+    return with_benchmarks[["small_area", "heat_demand_mwh_per_y"]]
