@@ -41,12 +41,12 @@ def apply_benchmarks_to_valuation_office_floor_areas(
     valuation_office: pd.DataFrame,
     benchmark_uses: pd.DataFrame,
     benchmarks: pd.DataFrame,
+    assumed_boiler_efficiency: float,
 ) -> pd.Series:
     valuation_office["use"] = valuation_office["Use1"].map(benchmark_uses)
     with_benchmarks = valuation_office.merge(
         benchmarks, left_on="use", right_on="Benchmark", how="left", indicator=True
     )
-    assumed_boiler_efficiency = 0.9
     non_industrial_heat_demand_kwh_per_y = (
         with_benchmarks["Typical fossil fuel [kWh/m²y]"] * with_benchmarks["Total_SQM"]
     ) / assumed_boiler_efficiency

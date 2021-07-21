@@ -84,10 +84,16 @@ def estimate_heat_demand_density(
     )
 
     apply_benchmarks_to_valuation_office_floor_areas = prefect.task(
-        tasks.apply_benchmarks_to_valuation_office_floor_areas
+        tasks.apply_benchmarks_to_valuation_office_floor_areas,
+        name="Apply Energy Benchmarks to Valuation Office Floor Areas"
     )
 
     with prefect.Flow("Estimate Heat Demand Density") as flow:
+        # Set Config
+        assumed_boiler_efficiency = prefect.Parameter(
+            "Assumed Boiler Efficiency", default=0.9
+        )
+
         # Extract
         valuation_office = load_valuation_office(
             url=config["valuation_office"]["url"], filesystem_name="s3"
@@ -108,6 +114,7 @@ def estimate_heat_demand_density(
             valuation_office=valuation_office,
             benchmark_uses=benchmark_uses,
             benchmarks=benchmarks,
+            assumed_boiler_efficiency=assumed_boiler_efficiency,
         )
 
     ## Run flow!
