@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -13,15 +15,16 @@ pandas_bokeh.output_notebook()
 # overwrite parameters with arguemnts generated in prefect pipeline
 
 # + tags=["parameters"]
-SAVE_PLOTS = True
-DATA_DIR = DATA_DIR
+SAVE_PLOTS: bool = True
+DATA_DIR: str = DATA_DIR
+demand_map_filepath: str = (
+    DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson"
+)
 # -
 
 ## Load
 
-demand_map = gpd.read_file(
-    DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson"
-)
+demand_map = gpd.read_file(demand_map_filepath)
 
 ## Categorise demands
 
@@ -65,7 +68,7 @@ for local_authority in demand_map["local_authority"].unique():
     """
     if SAVE_PLOTS:
         filename = local_authority + " Heat Demand Density.html"
-        pandas_bokeh.output_file(DATA_DIR / "maps" / filename)
+        pandas_bokeh.output_file(Path(DATA_DIR) / "maps" / filename)
     figure = demand_map.query("local_authority == @local_authority").plot_bokeh(
         figsize=(700, 900),
         category="category",

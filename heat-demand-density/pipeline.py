@@ -12,6 +12,19 @@ import tasks
 dotenv.load_dotenv()  # load s3 credentials
 tasks.check_if_s3_keys_are_defined()
 
+filepaths = {
+    "data": {
+        "demand_map": DATA_DIR
+        / "processed"
+        / "dublin_small_area_demand_tj_per_km2.geojson",
+    },
+    "pynb": {
+        "demand_map": BASE_DIR / "notebooks" / "map_heat_demand_densities.py",
+    },
+    "ipynb": {"demand_map": DATA_DIR / "notebooks" / "map_heat_demand_densities.ipynb"},
+}
+
+
 with prefect.Flow("Estimate Heat Demand Density") as flow:
     # Set CONFIG
     assumed_boiler_efficiency = prefect.Parameter(
@@ -69,17 +82,22 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
     # Plot
     save_demand_map = tasks.save_demand_map(
         demand_map=demand_map,
-        filepath=DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson",
+        filepath=filepaths["data"]["demand_map"],
     )
     convert_heat_demand_density_plotting_script_to_ipynb = (
         tasks.convert_heat_demand_density_plotting_script_to_ipynb(
-            input_filepath=BASE_DIR / "map.py",
-            output_filepath=DATA_DIR / "notebooks" / "map.ipynb",
+            input_filepath=filepaths["pynb"]["demand_map"],
+            output_filepath=filepaths["ipynb"]["demand_map"],
             fmt="py:light",
         )
     )
     execute_hdd_plot_ipynb = tasks.execute_hdd_plot_ipynb(
-        path=DATA_DIR / "notebooks" / "map.ipynb",
+        path=filepaths["ipynb"]["demand_map"],
+        parameters={
+            "SAVE_PLOTS": True,
+            "DATA_DIR": str(DATA_DIR),
+            "demand_map_filepath": str(filepaths["data"]["demand_map"]),
+        },
     )
 
     # Manually set dependencies where no inputs are passed between tasks
