@@ -111,6 +111,13 @@ def extract_residential_heat_demand(bers: pd.DataFrame) -> pd.Series:
     return bers[["small_area", "heat_demand_mwh_per_y"]]
 
 
+def drop_small_areas_not_in_boundaries(
+    bers: pd.DataFrame, small_area_boundaries: gpd.GeoDataFrame
+) -> pd.DataFrame:
+    small_areas = small_area_boundaries["small_area"].to_numpy()
+    return bers.query("small_area in @small_areas")
+
+
 def amalgamate_heat_demands_to_small_areas(
     residential: pd.DataFrame, non_residential: pd.DataFrame
 ) -> pd.DataFrame:

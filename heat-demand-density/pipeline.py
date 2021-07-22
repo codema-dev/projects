@@ -23,7 +23,7 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
     valuation_office = tasks.load_valuation_office(
         url=CONFIG["valuation_office"]["url"]
     )
-    bers = tasks.load_bers(url=CONFIG["bers"]["url"])
+    raw_bers = tasks.load_bers(url=CONFIG["bers"]["url"])
     benchmark_uses = tasks.load_benchmark_uses(
         url=CONFIG["benchmark_uses"]["url"], filesystem_name="s3"
     )
@@ -46,7 +46,10 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
         benchmarks=benchmarks,
         assumed_boiler_efficiency=assumed_boiler_efficiency,
     )
-    residential_demand = tasks.extract_residential_heat_demand(bers)
+    clean_bers = tasks.drop_small_areas_not_in_boundaries(
+        bers=raw_bers, small_area_boundaries=small_area_boundaries
+    )
+    residential_demand = tasks.extract_residential_heat_demand(raw_bers)
     demand_mwh_per_y = tasks.amalgamate_heat_demands_to_small_areas(
         residential=residential_demand, non_residential=non_residential_demand
     )

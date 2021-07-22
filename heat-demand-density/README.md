@@ -26,7 +26,7 @@ Via [conda](https://github.com/conda-forge/miniforge):
 conda env create --file environment.yml
 conda activate hdd
 ```
-
+gi
 - Development
 ```
 conda env create --file environment.dev.yml

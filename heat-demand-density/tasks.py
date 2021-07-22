@@ -114,6 +114,10 @@ link_valuation_office_to_small_areas = prefect.task(
     name="Link Valuation Office to Small Area Boundaries",
 )
 
+drop_small_areas_not_in_boundaries = prefect.task(
+    functions.drop_small_areas_not_in_boundaries, name="Drop Invalid Small Areas"
+)
+
 extract_residential_heat_demand = prefect.task(
     functions.extract_residential_heat_demand,
     name="Extract DEAP Residential Heat Demand",
@@ -123,7 +127,7 @@ amalgamate_heat_demands_to_small_areas = prefect.task(
     functions.amalgamate_heat_demands_to_small_areas,
     target="dublin_small_area_demand_mwh_per_y.parquet",
     checkpoint=True,
-    result=get_parquet_result("{parameters['data_dir']}/processed"),
+    result=get_parquet_result(DATA_DIR / "processed"),
     name="Amalgamate Heat Demands to Small Areas",
 )
 
