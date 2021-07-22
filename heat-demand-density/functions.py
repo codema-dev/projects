@@ -157,7 +157,7 @@ def convert_from_mwh_per_y_to_tj_per_km2(
     demand_tj_per_y = mwh_to_tj * demand
     return (
         demand_tj_per_y.divide(polygon_area_km2_by_small_area, axis="rows")
-        .rename(columns=lambda x: x.replace("_mwh_per_y", "_tj_per_mk2y"))
+        .rename(columns=lambda x: x.replace("_mwh_per_y", "_tj_per_km2y"))
         .assign(total_heat_demand_tj_per_km2y=lambda df: df.sum(axis="columns"))
     )
 

@@ -57,7 +57,7 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
         demand=demand_mwh_per_y, small_area_boundaries=small_area_boundaries
     )
 
-    # Map Demand
+    # Convert to Map
     boundaries = tasks.link_small_areas_to_local_authorities(
         small_area_boundaries=small_area_boundaries,
         local_authority_boundaries=local_authority_boundaries,
@@ -66,6 +66,8 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
         demands=demand_tj_per_km2,
         boundaries=boundaries,
     )
+
+    # Plot
     tasks.save_demand_map(
         demand_map=demand_map,
         filepath=DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson",

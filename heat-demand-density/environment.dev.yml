@@ -1,6 +1,7 @@
 name: hdd
 channels:
   - conda-forge
+  - patrikhlobil 
 dependencies:
   # DAG
   - prefect
@@ -12,6 +13,9 @@ dependencies:
   # Filesystem
   - fsspec
   - openpyxl
+
+  # Plotting
+  - pandas-bokeh
 
   # Dev
   - mypy

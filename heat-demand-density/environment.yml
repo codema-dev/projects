@@ -1,8 +1,11 @@
 name: hdd
 channels:
   - conda-forge
+  - patrikhlobil
 dependencies:
+  - python
   - pandas
+  - pandas-bokeh
   - geopandas
   - prefect
   - fsspec
