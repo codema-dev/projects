@@ -1,10 +1,9 @@
-import os
-
 import dotenv
 
 dotenv.load_dotenv(".prefect")  # load local prefect configuration prior to import!
 import prefect
 
+from globals import BASE_DIR
 from globals import CONFIG
 from globals import DATA_DIR
 import tasks
@@ -68,10 +67,25 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
     )
 
     # Plot
-    tasks.save_demand_map(
+    save_demand_map = tasks.save_demand_map(
         demand_map=demand_map,
         filepath=DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson",
     )
+    convert_heat_demand_density_plotting_script_to_ipynb = (
+        tasks.convert_heat_demand_density_plotting_script_to_ipynb(
+            input_filepath=BASE_DIR / "map.py",
+            output_filepath=DATA_DIR / "notebooks" / "map.ipynb",
+            fmt="py:light",
+        )
+    )
+    execute_hdd_plot_ipynb = tasks.execute_hdd_plot_ipynb(
+        path=DATA_DIR / "notebooks" / "map.ipynb",
+    )
 
+    # Manually set dependencies where no inputs are passed between tasks
+    convert_heat_demand_density_plotting_script_to_ipynb.set_upstream(save_demand_map)
+    execute_hdd_plot_ipynb.set_upstream(
+        convert_heat_demand_density_plotting_script_to_ipynb
+    )
 
 flow.run()

@@ -4,6 +4,7 @@ from pathlib import Path
 import prefect
 from prefect.engine import results
 from prefect.engine import serializers
+from prefect.tasks.jupyter import ExecuteNotebook
 
 import functions
 from globals import BASE_DIR
@@ -147,3 +148,10 @@ save_demand_map = prefect.task(
     functions.save_demand_map,
     name="Save Small Area Heat Demand Map",
 )
+
+convert_heat_demand_density_plotting_script_to_ipynb = prefect.task(
+    functions.convert_file_to_ipynb,
+    name="Convert Heat Demand Density Map Script to ipynb",
+)
+
+execute_hdd_plot_ipynb = ExecuteNotebook()

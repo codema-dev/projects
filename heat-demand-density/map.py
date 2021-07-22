@@ -5,18 +5,28 @@ import pandas_bokeh
 
 from globals import DATA_DIR
 
+## Initialise bokeh for notebooks
 
 pandas_bokeh.output_notebook()
+
+## Parametrize
+# overwrite parameters with arguemnts generated in prefect pipeline
+
+# + tags=["parameters"]
 SAVE_PLOTS = True
+DATA_DIR = DATA_DIR
+# -
 
 ## Load
-small_area_demands = gpd.read_file(
+
+demand_map = gpd.read_file(
     DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson"
 )
 
 ## Categorise demands
-small_area_demands["feasibility"] = pd.cut(
-    small_area_demands["total_heat_demand_tj_per_km2y"],
+
+demand_map["feasibility"] = pd.cut(
+    demand_map["total_heat_demand_tj_per_km2y"],
     bins=[-np.inf, 20, 50, 120, 300, np.inf],
     labels=[
         "Not Feasible<br>[<20 TJ/km²year]",
@@ -26,11 +36,12 @@ small_area_demands["feasibility"] = pd.cut(
         "Very Feasible<br>[>300 TJ/km²year]",
     ],
 )
-small_area_demands["category"] = small_area_demands["feasibility"].cat.codes
+demand_map["category"] = demand_map["feasibility"].cat.codes
 
 
 ## Plot
-for local_authority in small_area_demands["local_authority"].unique():
+
+for local_authority in demand_map["local_authority"].unique():
     hovertool_string = """
     <h3>Heat Demand Density</h3>
     <table>
@@ -55,7 +66,7 @@ for local_authority in small_area_demands["local_authority"].unique():
     if SAVE_PLOTS:
         filename = local_authority + " Heat Demand Density.html"
         pandas_bokeh.output_file(DATA_DIR / "maps" / filename)
-    figure = small_area_demands.query("local_authority == @local_authority").plot_bokeh(
+    figure = demand_map.query("local_authority == @local_authority").plot_bokeh(
         figsize=(700, 900),
         category="category",
         colormap=["#ffffb2", "#fecc5c", "#fd8d3c", "#f03b20", "#bd0026"],

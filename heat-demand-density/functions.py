@@ -1,6 +1,9 @@
 from collections import defaultdict
 from pathlib import Path
 
+import jupytext
+from jupytext import kernels
+from jupytext import header
 import fsspec
 import geopandas as gpd
 import pandas as pd
@@ -170,3 +173,14 @@ def link_demands_to_boundaries(
 
 def save_demand_map(demand_map: gpd.GeoDataFrame, filepath: Path) -> None:
     demand_map.to_file(filepath, driver="GeoJSON")
+
+
+def convert_file_to_ipynb(
+    input_filepath: Path,
+    output_filepath: Path,
+    fmt: str,
+    language: str = "python",
+) -> None:
+    notebook = jupytext.read(input_filepath)
+    notebook["metadata"]["kernelspec"] = kernels.kernelspec_from_language(language)
+    jupytext.write(notebook, output_filepath, fmt=fmt)
