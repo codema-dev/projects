@@ -19,7 +19,7 @@ filepaths = {
         / "dublin_small_area_demand_tj_per_km2.geojson",
     },
     "pynb": {
-        "demand_map": BASE_DIR / "notebooks" / "map_heat_demand_densities.py",
+        "demand_map": BASE_DIR / "map_heat_demand_densities.py",
     },
     "ipynb": {"demand_map": DATA_DIR / "notebooks" / "map_heat_demand_densities.ipynb"},
 }

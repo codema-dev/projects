@@ -15,7 +15,7 @@ pandas_bokeh.output_notebook()
 # overwrite parameters with arguemnts generated in prefect pipeline
 
 # + tags=["parameters"]
-SAVE_PLOTS: bool = True
+SAVE_PLOTS: bool = False
 DATA_DIR: str = DATA_DIR
 demand_map_filepath: str = (
     DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson"
@@ -42,11 +42,11 @@ demand_map["feasibility"] = pd.cut(
 demand_map["category"] = demand_map["feasibility"].cat.codes
 
 
-## Plot
+## Plot Demand Map & Glossary
 
 for local_authority in demand_map["local_authority"].unique():
     hovertool_string = """
-    <h3>Heat Demand Density</h3>
+    <h4>@feasibility</h4>
     <table>
         <tr>
             <th>Category</th>
