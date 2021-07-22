@@ -49,7 +49,7 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
     clean_bers = tasks.drop_small_areas_not_in_boundaries(
         bers=raw_bers, small_area_boundaries=small_area_boundaries
     )
-    residential_demand = tasks.extract_residential_heat_demand(raw_bers)
+    residential_demand = tasks.extract_residential_heat_demand(clean_bers)
     demand_mwh_per_y = tasks.amalgamate_heat_demands_to_small_areas(
         residential=residential_demand, non_residential=non_residential_demand
     )
@@ -62,9 +62,12 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
         small_area_boundaries=small_area_boundaries,
         local_authority_boundaries=local_authority_boundaries,
     )
-    tasks.map_demand(
-        demand=demand_tj_per_km2,
+    demand_map = tasks.link_demands_to_boundaries(
+        demands=demand_tj_per_km2,
         boundaries=boundaries,
+    )
+    tasks.save_demand_map(
+        demand_map=demand_map,
         filepath=DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson",
     )
 

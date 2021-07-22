@@ -139,7 +139,11 @@ convert_from_mwh_per_y_to_tj_per_km2 = prefect.task(
     name="Convert Heat Demands from MWh/year to TJ/km2",
 )
 
-map_demand = prefect.task(
-    functions.map_demand,
-    name="Map Small Area Heat Demands",
+link_demands_to_boundaries = prefect.task(
+    functions.link_demands_to_boundaries, name="Link Demands to Boundaries for Mapping"
+)
+
+save_demand_map = prefect.task(
+    functions.save_demand_map,
+    name="Save Small Area Heat Demand Map",
 )

@@ -121,17 +121,22 @@ def drop_small_areas_not_in_boundaries(
 def amalgamate_heat_demands_to_small_areas(
     residential: pd.DataFrame, non_residential: pd.DataFrame
 ) -> pd.DataFrame:
-    residential_small_areas = residential.groupby("small_area")[
-        "heat_demand_mwh_per_y"
-    ].sum()
+    residential_small_areas = (
+        residential.groupby("small_area")["heat_demand_mwh_per_y"]
+        .sum()
+        .rename("residential_heat_demand_mwh_per_y")
+    )
     index = residential_small_areas.index
     non_residential_small_areas = (
         non_residential.groupby("small_area")["heat_demand_mwh_per_y"]
         .sum()
         .reindex(index)
         .fillna(0)
+        .rename("non_residential_heat_demand_mwh_per_y")
     )
-    return (residential_small_areas + non_residential_small_areas).to_frame()
+    return pd.concat(
+        [residential_small_areas, non_residential_small_areas], axis="columns"
+    )
 
 
 def convert_from_mwh_per_y_to_tj_per_km2(
@@ -149,20 +154,19 @@ def convert_from_mwh_per_y_to_tj_per_km2(
         .reindex(index)
     )
     mwh_to_tj = 0.0036
-    demand_tj_per_y = (mwh_to_tj * demand).squeeze()
-    # TODO: resolve  erroneous small areas in demands upstream...
+    demand_tj_per_y = mwh_to_tj * demand
     return (
-        (demand_tj_per_y / polygon_area_km2_by_small_area)
-        .rename("heat_demand_tj_per_km2y")
-        .to_frame()
-        .query("heat_demand_tj_per_km2y.notnull()")
+        demand_tj_per_y.divide(polygon_area_km2_by_small_area, axis="rows")
+        .rename(columns=lambda x: x.replace("_mwh_per_y", "_tj_per_mk2y"))
+        .assign(total_heat_demand_tj_per_km2y=lambda df: df.sum(axis="columns"))
     )
 
 
-def map_demand(
-    demand: pd.DataFrame, boundaries: gpd.GeoDataFrame, filepath: Path
+def link_demands_to_boundaries(
+    demands: pd.DataFrame, boundaries: gpd.GeoDataFrame
 ) -> None:
-    mapped_demands = boundaries.merge(
-        demand, left_on="small_area", right_index=True, how="left"
-    )
-    mapped_demands.to_file(filepath, driver="GeoJSON")
+    return boundaries.merge(demands, left_on="small_area", right_index=True, how="left")
+
+
+def save_demand_map(demand_map: gpd.GeoDataFrame, filepath: Path) -> None:
+    demand_map.to_file(filepath, driver="GeoJSON")
