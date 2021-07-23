@@ -1,11 +1,8 @@
-from datetime import datetime
 from pathlib import Path
 
+from bokeh.io import export_svg
 from bokeh.io import save
 from bokeh.io import show
-from bokeh.models import ColumnDataSource
-from bokeh.models import DataTable
-from bokeh.models import TableColumn
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -17,7 +14,7 @@ from globals import DATA_DIR
 # overwrite parameters with arguemnts generated in prefect pipeline
 
 # + tags=["parameters"]
-SAVE_PLOTS: bool = True
+SAVE_AS_HTML: bool = False
 DATA_DIR: str = DATA_DIR
 demand_map_filepath: str = (
     DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson"
@@ -31,7 +28,6 @@ demand_map = gpd.read_file(demand_map_filepath)
 ## Set Globals
 
 local_authorities = demand_map["local_authority"].unique()
-date = datetime.today().strftime(r"%Y-%m-%d")
 
 ## Categorise demands
 
@@ -59,11 +55,11 @@ demand_table = (
 )
 demand_table["band"] = demand_table["feasibility"].map(
     {
-        "Not Feasible": "<20 TJ/km²year",
-        "Future Potential": "20-50 TJ/km²year",
-        "Feasible with Supporting Regulation": "50-120 TJ/km²year",
-        "Feasible": "120-300 TJ/km²year",
-        "Very Feasible": ">300 TJ/km²year",
+        "Not Feasible": "<20",
+        "Future Potential": "20-50",
+        "Feasible with Supporting Regulation": "50-120",
+        "Feasible": "120-300",
+        "Very Feasible": ">300",
     }
 )
 
@@ -73,10 +69,12 @@ la_maps = []
 la_tables = []
 for la in local_authorities:
 
-    la_map = demand_map.query("local_authority == @la")
+    la_map = demand_map.query("local_authority == @la").reset_index(drop=True)
     la_maps.append(la_map.drop(columns="local_authority"))
 
-    la_table = demand_table.query("local_authority == @la")
+    la_table = (
+        demand_table.query("local_authority == @la").copy().reset_index(drop=True)
+    )
     total_heat = la_table["total_heat_demand_tj_per_km2y"].sum()
     la_table["percentage_share_of_heat_demand"] = (
         la_table["total_heat_demand_tj_per_km2y"]
@@ -91,51 +89,92 @@ for la in local_authorities:
 
 for la, la_map, la_table in zip(local_authorities, la_maps, la_tables):
 
-    Columns = [TableColumn(field=Ci, title=Ci) for Ci in la_table.columns]
-    data_table = DataTable(
-        source=ColumnDataSource(la_table),
-        columns=Columns,
-        width=600,
-        height=280,
-    )
-
-    if SAVE_PLOTS:
-        filename = str(date) + " " + la + " Heat Demand Density Table.html"
-        save(data_table, filename=Path(DATA_DIR) / "maps" / filename)
-    else:
-        show(data_table)
-
     hovertool_string = """
     <h4>@feasibility</h4>
     <table>
-        <tr>
+        <t>
             <th>Category</th>
-            <td>TJ/km²year</td>
+            <th>TJ/km²year</th>
         </tr>
         <tr>
-            <th>Total</th>
+            <td>Total</td>
             <td>@total_heat_demand_tj_per_km2y</td>
         <tr>
         <tr>
-            <th>Residential</th>
+            <td>Residential</td>
             <td>@residential_heat_demand_tj_per_km2y</td>
         <tr>
         <tr>
-            <th>Non-Residential</th>
+            <td>Non-Residential</td>
             <td>@non_residential_heat_demand_tj_per_km2y</td>
         <tr>
     </table>
     """
+    opacity = 0.75
+    colors = [
+        f"rgba(255,255,178,{opacity})",
+        f"rgba(254,204,92,{opacity})",
+        f"rgba(253,141,60,{opacity})",
+        f"rgba(240,59,32,{opacity})",
+        f"rgba(189,0,38,{opacity})",
+    ]
     figure = la_map.plot_bokeh(
         figsize=(700, 900),
         category="category",
-        colormap=["#ffffb2", "#fecc5c", "#fd8d3c", "#f03b20", "#bd0026"],
+        colormap=colors,
         show_colorbar=False,
-        fill_alpha=0.5,
         hovertool_string=hovertool_string,
+        legend="Heat Demand Density",
+        show_figure=False,
     )
-    if SAVE_PLOTS:
-        filename = str(date) + " " + la + " Heat Demand Density Map.html"
-        save(figure, filename=Path(DATA_DIR) / "maps" / filename)
+
+    ## Style each table row with it's corresponding color
+    idx = pd.IndexSlice
+    styled_table = (
+        la_table.astype(
+            {
+                "residential_heat_demand_tj_per_km2y": "int32",
+                "non_residential_heat_demand_tj_per_km2y": "int32",
+                "total_heat_demand_tj_per_km2y": "int32",
+                "percentage_share_of_heat_demand": "int8",
+            }
+        )
+        .rename(
+            columns={
+                "feasibility": "Feasibility",
+                "residential_heat_demand_tj_per_km2y": "Residential [TJ/km²year]",
+                "non_residential_heat_demand_tj_per_km2y": "Non-Residential [TJ/km²year]",
+                "total_heat_demand_tj_per_km2y": "Total [TJ/km²year]",
+                "band": "Band [TJ/km²year]",
+                "percentage_share_of_heat_demand": "% Share",
+            }
+        )
+        .set_index("Feasibility")
+        .style
+    )
+    feasibilities = [
+        "Not Feasible",
+        "Future Potential",
+        "Feasible with Supporting Regulation",
+        "Feasible",
+        "Very Feasible",
+    ]
+    for feasibility, color in zip(feasibilities, colors):
+        styled_table = styled_table.set_properties(
+            **{"background": color},
+            axis=1,
+            subset=idx[idx[feasibility], idx[:]],
+        )
+
+    if SAVE_AS_HTML:
+        with open(
+            Path(DATA_DIR) / "tables" / f"{la}.html", "w", encoding="utf-8"
+        ) as file:
+            styled_table.to_html(file)
+    else:
+        print(la_table)
+
+    if SAVE_AS_HTML:
+        save(figure, filename=Path(DATA_DIR) / "maps" / f"{la}.html")
     else:
         show(figure)
