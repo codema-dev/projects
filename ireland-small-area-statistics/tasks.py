@@ -109,7 +109,9 @@ def link_small_areas_to_routing_keys(
 ) -> gpd.GeoDataFrame:
     representative_points = small_area_boundaries.assign(
         geometry=lambda gdf: gdf.to_crs(epsg=2157).geometry.representative_point(),
-    )[["SMALL_AREA", "geometry"]].rename(columns={"SMALL_AREA": "small_area"})
+    )[["SMALL_AREA", "CSOED", "geometry"]].rename(
+        columns={"SMALL_AREA": "small_area", "CSOED": "cso_ed_id"}
+    )
     small_areas_in_routing_keys = gpd.sjoin(
         representative_points,
         routing_key_boundaries.to_crs(epsg=2157),
@@ -117,7 +119,7 @@ def link_small_areas_to_routing_keys(
         how="left",
     )
     return _fill_unknown_countyname(
-        small_areas_in_routing_keys[["small_area", "countyname"]].copy()
+        small_areas_in_routing_keys[["small_area", "cso_ed_id", "countyname"]].copy()
     )
 
 
