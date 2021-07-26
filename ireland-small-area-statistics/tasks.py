@@ -9,6 +9,7 @@ from urllib.request import urlretrieve
 import numpy as np
 import geopandas as gpd
 import pandas as pd
+from sklearn.neighbors import BallTree
 from shapely import geometry
 
 
@@ -93,6 +94,16 @@ def map_routing_keys_to_countyname(
     )
 
 
+def _fill_unknown_countyname(gdf):
+    # these small areas are islands and so fall outside the routing key boundaries!
+    c = "countyname"
+    gdf.loc[46, c] = "CO. KERRY"
+    gdf.loc[418, c] = "CO. WEXFORD"
+    gdf.loc[1184, c] = "CO. DONEGAL"
+    gdf.loc[2004, c] = "CO. DONEGAL"
+    return gdf
+
+
 def link_small_areas_to_routing_keys(
     small_area_boundaries: gpd.GeoDataFrame, routing_key_boundaries: gpd.GeoDataFrame
 ) -> gpd.GeoDataFrame:
@@ -105,7 +116,9 @@ def link_small_areas_to_routing_keys(
         op="within",
         how="left",
     )
-    return small_areas_in_routing_keys[["small_area", "countyname"]]
+    return _fill_unknown_countyname(
+        small_areas_in_routing_keys[["small_area", "countyname"]].copy()
+    )
 
 
 def to_parquet(df: pd.DataFrame, path: str) -> None:

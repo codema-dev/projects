@@ -4,5 +4,7 @@ channels:
 dependencies:
   - ipykernel
   - pandas
+  - geopandas
   - numpy
   - prefect
+  - python-dotenv
