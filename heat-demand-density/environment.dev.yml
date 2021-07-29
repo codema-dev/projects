@@ -8,6 +8,7 @@ dependencies:
 
   # load s3 credentials from .env
   - python-dotenv
+  - jupyter
 
   # Data Wrangling
   - pandas
