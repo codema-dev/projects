@@ -10,8 +10,9 @@ dependencies:
   - prefect
   - fsspec
   - s3fs
-  - openpyxl
+  - pyarrow
   - python-dotenv
   - jupyter
   - papermill
   - jupytext
+  - pyarrow
