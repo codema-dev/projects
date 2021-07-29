@@ -15,4 +15,3 @@ dependencies:
   - jupyter
   - papermill
   - jupytext
-  - pyarrow
