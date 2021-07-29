@@ -14,7 +14,7 @@ from globals import DATA_DIR
 # overwrite parameters with arguemnts generated in prefect pipeline
 
 # + tags=["parameters"]
-SAVE_AS_HTML: bool = False
+SAVE_AS_HTML: bool = True
 DATA_DIR: str = DATA_DIR
 demand_map_filepath: str = (
     DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson"
@@ -166,15 +166,13 @@ for la, la_map, la_table in zip(local_authorities, la_maps, la_tables):
             subset=idx[idx[feasibility], idx[:]],
         )
 
+    filename = la.replace(" ", "-").replace("ú", "u")
     if SAVE_AS_HTML:
         with open(
-            Path(DATA_DIR) / "tables" / f"{la}.html", "w", encoding="utf-8"
+            Path(DATA_DIR) / "tables" / f"{filename}.html", "w", encoding="utf-8"
         ) as file:
             styled_table.to_html(file)
+        save(figure, filename=Path(DATA_DIR) / "maps" / f"{filename}.html")
     else:
         print(la_table)
-
-    if SAVE_AS_HTML:
-        save(figure, filename=Path(DATA_DIR) / "maps" / f"{la}.html")
-    else:
         show(figure)
