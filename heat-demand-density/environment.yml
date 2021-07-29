@@ -10,3 +10,4 @@ dependencies:
   - prefect
   - fsspec
   - openpyxl
+  - python-dotenv

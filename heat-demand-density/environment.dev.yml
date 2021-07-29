@@ -6,6 +6,9 @@ dependencies:
   # DAG
   - prefect
 
+  # load s3 credentials from .env
+  - python-dotenv
+
   # Data Wrangling
   - pandas
   - geopandas
