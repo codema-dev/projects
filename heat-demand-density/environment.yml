@@ -9,6 +9,7 @@ dependencies:
   - geopandas
   - prefect
   - fsspec
+  - s3fs
   - openpyxl
   - python-dotenv
   - jupyter
