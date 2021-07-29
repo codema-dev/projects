@@ -12,3 +12,5 @@ dependencies:
   - openpyxl
   - python-dotenv
   - jupyter
+  - papermill
+  - jupytext
