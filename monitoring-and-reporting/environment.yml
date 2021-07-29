@@ -1,0 +1,10 @@
+name: monitoring-and-reporting
+channels:
+  - conda-forge
+dependencies:
+  - prefect
+  - python-dotenv
+  - pandas
+  - openpyxl
+  - s3fs
+  - fsspec
