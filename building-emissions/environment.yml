@@ -1,0 +1,17 @@
+name: building-emissions
+channels:
+  - conda-forge
+  - patrikhlobil
+dependencies:
+  - python
+  - pandas
+  - pandas-bokeh
+  - geopandas
+  - prefect
+  - fsspec
+  - s3fs
+  - pyarrow
+  - python-dotenv
+  - jupyter
+  - papermill
+  - jupytext

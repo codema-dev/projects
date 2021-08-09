@@ -1,0 +1,33 @@
+name: building-emissions
+channels:
+  - conda-forge
+  - patrikhlobil 
+dependencies:
+  # DAG
+  - prefect
+
+  # load s3 credentials from .env
+  - python-dotenv
+
+  # notebooks
+  - jupyter
+  - papermill
+  - jupytext
+
+  # Data Wrangling
+  - pandas
+  - geopandas
+
+  # Filesystem
+  - fsspec
+  - s3fs
+  - pyarrow
+
+  # Plotting
+  - pandas-bokeh
+
+  # Dev
+  - mypy
+  - black
+  - isort
+  - flake8
