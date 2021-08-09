@@ -146,7 +146,7 @@ def extract_residential_emissions(bers: pd.DataFrame) -> pd.Series:
         heating_demand * emission_factors + electricity_demand * kwh_electricity_to_tco2
     )
 
-    return bers[["small_area", "emissions_tco2_per_y"]]
+    return bers[["small_area", "period_built", "emissions_tco2_per_y"]]
 
 
 def drop_small_areas_not_in_boundaries(
@@ -160,21 +160,30 @@ def amalgamate_emissions_to_small_areas(
     residential: pd.DataFrame, non_residential: pd.DataFrame
 ) -> pd.DataFrame:
     residential_small_areas = (
-        residential.groupby("small_area")["emissions_tco2_per_y"]
+        residential.groupby(["small_area", "period_built"])["emissions_tco2_per_y"]
         .sum()
-        .rename("residential_emissions_tco2_per_y")
+        .reset_index()
+        .rename(
+            columns={
+                "period_built": "category",
+            }
+        )
+        .set_index("small_area")
     )
-    index = residential_small_areas.index
     non_residential_small_areas = (
-        non_residential.groupby("small_area")["emissions_tco2_per_y"]
+        non_residential.groupby(["small_area", "Benchmark"])["emissions_tco2_per_y"]
         .sum()
-        .reindex(index)
-        .fillna(0)
-        .rename("non_residential_emissions_tco2_per_y")
+        .reset_index()
+        .rename(
+            columns={
+                "Benchmark": "category",
+            }
+        )
+        .set_index("small_area")
     )
     return pd.concat(
-        [residential_small_areas, non_residential_small_areas], axis="columns"
-    )
+        [residential_small_areas, non_residential_small_areas], axis="rows"
+    ).sort_index()
 
 
 def link_emissions_to_boundaries(
