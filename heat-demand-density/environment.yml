@@ -15,3 +15,6 @@ dependencies:
   - jupyter
   - papermill
   - jupytext
+  - selenium
+  - geckodriver
+  - dataframe-image

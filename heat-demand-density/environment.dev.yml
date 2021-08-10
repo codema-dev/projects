@@ -23,6 +23,10 @@ dependencies:
   - s3fs
   - pyarrow
 
+  # Saving bokeh plots as images
+  - selenium
+  - geckodriver
+
   # Plotting
   - pandas-bokeh
 
