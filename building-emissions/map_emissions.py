@@ -28,3 +28,33 @@ emission_map = gpd.read_file(emission_map_filepath)
 ## Set Globals
 
 local_authorities = emission_map["local_authority"].unique()
+
+## Plot
+
+emission_map["Total"] = emission_map.drop(
+    columns=["small_area", "local_authority", "geometry"]
+).sum(axis="columns")
+emission_map["Quintile"] = pd.qcut(emission_map["Total"], q=20)
+emission_map["category"] = emission_map["Quintile"].cat.codes
+emission_map["Quintile"] = emission_map["Quintile"].astype("string")
+
+column_names = list(
+    emission_map.columns.drop(
+        ["small_area", "local_authority", "geometry", "Total", "Quintile", "category"]
+    )
+)
+column_values = ["@{" + name + "}" for name in column_names]
+hovertool_string = "<table>"
+for name, value in zip(column_names, column_values):
+    hovertool_string += (
+        "<tr>" + "<td>" + name + "</td>" "<td>" + value + "</td>" + "</tr>"
+    )
+hovertool_string += "</table>"
+figure = emission_map.plot_bokeh(
+    figsize=(700, 900),
+    category="category",
+    show_colorbar=False,
+    hovertool_string=hovertool_string,
+    legend="Emissions [tCO2]",
+    show_figure=True,
+)

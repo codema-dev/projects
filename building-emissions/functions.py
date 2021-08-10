@@ -163,27 +163,21 @@ def amalgamate_emissions_to_small_areas(
         residential.groupby(["small_area", "period_built"])["emissions_tco2_per_y"]
         .sum()
         .reset_index()
-        .rename(
-            columns={
-                "period_built": "category",
-            }
+        .pivot(
+            index="small_area", columns="period_built", values="emissions_tco2_per_y"
         )
-        .set_index("small_area")
+        .fillna(0)
     )
     non_residential_small_areas = (
         non_residential.groupby(["small_area", "Benchmark"])["emissions_tco2_per_y"]
         .sum()
         .reset_index()
-        .rename(
-            columns={
-                "Benchmark": "category",
-            }
-        )
-        .set_index("small_area")
+        .pivot(index="small_area", columns="Benchmark", values="emissions_tco2_per_y")
+        .fillna(0)
     )
     return pd.concat(
-        [residential_small_areas, non_residential_small_areas], axis="rows"
-    ).sort_index()
+        [residential_small_areas, non_residential_small_areas], axis="columns"
+    ).fillna(0)
 
 
 def link_emissions_to_boundaries(
