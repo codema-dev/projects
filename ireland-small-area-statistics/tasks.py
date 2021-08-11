@@ -20,4 +20,8 @@ link_small_areas_to_routing_keys = prefect.task(
     functions.link_small_areas_to_routing_keys
 )
 to_parquet = prefect.task(functions.to_parquet)
-merge = prefect.task(pd.merge)
+link_building_ages_to_countyname = prefect.task(
+    functions.link_building_ages_to_countyname
+)
+extract_dublin = prefect.task(functions.extract_dublin)
+to_file = prefect.task(functions.to_file)

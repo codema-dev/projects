@@ -36,6 +36,9 @@ filepaths: Dict[str, str] = {
         DATA_DIR / "routing_key_descriptors_to_postcodes.json"
     ),
     "building_ages": str(DATA_DIR / "building_ages_2016.parquet"),
+    "dublin_small_areas": str(
+        DATA_DIR / "dublin_small_area_boundaries_in_routing_keys.geojson"
+    ),
 }
 
 
@@ -78,11 +81,15 @@ with prefect.Flow("Ireland Small Area Statistics") as flow:
     small_areas_in_routing_keys = tasks.link_small_areas_to_routing_keys(
         small_area_boundaries, routing_key_boundaries
     )
+    dublin_small_areas = tasks.extract_dublin(small_areas_in_routing_keys)
 
-    building_ages_in_countyname = tasks.merge(
-        left=buildings_ages, right=small_areas_in_routing_keys
+    building_ages_in_countyname = tasks.link_building_ages_to_countyname(
+        buildings_ages, small_areas_in_routing_keys
     )
 
+    tasks.to_file(
+        dublin_small_areas, path=filepaths["dublin_small_areas"], driver="GeoJSON"
+    )
     tasks.to_parquet(
         building_ages_in_countyname,
         path=filepaths["building_ages"],

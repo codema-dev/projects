@@ -116,10 +116,38 @@ def link_small_areas_to_routing_keys(
         op="within",
         how="left",
     )
+    small_areas_in_routing_keys["geometry"] = small_area_boundaries["geometry"]
     return _fill_unknown_countyname(
-        small_areas_in_routing_keys[["small_area", "cso_ed_id", "countyname"]].copy()
+        small_areas_in_routing_keys[
+            [
+                "small_area",
+                "cso_ed_id",
+                "countyname",
+                "RoutingKey",
+                "Descriptor",
+                "geometry",
+            ]
+        ].copy()
+    )
+
+
+def extract_dublin(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    return gdf[gdf["countyname"].str.contains("DUBLIN")].copy()
+
+
+def link_building_ages_to_countyname(
+    building_ages: pd.DataFrame, small_area_countynames: gpd.GeoDataFrame
+) -> pd.DataFrame:
+    return (
+        building_ages.merge(small_area_countynames)
+        .drop(columns="geometry")
+        .pipe(pd.DataFrame)
     )
 
 
 def to_parquet(df: pd.DataFrame, path: str) -> None:
     df.to_parquet(path)
+
+
+def to_file(gdf: gpd.GeoDataFrame, path: str, driver: str) -> None:
+    gdf.to_file(path, driver=driver)
