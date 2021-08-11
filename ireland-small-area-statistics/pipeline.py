@@ -24,20 +24,20 @@ DATA_DIR = HERE / "data"
 
 filepaths: Dict[str, str] = {
     "small_area_statistics": str(
-        DATA_DIR / CONFIG["filenames"]["small_area_statistics"]
+        DATA_DIR / "external" / CONFIG["filenames"]["small_area_statistics"]
     ),
     "small_area_boundaries": str(
-        DATA_DIR / CONFIG["filenames"]["small_area_boundaries"]
+        DATA_DIR / "external" / CONFIG["filenames"]["small_area_boundaries"]
     ),
     "routing_key_boundaries": str(
-        DATA_DIR / CONFIG["filenames"]["routing_key_boundaries"]
+        DATA_DIR / "external" / CONFIG["filenames"]["routing_key_boundaries"]
     ),
     "routing_key_descriptors_to_postcodes": str(
-        DATA_DIR / "routing_key_descriptors_to_postcodes.json"
+        DATA_DIR / "external" / "routing_key_descriptors_to_postcodes.json"
     ),
-    "building_ages": str(DATA_DIR / "building_ages_2016.parquet"),
+    "building_ages": str(DATA_DIR / "processed" / "building_ages_2016.parquet"),
     "dublin_small_areas": str(
-        DATA_DIR / "dublin_small_area_boundaries_in_routing_keys.geojson"
+        DATA_DIR / "processed" / "dublin_small_area_boundaries_in_routing_keys.geojson"
     ),
 }
 
