@@ -195,7 +195,9 @@ def link_small_areas_to_routing_keys(
 
 
 def extract_dublin(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    return gdf[gdf["countyname"].str.contains("DUBLIN")].copy()
+    return gdf.query(
+        "local_authority == ['South Dublin', 'Dún Laoghaire-Rathdown', 'Fingal', 'Dublin City']"
+    )
 
 
 def link_building_ages_to_countyname(
