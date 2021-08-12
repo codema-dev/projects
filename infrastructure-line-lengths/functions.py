@@ -2,6 +2,5 @@ from pathlib import Path
 import urllib
 
 
-def download_file(url: str, filepath: str) -> None:
-    if not filepath.exists():
-        urllib.request.urlretrieve(url=url, filename=str(filepath))
+def check_file_exists(filepath):
+    assert filepath.exists(), f"Please download & unzip {filepath} to data/external/"
