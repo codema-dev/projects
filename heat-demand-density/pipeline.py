@@ -28,7 +28,7 @@ filepaths = {
 with prefect.Flow("Estimate Heat Demand Density") as flow:
     # Set CONFIG
     assumed_boiler_efficiency = prefect.Parameter(
-        "Assumed Boiler Efficiency", default=0.9
+        "Assumed Boiler Efficiency", default=0.85
     )
 
     # Extract
