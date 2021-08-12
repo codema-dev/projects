@@ -82,7 +82,7 @@ load_benchmarks = prefect.task(
 )
 
 load_small_area_boundaries = prefect.task(
-    functions.read_geoparquet,
+    functions.read_file,
     target="small_area_boundaries.parquet",
     checkpoint=True,
     result=get_geoparquet_result(DATA_DIR / "external"),
@@ -90,7 +90,7 @@ load_small_area_boundaries = prefect.task(
 )
 
 load_local_authority_boundaries = prefect.task(
-    functions.read_zipped_shp,
+    functions.read_file,
     target="local_authority_boundaries.parquet",
     checkpoint=True,
     result=get_geoparquet_result(DATA_DIR / "external"),
@@ -113,10 +113,6 @@ link_valuation_office_to_small_areas = prefect.task(
     checkpoint=True,
     result=get_geoparquet_result(DATA_DIR / "interim"),
     name="Link Valuation Office to Small Area Boundaries",
-)
-
-drop_small_areas_not_in_boundaries = prefect.task(
-    functions.drop_small_areas_not_in_boundaries, name="Drop Invalid Small Areas"
 )
 
 extract_residential_heat_demand = prefect.task(

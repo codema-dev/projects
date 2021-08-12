@@ -35,16 +35,13 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
     valuation_office = tasks.load_valuation_office(
         url=CONFIG["valuation_office"]["url"]
     )
-    raw_bers = tasks.load_bers(url=CONFIG["bers"]["url"])
+    bers = tasks.load_bers(url=CONFIG["bers"]["url"])
     benchmark_uses = tasks.load_benchmark_uses(
         url=CONFIG["benchmark_uses"]["url"], filesystem_name="s3"
     )
     benchmarks = tasks.load_benchmarks(url=CONFIG["benchmarks"]["url"])
     small_area_boundaries = tasks.load_small_area_boundaries(
         url=CONFIG["small_area_boundaries"]["url"]
-    )
-    local_authority_boundaries = tasks.load_local_authority_boundaries(
-        url=CONFIG["local_authority_boundaries"]["url"]
     )
 
     # Estimate Demand
@@ -58,10 +55,7 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
         benchmarks=benchmarks,
         assumed_boiler_efficiency=assumed_boiler_efficiency,
     )
-    clean_bers = tasks.drop_small_areas_not_in_boundaries(
-        bers=raw_bers, small_area_boundaries=small_area_boundaries
-    )
-    residential_demand = tasks.extract_residential_heat_demand(clean_bers)
+    residential_demand = tasks.extract_residential_heat_demand(bers)
     demand_mwh_per_y = tasks.amalgamate_heat_demands_to_small_areas(
         residential=residential_demand, non_residential=non_residential_demand
     )
@@ -70,13 +64,9 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
     )
 
     # Convert to Map
-    boundaries = tasks.link_small_areas_to_local_authorities(
-        small_area_boundaries=small_area_boundaries,
-        local_authority_boundaries=local_authority_boundaries,
-    )
     demand_map = tasks.link_demands_to_boundaries(
         demands=demand_tj_per_km2,
-        boundaries=boundaries,
+        boundaries=small_area_boundaries,
     )
 
     # Plot

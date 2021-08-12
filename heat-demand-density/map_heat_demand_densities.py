@@ -11,6 +11,9 @@ import dataframe_image as dfi
 import pandas_bokeh
 from globals import DATA_DIR
 
+pandas_bokeh.output_notebook()
+pd.set_option("display.precision", 1)
+
 ## Parametrize
 # overwrite parameters with arguemnts generated in prefect pipeline
 
@@ -138,7 +141,6 @@ for la, la_map, la_table in zip(local_authorities, la_maps, la_tables):
                 "residential_heat_demand_tj_per_km2y": "int32",
                 "non_residential_heat_demand_tj_per_km2y": "int32",
                 "total_heat_demand_tj_per_km2y": "int32",
-                "percentage_share_of_heat_demand": "int8",
             }
         )
         .rename(

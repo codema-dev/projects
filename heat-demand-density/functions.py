@@ -24,7 +24,7 @@ def read_geoparquet(url: str) -> pd.DataFrame:
         return gpd.read_parquet(f)
 
 
-def read_zipped_shp(url: str) -> pd.DataFrame:
+def read_file(url: str) -> pd.DataFrame:
     with fsspec.open(url) as f:
         return gpd.read_file(f)
 
@@ -114,13 +114,6 @@ def extract_residential_heat_demand(bers: pd.DataFrame) -> pd.Series:
     return bers[["small_area", "heat_demand_mwh_per_y"]]
 
 
-def drop_small_areas_not_in_boundaries(
-    bers: pd.DataFrame, small_area_boundaries: gpd.GeoDataFrame
-) -> pd.DataFrame:
-    small_areas = small_area_boundaries["small_area"].to_numpy()
-    return bers.query("small_area in @small_areas")
-
-
 def amalgamate_heat_demands_to_small_areas(
     residential: pd.DataFrame, non_residential: pd.DataFrame
 ) -> pd.DataFrame:
@@ -162,13 +155,16 @@ def convert_from_mwh_per_y_to_tj_per_km2(
         demand_tj_per_y.divide(polygon_area_km2_by_small_area, axis="rows")
         .rename(columns=lambda x: x.replace("_mwh_per_y", "_tj_per_km2y"))
         .assign(total_heat_demand_tj_per_km2y=lambda df: df.sum(axis="columns"))
+        .dropna(how="any")
     )
 
 
 def link_demands_to_boundaries(
     demands: pd.DataFrame, boundaries: gpd.GeoDataFrame
 ) -> None:
-    return boundaries.merge(demands, left_on="small_area", right_index=True, how="left")
+    return boundaries.merge(
+        demands, left_on="small_area", right_index=True, how="right"
+    )
 
 
 def save_demand_map(demand_map: gpd.GeoDataFrame, filepath: Path) -> None:
