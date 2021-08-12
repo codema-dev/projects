@@ -95,11 +95,68 @@ def map_routing_keys_to_countyname(
 def _fill_unknown_countyname(gdf):
     # these small areas are islands and so fall outside the routing key boundaries!
     c = "countyname"
-    gdf.loc[46, c] = "CO. KERRY"
-    gdf.loc[418, c] = "CO. WEXFORD"
-    gdf.loc[1184, c] = "CO. DONEGAL"
-    gdf.loc[2004, c] = "CO. DONEGAL"
+    gdf.loc["077149001/077149002", c] = "CO. KERRY"
+    gdf.loc["057133003", c] = "CO. WEXFORD"
+    gdf.loc["247076001/247076002", c] = "CO. DONEGAL"
+    gdf.loc["057081001/057081008", c] = "CO. DONEGAL"
     return gdf
+
+
+def _replace_incorrectly_matched_small_areas(gdf):
+    # these small areas were placed in the wrong local countyname due to a discrepency
+    # between openaddress boundaries & cso boundaries
+    c = "countyname"
+    co_dublin_sas = [
+        "267091001",
+        "267120004",
+        "267120005",
+        "267120006",
+        "267120007",
+        "267120008",
+        "267120009",
+        "267122001",
+        "267122003",
+        "267122016",
+        "267122017",
+    ]
+    gdf.loc[co_dublin_sas, c] = ["CO. DUBLIN"] * len(co_dublin_sas)
+    gdf.loc["257046001", c] = "CO. WICKLOW"
+    gdf.loc["087071028", c] = "CO. KILDARE"
+    gdf.loc["087002003", c] = "CO. KILDARE"
+    meath_sas = [
+        "167025001/03",
+        "167003002",
+        "167085001",
+        "167085003",
+        "167085013",
+        "167074003",
+        "167003003",
+        "167085002",
+        "167025001/01",
+        "167085014",
+        "167003001",
+        "167085011",
+        "167029005/04",
+        "167029005/02",
+        "167029005/05",
+        "167085005",
+        "167085012",
+        "167085004",
+        "167085006",
+        "167085008",
+        "167085007",
+        "167029005/03",
+        "167085009",
+        "167085010",
+    ]
+    gdf.loc[meath_sas, c] = ["CO. MEATH"] * len(meath_sas)
+    return gdf
+
+
+def _replace_erroneous_data(gdf):
+    gdf = gdf.set_index("small_area")
+    with_known_countyname = _fill_unknown_countyname(gdf)
+    return _replace_incorrectly_matched_small_areas(with_known_countyname).reset_index()
 
 
 def link_small_areas_to_routing_keys(
@@ -107,8 +164,12 @@ def link_small_areas_to_routing_keys(
 ) -> gpd.GeoDataFrame:
     representative_points = small_area_boundaries.assign(
         geometry=lambda gdf: gdf.to_crs(epsg=2157).geometry.representative_point(),
-    )[["SMALL_AREA", "CSOED", "geometry"]].rename(
-        columns={"SMALL_AREA": "small_area", "CSOED": "cso_ed_id"}
+    )[["SMALL_AREA", "CSOED", "COUNTYNAME", "geometry"]].rename(
+        columns={
+            "SMALL_AREA": "small_area",
+            "CSOED": "cso_ed_id",
+            "COUNTYNAME": "local_authority",
+        }
     )
     small_areas_in_routing_keys = gpd.sjoin(
         representative_points,
@@ -117,17 +178,18 @@ def link_small_areas_to_routing_keys(
         how="left",
     )
     small_areas_in_routing_keys["geometry"] = small_area_boundaries["geometry"]
-    return _fill_unknown_countyname(
+    return _replace_erroneous_data(
         small_areas_in_routing_keys[
             [
                 "small_area",
                 "cso_ed_id",
                 "countyname",
+                "local_authority",
                 "RoutingKey",
                 "Descriptor",
                 "geometry",
             ]
-        ].copy()
+        ]
     )
 
 
