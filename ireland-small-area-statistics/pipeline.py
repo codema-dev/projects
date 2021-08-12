@@ -37,7 +37,7 @@ filepaths: Dict[str, str] = {
     ),
     "building_ages": str(DATA_DIR / "processed" / "building_ages_2016.parquet"),
     "dublin_small_areas": str(
-        DATA_DIR / "processed" / "dublin_small_area_boundaries_in_routing_keys.geojson"
+        DATA_DIR / "processed" / "dublin_small_area_boundaries_in_routing_keys.gpkg"
     ),
 }
 
@@ -88,7 +88,7 @@ with prefect.Flow("Ireland Small Area Statistics") as flow:
     )
 
     tasks.to_file(
-        dublin_small_areas, path=filepaths["dublin_small_areas"], driver="GeoJSON"
+        dublin_small_areas, path=filepaths["dublin_small_areas"], driver="GPKG"
     )
     tasks.to_parquet(
         building_ages_in_countyname,

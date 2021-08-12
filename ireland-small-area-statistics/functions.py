@@ -123,6 +123,7 @@ def _replace_incorrectly_matched_small_areas(gdf):
     gdf.loc["257046001", c] = "CO. WICKLOW"
     gdf.loc["087071028", c] = "CO. KILDARE"
     gdf.loc["087002003", c] = "CO. KILDARE"
+    gdf.loc[["267103003", "267122002"], c] = ["CO. DUBLIN"] * 2
     meath_sas = [
         "167025001/03",
         "167003002",
