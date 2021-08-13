@@ -1,0 +1,11 @@
+name: line-lengths
+channels:
+  - conda-forge
+dependencies:
+  - prefect
+  - geopandas
+  - pyarrow
+  - python-dotenv
+  - pip
+  - pip:
+    - prefect-geopandas-serializer
