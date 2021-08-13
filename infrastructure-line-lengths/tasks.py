@@ -19,10 +19,12 @@ def get_geoparquet_result(data_dir: Path) -> results.LocalResult:
 
 check_file_exists = prefect.task(functions.check_file_exists)
 download_file = prefect.task(functions.download_file)
-read_file = prefect.task(gpd.read_file)
+read_file = prefect.task(functions.read_file)
+read_csv = prefect.task(functions.read_csv)
 read_network = prefect.task(
     functions.read_network,
     target="hv_network.parquet",
     result=get_geoparquet_result(DATA_DIR / "interim"),
     checkpoint=True,
 )
+extract_mv_index = prefect.task(functions.extract_rows_in_list)

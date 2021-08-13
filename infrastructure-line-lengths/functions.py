@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from typing import List
 from typing import Optional
@@ -19,3 +20,21 @@ def download_file(url: str, filepath: Path) -> None:
 def read_network(dirpath: Path) -> gpd.GeoDataFrame:
     network = [gpd.read_file(filepath) for filepath in dirpath.iterdir()]
     return gpd.GeoDataFrame(pd.concat(network), crs="EPSG:29903").to_crs(epsg=2157)
+
+
+def read_file(filepath: Path, crs: str) -> gpd.GeoDataFrame:
+    gdf = gpd.read_file(filepath)
+    gdf.crs = crs
+    return gdf
+
+
+def read_csv(filepath: Path, header: str) -> List[str]:
+    return pd.read_csv(filepath, squeeze=True, header=header)
+
+
+def extract_rows_in_list(
+    gdf: gpd.GeoDataFrame, on_column: str, list_of_values: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    rows_in_list = gdf[on_column].isin(list_of_values)
+    breakpoint()
+    return gdf[rows_in_list]
