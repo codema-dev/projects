@@ -69,7 +69,7 @@ extract_dublin_mvlv_network = prefect.task(
     checkpoint=True,
     name="Extract Dublin MV-LV Network",
 )
-query = prefect.task(functions.query)
+extract_lines = prefect.task(functions.query, name="Extract Lines")
 cut_hv_lines_on_boundaries = prefect.task(
     functions.cut_lines_on_boundaries,
     target="dublin_hv_lines_cut.parquet",
@@ -86,5 +86,5 @@ cut_mvlv_lines_on_boundaries = prefect.task(
 )
 
 save_subset_to_gpkg = prefect.task(
-    functions.save_subset_to_gpkg, name="Save Extracted Stations/Lines to GPKG"
+    functions.save_subset_to_gpkg, name="Save Stations/Lines to GPKG"
 )

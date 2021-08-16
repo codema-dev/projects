@@ -125,10 +125,10 @@ with Flow("Extract infrastructure small area line lengths") as flow:
         filepath=FILEPATHS["220kv_stations"],
     )
 
-    mvlv_lines = tasks.query(
+    mvlv_lines = tasks.extract_lines(
         dublin_mvlv_network, "Level == 1 or Level == 2 or Level == 10 or Level == 11"
     )
-    hv_lines = tasks.query(
+    hv_lines = tasks.extract_lines(
         dublin_hv_network,
         "Level == 21 or Level == 24 or Level == 31 or Level == 34 or Level == 41 or Level == 44",
     )
