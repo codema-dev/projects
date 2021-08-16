@@ -35,6 +35,10 @@ FILEPATHS = {
     "dublin_small_area_boundaries": DATA_DIR
     / "external"
     / "dublin_small_area_boundaries_in_routing_keys.gpkg",
+    "38kv_stations": DATA_DIR / "processed" / "38kv_stations.gpkg",
+    "110kv_stations": DATA_DIR / "processed" / "110kv_stations.gpkg",
+    "220kv_stations": DATA_DIR / "processed" / "220kv_stations.gpkg",
+    "400kv_stations": DATA_DIR / "processed" / "400kv_stations.gpkg",
     "lv_single_phase": DATA_DIR / "processed" / "lv_single_phase.gpkg",
     "lv_three_phase": DATA_DIR / "processed" / "lv_three_phase.gpkg",
     "mv_single_phase": DATA_DIR / "processed" / "mv_single_phase.gpkg",
@@ -103,6 +107,22 @@ with Flow("Extract infrastructure small area line lengths") as flow:
     dublin_hv_network = tasks.extract_dublin_hv_network(hv_network, dublin_boundary)
     dublin_mvlv_network = tasks.extract_dublin_mvlv_network(
         dublin_region_mvlv_network, dublin_boundary
+    )
+
+    tasks.save_subset_to_gpkg(
+        gdf=dublin_hv_network,
+        query_str="Level == 20",
+        filepath=FILEPATHS["38kv_stations"],
+    )
+    tasks.save_subset_to_gpkg(
+        gdf=dublin_hv_network,
+        query_str="Level == 30",
+        filepath=FILEPATHS["110kv_stations"],
+    )
+    tasks.save_subset_to_gpkg(
+        gdf=dublin_hv_network,
+        query_str="Level == 40",
+        filepath=FILEPATHS["220kv_stations"],
     )
 
     mvlv_lines = tasks.query(

@@ -85,4 +85,6 @@ cut_mvlv_lines_on_boundaries = prefect.task(
     name="Cut MV & LV Lines on Small Area Boundaries",
 )
 
-save_subset_to_gpkg = prefect.task(functions.save_subset_to_gpkg)
+save_subset_to_gpkg = prefect.task(
+    functions.save_subset_to_gpkg, name="Save Extracted Stations/Lines to GPKG"
+)
