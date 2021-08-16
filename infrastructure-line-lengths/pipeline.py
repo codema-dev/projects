@@ -49,24 +49,29 @@ with Flow("Extract infrastructure small area line lengths") as flow:
         URLS["dublin_small_area_boundaries"], FILEPATHS["dublin_small_area_boundaries"]
     )
 
+    dublin_boundary = tasks.read_file(FILEPATHS["dublin_boundary"], crs="EPSG:2157")
     hv_network = tasks.read_hv_network(DIRPATHS["hv_network"])
     mv_index = tasks.read_file(FILEPATHS["mv_index"], crs="EPSG:29903")
     dublin_mv_index_ids = tasks.read_mv_index_ids(
         FILEPATHS["dublin_mv_index_ids"], header=None
     )
-    mvlv_network = tasks.read_mvlv_network(
+    dublin_region_mvlv_network = tasks.read_mvlv_network(
         DIRPATHS["mvlv_network"], ids=dublin_mv_index_ids
     )
-    dublin_boundary = tasks.read_file(FILEPATHS["dublin_boundary"], crs="EPSG:2157")
     dublin_small_area_boundaries = tasks.read_small_area_boundaries(
         FILEPATHS["dublin_small_area_boundaries"]
     )
 
+    dublin_hv_network = tasks.extract_dublin_hv_network(hv_network, dublin_boundary)
+    dublin_mvlv_network = tasks.extract_dublin_mvlv_network(
+        dublin_region_mvlv_network, dublin_boundary
+    )
+
     mvlv_lines = tasks.query(
-        mvlv_network, "Level == 1 or Level == 2 or Level == 10 or Level == 11"
+        dublin_mvlv_network, "Level == 1 or Level == 2 or Level == 10 or Level == 11"
     )
     hv_lines = tasks.query(
-        hv_network,
+        dublin_hv_network,
         "Level == 21 or Level == 24 or Level == 31 or Level == 34 or Level == 41 or Level == 44",
     )
     mvlv_lines_cut = tasks.cut_mvlv_lines_on_boundaries(
@@ -78,7 +83,7 @@ with Flow("Extract infrastructure small area line lengths") as flow:
 
     # set manual dependencies
     hv_network.set_upstream(check_electricity_data_exists)
-    mvlv_network.set_upstream(check_electricity_data_exists)
+    dublin_mvlv_network.set_upstream(check_electricity_data_exists)
     dublin_boundary.set_upstream(download_dublin_boundary)
     dublin_mv_index_ids.set_upstream(download_dublin_mv_index_ids)
     dublin_small_area_boundaries.set_upstream(download_dublin_small_area_boundaries)

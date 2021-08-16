@@ -55,3 +55,9 @@ def cut_lines_on_boundaries(
     lines: gpd.GeoDataFrame, boundaries: gpd.GeoDataFrame
 ) -> gpd.GeoDataFrame:
     return gpd.overlay(lines, boundaries, "union")
+
+
+def extract_in_boundary(
+    gdf: gpd.GeoDataFrame, boundary: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    return gpd.sjoin(gdf, boundary.to_crs(epsg=2157), op="intersects")

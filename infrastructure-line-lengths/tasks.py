@@ -41,30 +41,45 @@ download_file = prefect.task(functions.download_file)
 read_file = prefect.task(functions.read_file)
 read_hv_network = prefect.task(
     functions.read_hv_network,
-    target="hv_network.parquet",
+    target="ireland_hv_network.parquet",
     result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
     checkpoint=True,
 )
 read_mv_index_ids = prefect.task(functions.read_csv)
 read_mvlv_network = prefect.task(
     functions.read_mvlv_network,
-    target="mvlv_network.parquet",
+    target="dublin_region_mvlv_network.parquet",
     result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
     checkpoint=True,
 )
 read_small_area_boundaries = prefect.task(gpd.read_file)
 
+
+extract_dublin_hv_network = prefect.task(
+    functions.extract_in_boundary,
+    target="dublin_hv_network.parquet",
+    result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
+    checkpoint=True,
+    name="Extract Dublin HV Network",
+)
+extract_dublin_mvlv_network = prefect.task(
+    functions.extract_in_boundary,
+    target="dublin_mvlv_network.parquet",
+    result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
+    checkpoint=True,
+    name="Extract Dublin MV-LV Network",
+)
 query = prefect.task(functions.query)
 cut_hv_lines_on_boundaries = prefect.task(
     functions.cut_lines_on_boundaries,
-    target="hv_lines_cut.parquet",
+    target="dublin_hv_lines_cut.parquet",
     result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
     checkpoint=True,
     name="Cut HV Lines on Small Area Boundaries",
 )
 cut_mvlv_lines_on_boundaries = prefect.task(
     functions.cut_lines_on_boundaries,
-    target="mvlv_lines_cut.parquet",
+    target="dublin_mvlv_lines_cut.parquet",
     result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
     checkpoint=True,
     name="Cut MV & LV Lines on Small Area Boundaries",
