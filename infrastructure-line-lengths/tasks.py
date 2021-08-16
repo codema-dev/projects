@@ -62,3 +62,4 @@ read_mvlv_network = prefect.task(
     result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
     checkpoint=True,
 )
+read_small_area_boundaries = prefect.task(gpd.read_file)
