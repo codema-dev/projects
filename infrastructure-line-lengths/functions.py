@@ -17,8 +17,16 @@ def download_file(url: str, filepath: Path) -> None:
         urlretrieve(url=url, filename=str(filepath))
 
 
-def read_network(dirpath: Path) -> gpd.GeoDataFrame:
+def read_hv_network(dirpath: Path) -> gpd.GeoDataFrame:
     network = [gpd.read_file(filepath) for filepath in dirpath.iterdir()]
+    return gpd.GeoDataFrame(pd.concat(network), crs="EPSG:29903").to_crs(epsg=2157)
+
+
+def read_mvlv_network(dirpath: Path, ids: List[str]) -> gpd.GeoDataFrame:
+    network = []
+    for id in ids:
+        gdf = gpd.read_file(dirpath / f"{id}.dgn")
+        network.append(gdf)
     return gpd.GeoDataFrame(pd.concat(network), crs="EPSG:29903").to_crs(epsg=2157)
 
 
@@ -36,5 +44,4 @@ def extract_rows_in_list(
     gdf: gpd.GeoDataFrame, on_column: str, list_of_values: gpd.GeoDataFrame
 ) -> gpd.GeoDataFrame:
     rows_in_list = gdf[on_column].isin(list_of_values)
-    breakpoint()
     return gdf[rows_in_list]
