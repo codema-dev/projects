@@ -37,6 +37,7 @@ def get_pandas_result(
 
 
 check_file_exists = prefect.task(functions.check_file_exists)
+create_folder_structure = prefect.task(functions.create_folder_structure)
 download_file = prefect.task(functions.download_file)
 read_file = prefect.task(functions.read_file)
 read_hv_network = prefect.task(
@@ -52,7 +53,6 @@ read_mvlv_network = prefect.task(
     result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
     checkpoint=True,
 )
-read_small_area_boundaries = prefect.task(gpd.read_file)
 
 
 extract_dublin_hv_network = prefect.task(
@@ -84,3 +84,5 @@ cut_mvlv_lines_on_boundaries = prefect.task(
     checkpoint=True,
     name="Cut MV & LV Lines on Small Area Boundaries",
 )
+
+save_subset_to_gpkg = prefect.task(functions.save_subset_to_gpkg)

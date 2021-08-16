@@ -12,6 +12,19 @@ def check_file_exists(filepath: Path):
     assert filepath.exists(), f"Please download & unzip {filepath} to data/external/"
 
 
+def create_folder_structure(data_dirpath: Path) -> None:
+    external_dir = data_dirpath / "external"
+    external_dir.mkdir(exist_ok=True)
+    interim_dir = data_dirpath / "interim"
+    interim_dir.mkdir(exist_ok=True)
+    processed_dir = data_dirpath / "processed"
+    processed_dir.mkdir(exist_ok=True)
+
+
+def extract_columns(gdf: gpd.GeoDataFrame, columns: List[str]) -> gpd.GeoDataFrame:
+    return gdf[columns].copy()
+
+
 def download_file(url: str, filepath: Path) -> None:
     if not filepath.exists():
         urlretrieve(url=url, filename=str(filepath))
@@ -30,10 +43,15 @@ def read_mvlv_network(dirpath: Path, ids: List[str]) -> gpd.GeoDataFrame:
     return gpd.GeoDataFrame(pd.concat(network), crs="EPSG:29903").to_crs(epsg=2157)
 
 
-def read_file(filepath: Path, crs: str) -> gpd.GeoDataFrame:
+def read_file(
+    filepath: Path, crs: str, columns: Optional[List[str]] = None
+) -> gpd.GeoDataFrame:
     gdf = gpd.read_file(filepath)
     gdf.crs = crs
-    return gdf
+    if columns:
+        return gdf[columns]
+    else:
+        return gdf
 
 
 def read_csv(filepath: Path, header: str) -> List[str]:
@@ -61,3 +79,7 @@ def extract_in_boundary(
     gdf: gpd.GeoDataFrame, boundary: gpd.GeoDataFrame
 ) -> gpd.GeoDataFrame:
     return gpd.sjoin(gdf, boundary.to_crs(epsg=2157), op="intersects")
+
+
+def save_subset_to_gpkg(gdf: gpd.GeoDataFrame, query_str: str, filepath: Path) -> None:
+    gdf.query(query_str).to_file(filepath, driver="GPKG")

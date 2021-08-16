@@ -4,6 +4,7 @@ load_dotenv(".prefect")  # load local prefect configuration prior to import!
 from prefect import Flow
 
 import tasks
+from globals import HERE
 from globals import DATA_DIR
 
 URLS = {
@@ -34,32 +35,69 @@ FILEPATHS = {
     "dublin_small_area_boundaries": DATA_DIR
     / "external"
     / "dublin_small_area_boundaries_in_routing_keys.gpkg",
+    "lv_single_phase": DATA_DIR / "processed" / "lv_single_phase.gpkg",
+    "lv_three_phase": DATA_DIR / "processed" / "lv_three_phase.gpkg",
+    "mv_single_phase": DATA_DIR / "processed" / "mv_single_phase.gpkg",
+    "mv_three_phase": DATA_DIR / "processed" / "mv_three_phase.gpkg",
+    "38kv_overhead": DATA_DIR / "processed" / "38kv_overhead.gpkg",
+    "38kv_underground": DATA_DIR / "processed" / "38kv_underground.gpkg",
+    "110kv_overhead": DATA_DIR / "processed" / "110kv_overhead.gpkg",
+    "110kv_underground": DATA_DIR / "processed" / "110kv_underground.gpkg",
+    "220kv_overhead": DATA_DIR / "processed" / "220kv_overhead.gpkg",
+    "220kv_underground": DATA_DIR / "processed" / "220kv_underground.gpkg",
 }
 
 with Flow("Extract infrastructure small area line lengths") as flow:
+    create_folder_structure = tasks.create_folder_structure(DATA_DIR)
+
     check_gas_data_exists = tasks.check_file_exists(DIRPATHS["gas"])
-    check_electricity_data_exists = tasks.check_file_exists(DIRPATHS["electricity"])
+    check_electricity_data_exists = tasks.check_file_exists(
+        DIRPATHS["electricity"], upstream_tasks=[create_folder_structure]
+    )
     download_dublin_boundary = tasks.download_file(
-        URLS["dublin_boundary"], FILEPATHS["dublin_boundary"]
+        URLS["dublin_boundary"],
+        FILEPATHS["dublin_boundary"],
+        upstream_tasks=[create_folder_structure],
     )
     download_dublin_mv_index_ids = tasks.download_file(
-        URLS["dublin_mv_index_ids"], FILEPATHS["dublin_mv_index_ids"]
+        URLS["dublin_mv_index_ids"],
+        FILEPATHS["dublin_mv_index_ids"],
+        upstream_tasks=[create_folder_structure],
     )
     download_dublin_small_area_boundaries = tasks.download_file(
-        URLS["dublin_small_area_boundaries"], FILEPATHS["dublin_small_area_boundaries"]
+        URLS["dublin_small_area_boundaries"],
+        FILEPATHS["dublin_small_area_boundaries"],
+        upstream_tasks=[create_folder_structure],
     )
 
-    dublin_boundary = tasks.read_file(FILEPATHS["dublin_boundary"], crs="EPSG:2157")
-    hv_network = tasks.read_hv_network(DIRPATHS["hv_network"])
-    mv_index = tasks.read_file(FILEPATHS["mv_index"], crs="EPSG:29903")
+    dublin_boundary = tasks.read_file(
+        FILEPATHS["dublin_boundary"],
+        crs="EPSG:2157",
+        columns=["geometry"],
+        upstream_tasks=[download_dublin_boundary],
+    )
+    hv_network = tasks.read_hv_network(
+        DIRPATHS["hv_network"], upstream_tasks=[check_electricity_data_exists]
+    )
+    mv_index = tasks.read_file(
+        FILEPATHS["mv_index"],
+        crs="EPSG:29903",
+        upstream_tasks=[check_electricity_data_exists],
+    )
     dublin_mv_index_ids = tasks.read_mv_index_ids(
-        FILEPATHS["dublin_mv_index_ids"], header=None
+        FILEPATHS["dublin_mv_index_ids"],
+        header=None,
+        upstream_tasks=[download_dublin_mv_index_ids],
     )
     dublin_region_mvlv_network = tasks.read_mvlv_network(
-        DIRPATHS["mvlv_network"], ids=dublin_mv_index_ids
+        DIRPATHS["mvlv_network"],
+        ids=dublin_mv_index_ids,
+        upstream_tasks=[check_electricity_data_exists],
     )
-    dublin_small_area_boundaries = tasks.read_small_area_boundaries(
-        FILEPATHS["dublin_small_area_boundaries"]
+    dublin_small_area_boundaries = tasks.read_file(
+        FILEPATHS["dublin_small_area_boundaries"],
+        upstream_tasks=[download_dublin_small_area_boundaries],
+        crs="EPSG:2157",
     )
 
     dublin_hv_network = tasks.extract_dublin_hv_network(hv_network, dublin_boundary)
@@ -81,11 +119,49 @@ with Flow("Extract infrastructure small area line lengths") as flow:
         hv_lines, dublin_small_area_boundaries
     )
 
-    # set manual dependencies
-    hv_network.set_upstream(check_electricity_data_exists)
-    dublin_mvlv_network.set_upstream(check_electricity_data_exists)
-    dublin_boundary.set_upstream(download_dublin_boundary)
-    dublin_mv_index_ids.set_upstream(download_dublin_mv_index_ids)
-    dublin_small_area_boundaries.set_upstream(download_dublin_small_area_boundaries)
+    tasks.save_subset_to_gpkg(
+        gdf=mvlv_lines_cut, query_str="Level == 1", filepath=FILEPATHS["lv_three_phase"]
+    )
+    tasks.save_subset_to_gpkg(
+        gdf=mvlv_lines_cut,
+        query_str="Level == 2",
+        filepath=FILEPATHS["lv_single_phase"],
+    )
+    tasks.save_subset_to_gpkg(
+        gdf=mvlv_lines_cut,
+        query_str="Level == 10",
+        filepath=FILEPATHS["mv_three_phase"],
+    )
+    tasks.save_subset_to_gpkg(
+        gdf=mvlv_lines_cut,
+        query_str="Level == 11",
+        filepath=FILEPATHS["mv_single_phase"],
+    )
+    tasks.save_subset_to_gpkg(
+        gdf=hv_lines_cut, query_str="Level == 21", filepath=FILEPATHS["38kv_overhead"]
+    )
+    tasks.save_subset_to_gpkg(
+        gdf=hv_lines_cut,
+        query_str="Level == 24",
+        filepath=FILEPATHS["38kv_underground"],
+    )
+    tasks.save_subset_to_gpkg(
+        gdf=hv_lines_cut, query_str="Level == 31", filepath=FILEPATHS["110kv_overhead"]
+    )
+    tasks.save_subset_to_gpkg(
+        gdf=hv_lines_cut,
+        query_str="Level == 34",
+        filepath=FILEPATHS["110kv_underground"],
+    )
+    tasks.save_subset_to_gpkg(
+        gdf=hv_lines_cut, query_str="Level == 41", filepath=FILEPATHS["220kv_overhead"]
+    )
+    tasks.save_subset_to_gpkg(
+        gdf=hv_lines_cut,
+        query_str="Level == 44",
+        filepath=FILEPATHS["220kv_underground"],
+    )
 
-flow.run()
+state = flow.run()
+
+flow.visualize(flow_state=state, filename=HERE / "flow", format="png")
