@@ -55,3 +55,17 @@ read_mvlv_network = prefect.task(
 read_small_area_boundaries = prefect.task(gpd.read_file)
 
 query = prefect.task(functions.query)
+cut_hv_lines_on_boundaries = prefect.task(
+    functions.cut_lines_on_boundaries,
+    target="hv_lines_cut.parquet",
+    result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
+    checkpoint=True,
+    name="Cut HV Lines on Small Area Boundaries",
+)
+cut_mvlv_lines_on_boundaries = prefect.task(
+    functions.cut_lines_on_boundaries,
+    target="mvlv_lines_cut.parquet",
+    result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
+    checkpoint=True,
+    name="Cut MV & LV Lines on Small Area Boundaries",
+)

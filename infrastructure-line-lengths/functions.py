@@ -49,3 +49,9 @@ def extract_rows_in_list(
 
 def query(gdf: gpd.GeoDataFrame, query_str: str) -> gpd.GeoDataFrame:
     return gdf.query(query_str)
+
+
+def cut_lines_on_boundaries(
+    lines: gpd.GeoDataFrame, boundaries: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    return gpd.overlay(lines, boundaries, "union")
