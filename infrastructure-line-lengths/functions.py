@@ -45,3 +45,7 @@ def extract_rows_in_list(
 ) -> gpd.GeoDataFrame:
     rows_in_list = gdf[on_column].isin(list_of_values)
     return gdf[rows_in_list]
+
+
+def query(gdf: gpd.GeoDataFrame, query_str: str) -> gpd.GeoDataFrame:
+    return gdf.query(query_str)

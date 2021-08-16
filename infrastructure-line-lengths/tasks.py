@@ -45,17 +45,7 @@ read_hv_network = prefect.task(
     result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
     checkpoint=True,
 )
-read_mv_index_ids = prefect.task(
-    functions.read_csv,
-    target="esb_20210107_dublin_mv_index.csv",
-    result=get_pandas_result(
-        DATA_DIR / "interim",
-        filetype="csv",
-        serialize_kwargs={"index": False, "header": None},
-        deserialize_kwargs={"header": None, "squeeze": True},
-    ),
-    checkpoint=True,
-)
+read_mv_index_ids = prefect.task(functions.read_csv)
 read_mvlv_network = prefect.task(
     functions.read_mvlv_network,
     target="mvlv_network.parquet",
@@ -63,3 +53,5 @@ read_mvlv_network = prefect.task(
     checkpoint=True,
 )
 read_small_area_boundaries = prefect.task(gpd.read_file)
+
+query = prefect.task(functions.query)

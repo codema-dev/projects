@@ -62,6 +62,11 @@ with Flow("Extract infrastructure small area line lengths") as flow:
         FILEPATHS["dublin_small_area_boundaries"]
     )
 
+    mvlv_lines = tasks.query(
+        mvlv_network, "Level == 1 or Level == 2 or Level == 10 or Level == 11"
+    )
+    hv_lines = tasks.query(hv_network, "Level == 20 or Level == 30 or Level == 40")
+
     # set manual dependencies
     hv_network.set_upstream(check_electricity_data_exists)
     mvlv_network.set_upstream(check_electricity_data_exists)
