@@ -16,26 +16,22 @@ filepaths = {
     "data": {
         "demand_map": DATA_DIR
         / "processed"
-        / "dublin_small_area_demand_tj_per_km2.geojson",
+        / "dublin_small_area_emissions_tco2_per_y.geojson",
     },
     "pynb": {
-        "demand_map": BASE_DIR / "map_heat_demand_densities.py",
+        "demand_map": BASE_DIR / "map_emissions.py",
     },
-    "ipynb": {"demand_map": DATA_DIR / "notebooks" / "map_heat_demand_densities.ipynb"},
+    "ipynb": {"demand_map": DATA_DIR / "notebooks" / "map_emissions.ipynb"},
 }
 
 
 with prefect.Flow("Estimate Heat Demand Density") as flow:
-    # Set CONFIG
-    assumed_boiler_efficiency = prefect.Parameter(
-        "Assumed Boiler Efficiency", default=0.85
-    )
 
     # Extract
     valuation_office = tasks.load_valuation_office(
         url=CONFIG["valuation_office"]["url"]
     )
-    bers = tasks.load_bers(url=CONFIG["bers"]["url"])
+    raw_bers = tasks.load_bers(url=CONFIG["bers"]["url"])
     benchmark_uses = tasks.load_benchmark_uses(
         url=CONFIG["benchmark_uses"]["url"], filesystem_name="s3"
     )
@@ -43,30 +39,36 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
     small_area_boundaries = tasks.load_small_area_boundaries(
         url=CONFIG["small_area_boundaries"]["url"]
     )
+    local_authority_boundaries = tasks.load_local_authority_boundaries(
+        url=CONFIG["local_authority_boundaries"]["url"]
+    )
 
     # Estimate Demand
     valuation_office_map = tasks.link_valuation_office_to_small_areas(
         valuation_office=valuation_office,
         small_area_boundaries=small_area_boundaries,
     )
-    non_residential_demand = tasks.apply_benchmarks_to_valuation_office_floor_areas(
+    non_residential_emissions = tasks.extract_non_residential_emissions(
         valuation_office=valuation_office_map,
         benchmark_uses=benchmark_uses,
         benchmarks=benchmarks,
-        assumed_boiler_efficiency=assumed_boiler_efficiency,
     )
-    residential_demand = tasks.extract_residential_heat_demand(bers)
-    demand_mwh_per_y = tasks.amalgamate_heat_demands_to_small_areas(
-        residential=residential_demand, non_residential=non_residential_demand
+    clean_bers = tasks.drop_small_areas_not_in_boundaries(
+        bers=raw_bers, small_area_boundaries=small_area_boundaries
     )
-    demand_tj_per_km2 = tasks.convert_from_mwh_per_y_to_tj_per_km2(
-        demand=demand_mwh_per_y, small_area_boundaries=small_area_boundaries
+    residential_emissions = tasks.extract_residential_emissions(clean_bers)
+    emissions_tco2_per_y = tasks.amalgamate_emissions_to_small_areas(
+        residential=residential_emissions, non_residential=non_residential_emissions
     )
 
     # Convert to Map
-    demand_map = tasks.link_demands_to_boundaries(
-        demands=demand_tj_per_km2,
-        boundaries=small_area_boundaries,
+    boundaries = tasks.link_small_areas_to_local_authorities(
+        small_area_boundaries=small_area_boundaries,
+        local_authority_boundaries=local_authority_boundaries,
+    )
+    demand_map = tasks.link_emissions_to_boundaries(
+        demands=emissions_tco2_per_y,
+        boundaries=boundaries,
     )
 
     # Plot
@@ -74,14 +76,12 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
         demand_map=demand_map,
         filepath=filepaths["data"]["demand_map"],
     )
-    convert_heat_demand_density_plotting_script_to_ipynb = (
-        tasks.convert_heat_demand_density_plotting_script_to_ipynb(
-            input_filepath=filepaths["pynb"]["demand_map"],
-            output_filepath=filepaths["ipynb"]["demand_map"],
-            fmt="py:light",
-        )
+    convert_plotting_script_to_ipynb = tasks.convert_plotting_script_to_ipynb(
+        input_filepath=filepaths["pynb"]["demand_map"],
+        output_filepath=filepaths["ipynb"]["demand_map"],
+        fmt="py:light",
     )
-    execute_hdd_plot_ipynb = tasks.execute_hdd_plot_ipynb(
+    execute_hdd_plot_ipynb = tasks.execute_plot_ipynb(
         path=filepaths["ipynb"]["demand_map"],
         parameters={
             "SAVE_PLOTS": True,
@@ -91,9 +91,7 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
     )
 
     # Manually set dependencies where no inputs are passed between tasks
-    convert_heat_demand_density_plotting_script_to_ipynb.set_upstream(save_demand_map)
-    execute_hdd_plot_ipynb.set_upstream(
-        convert_heat_demand_density_plotting_script_to_ipynb
-    )
+    convert_plotting_script_to_ipynb.set_upstream(save_demand_map)
+    execute_hdd_plot_ipynb.set_upstream(convert_plotting_script_to_ipynb)
 
 flow.run()

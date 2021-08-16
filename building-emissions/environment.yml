@@ -1,4 +1,4 @@
-name: hdd
+name: building-emissions
 channels:
   - conda-forge
   - patrikhlobil
@@ -15,6 +15,3 @@ dependencies:
   - jupyter
   - papermill
   - jupytext
-  - selenium
-  - geckodriver
-  - dataframe-image

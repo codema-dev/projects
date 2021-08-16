@@ -1,4 +1,4 @@
-name: hdd
+name: building-emissions
 channels:
   - conda-forge
   - patrikhlobil 
@@ -22,10 +22,6 @@ dependencies:
   - fsspec
   - s3fs
   - pyarrow
-
-  # Saving bokeh plots as images
-  - selenium
-  - geckodriver
 
   # Plotting
   - pandas-bokeh

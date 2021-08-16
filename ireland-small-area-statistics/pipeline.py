@@ -22,108 +22,89 @@ CONFIG.read(HERE / "config.ini")
 DATA_DIR = HERE / "data"
 
 
-def main(config: ConfigParser = CONFIG, data_dir: Path = DATA_DIR):
+filepaths: Dict[str, str] = {
+    "small_area_statistics": str(
+        DATA_DIR / "external" / CONFIG["filenames"]["small_area_statistics"]
+    ),
+    "small_area_boundaries": str(
+        DATA_DIR / "external" / CONFIG["filenames"]["small_area_boundaries"]
+    ),
+    "routing_key_boundaries": str(
+        DATA_DIR / "external" / CONFIG["filenames"]["routing_key_boundaries"]
+    ),
+    "routing_key_descriptors_to_postcodes": str(
+        DATA_DIR / "external" / "routing_key_descriptors_to_postcodes.json"
+    ),
+    "building_ages": str(DATA_DIR / "processed" / "building_ages_2016.parquet"),
+    "dublin_small_areas": str(
+        DATA_DIR / "processed" / "dublin_small_area_boundaries_in_routing_keys.gpkg"
+    ),
+}
 
-    if not data_dir.exists():
-        data_dir.mkdir(exist_ok=True)
 
-    filepaths: Dict[str, str] = {
-        "small_area_statistics": str(
-            data_dir / config["filenames"]["small_area_statistics"]
-        ),
-        "small_area_boundaries": str(
-            data_dir / config["filenames"]["small_area_boundaries"]
-        ),
-        "routing_key_boundaries": str(
-            data_dir / config["filenames"]["routing_key_boundaries"]
-        ),
-        "routing_key_descriptors_to_postcodes": str(
-            data_dir / "routing_key_descriptors_to_postcodes.json"
-        ),
-        "building_ages": str(data_dir / "building_ages_2016.parquet"),
-    }
+## Generate prefect flow
+with prefect.Flow("Ireland Small Area Statistics") as flow:
 
-    ## Transform functions into prefect tasks
-    download = prefect.task(tasks.download)
-    read_csv = prefect.task(pd.read_csv)
-    read_shp = prefect.task(gpd.read_file)
-    read_json = prefect.task(tasks.read_json)
-    extract_period_built_statistics = prefect.task(
-        tasks.extract_period_built_statistics,
+    download_small_areas_statistics = tasks.download(
+        url=CONFIG["urls"]["small_area_statistics"],
+        filename=filepaths["small_area_statistics"],
     )
-    melt_small_area_statistics_to_individual_buildings = prefect.task(
-        tasks.melt_small_area_statistics_to_individual_buildings,
+    download_small_area_boundaries = tasks.download(
+        url=CONFIG["urls"]["small_area_boundaries"],
+        filename=filepaths["small_area_boundaries"],
     )
-    map_routing_keys_to_countyname = prefect.task(tasks.map_routing_keys_to_countyname)
-    link_small_areas_to_routing_keys = prefect.task(
-        tasks.link_small_areas_to_routing_keys
+    download_routing_key_boundaries = tasks.download(
+        url=CONFIG["urls"]["routing_key_boundaries"],
+        filename=filepaths["routing_key_boundaries"],
     )
-    to_parquet = prefect.task(tasks.to_parquet)
-    merge = prefect.task(pd.merge)
+    download_routing_key_descriptors_to_postcodes = tasks.download(
+        url=CONFIG["urls"]["routing_key_descriptors_to_postcodes"],
+        filename=filepaths["routing_key_descriptors_to_postcodes"],
+    )
 
-    ## Generate prefect flow
-    with prefect.Flow("Ireland Small Area Statistics") as flow:
+    small_areas_statistics = tasks.read_csv(filepaths["small_area_statistics"])
+    small_areas_building_ages = tasks.extract_period_built_statistics(
+        small_areas_statistics
+    )
+    buildings_ages = tasks.melt_small_area_statistics_to_individual_buildings(
+        small_areas_building_ages
+    )
 
-        download_small_areas_statistics = download(
-            url=config["urls"]["small_area_statistics"],
-            filename=filepaths["small_area_statistics"],
-        )
-        download_small_area_boundaries = download(
-            url=config["urls"]["small_area_boundaries"],
-            filename=filepaths["small_area_boundaries"],
-        )
-        download_routing_key_boundaries = download(
-            url=config["urls"]["routing_key_boundaries"],
-            filename=filepaths["routing_key_boundaries"],
-        )
-        download_routing_key_descriptors_to_postcodes = download(
-            url=config["urls"]["routing_key_descriptors_to_postcodes"],
-            filename=filepaths["routing_key_descriptors_to_postcodes"],
-        )
+    routing_key_descriptors_to_postcodes = tasks.read_json(
+        filepaths["routing_key_descriptors_to_postcodes"]
+    )
+    routing_key_boundaries = tasks.map_routing_keys_to_countyname(
+        tasks.read_shp(filepaths["routing_key_boundaries"]),
+        routing_key_descriptors_to_postcodes,
+    )
+    small_area_boundaries = tasks.read_shp(filepaths["small_area_boundaries"])
+    small_areas_in_routing_keys = tasks.link_small_areas_to_routing_keys(
+        small_area_boundaries, routing_key_boundaries
+    )
+    dublin_small_areas = tasks.extract_dublin(small_areas_in_routing_keys)
 
-        small_areas_statistics = read_csv(filepaths["small_area_statistics"])
-        small_areas_building_ages = extract_period_built_statistics(
-            small_areas_statistics
-        )
-        buildings_ages = melt_small_area_statistics_to_individual_buildings(
-            small_areas_building_ages
-        )
+    building_ages_in_countyname = tasks.link_building_ages_to_countyname(
+        buildings_ages, small_areas_in_routing_keys
+    )
 
-        routing_key_descriptors_to_postcodes = read_json(
-            filepaths["routing_key_descriptors_to_postcodes"]
-        )
-        routing_key_boundaries = map_routing_keys_to_countyname(
-            read_shp(filepaths["routing_key_boundaries"]),
-            routing_key_descriptors_to_postcodes,
-        )
-        small_area_boundaries = read_shp(filepaths["small_area_boundaries"])
-        small_areas_in_routing_keys = link_small_areas_to_routing_keys(
-            small_area_boundaries, routing_key_boundaries
-        )
+    tasks.to_file(
+        dublin_small_areas, path=filepaths["dublin_small_areas"], driver="GPKG"
+    )
+    tasks.to_parquet(
+        building_ages_in_countyname,
+        path=filepaths["building_ages"],
+    )
 
-        building_ages_in_countyname = merge(
-            left=buildings_ages, right=small_areas_in_routing_keys
-        )
+    ## Manually set dependencies where prefect can't infer run-order
+    small_areas_statistics.set_upstream(download_small_areas_statistics)
+    small_area_boundaries.set_upstream(download_small_area_boundaries)
+    routing_key_boundaries.set_upstream(download_routing_key_boundaries)
+    routing_key_descriptors_to_postcodes.set_upstream(
+        download_routing_key_descriptors_to_postcodes
+    )
 
-        to_parquet(
-            building_ages_in_countyname,
-            path=filepaths["building_ages"],
-        )
+## Run flow!
+from prefect.utilities.debug import raise_on_exception
 
-        ## Manually set dependencies where prefect can't infer run-order
-        small_areas_statistics.set_upstream(download_small_areas_statistics)
-        small_area_boundaries.set_upstream(download_small_area_boundaries)
-        routing_key_boundaries.set_upstream(download_routing_key_boundaries)
-        routing_key_descriptors_to_postcodes.set_upstream(
-            download_routing_key_descriptors_to_postcodes
-        )
-
-    ## Run flow!
-    from prefect.utilities.debug import raise_on_exception
-
-    with raise_on_exception():
-        flow.run()
-
-
-if __name__ == "__main__":
-    main()
+with raise_on_exception():
+    flow.run()

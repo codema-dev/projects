@@ -24,7 +24,7 @@ def read_geoparquet(url: str) -> pd.DataFrame:
         return gpd.read_parquet(f)
 
 
-def read_file(url: str) -> pd.DataFrame:
+def read_zipped_shp(url: str) -> pd.DataFrame:
     with fsspec.open(url) as f:
         return gpd.read_file(f)
 
@@ -78,93 +78,112 @@ def link_small_areas_to_local_authorities(
     )
 
 
-def apply_benchmarks_to_valuation_office_floor_areas(
+def extract_non_residential_emissions(
     valuation_office: pd.DataFrame,
     benchmark_uses: pd.DataFrame,
     benchmarks: pd.DataFrame,
-    assumed_boiler_efficiency: float,
 ) -> pd.Series:
+    kwh_gas_to_tco2 = 204.7e-6
+    kwh_electricity_to_tco2 = 295.1e-6
+
     valuation_office["use"] = valuation_office["Use1"].map(benchmark_uses)
     with_benchmarks = valuation_office.merge(
         benchmarks, left_on="use", right_on="Benchmark", how="left", indicator=True
     )
-    non_industrial_heat_demand_kwh_per_y = (
-        with_benchmarks["Typical fossil fuel [kWh/m²y]"] * with_benchmarks["Total_SQM"]
-    ) / assumed_boiler_efficiency
-    industrial_heat_demand_kwh_per_y = (
-        with_benchmarks["Industrial space heat [kWh/m²y]"]
+
+    non_industrial_tco2_per_y = (
+        with_benchmarks["Typical fossil fuel [kWh/m²y]"].fillna(0)
         * with_benchmarks["Total_SQM"]
+        * kwh_gas_to_tco2
+        + with_benchmarks["Typical electricity [kWh/m²y]"].fillna(0)
+        * with_benchmarks["Total_SQM"]
+        * kwh_electricity_to_tco2
     )
-    kwh_to_mwh = 1e-3
-    with_benchmarks["heat_demand_mwh_per_y"] = (
-        non_industrial_heat_demand_kwh_per_y.fillna(0)
-        + industrial_heat_demand_kwh_per_y.fillna(0)
-    ) * kwh_to_mwh
-    return with_benchmarks[["small_area", "heat_demand_mwh_per_y"]]
+
+    industrial_tco2_per_y = (
+        (
+            with_benchmarks["Industrial building total [kWh/m²y]"].fillna(0)
+            + with_benchmarks["Industrial process energy [kWh/m²y]"].fillna(0)
+        )
+        * with_benchmarks["Total_SQM"]
+        * kwh_gas_to_tco2
+    )
+
+    with_benchmarks["emissions_tco2_per_y"] = (
+        non_industrial_tco2_per_y + industrial_tco2_per_y
+    )
+
+    return with_benchmarks[["small_area", "Benchmark", "emissions_tco2_per_y"]]
 
 
-def extract_residential_heat_demand(bers: pd.DataFrame) -> pd.Series:
-    kwh_to_mwh = 1e-3
-    bers["heat_demand_mwh_per_y"] = (
+def extract_residential_emissions(bers: pd.DataFrame) -> pd.Series:
+    kwh_electricity_to_tco2 = 295.1e-6
+    emission_factors = bers["main_sh_boiler_fuel"].map(
+        {
+            "Mains Gas": 204.7e-6,
+            "Heating Oil": 263e-6,
+            "Electricity": kwh_electricity_to_tco2,
+            "Bulk LPG": 229e-6,
+            "Wood Pellets (bags)": 390e-6,
+            "Wood Pellets (bulk)": 160e-6,
+            "Solid Multi-Fuel": 390e-6,
+            "Manuf.Smokeless Fuel": 390e-6,
+            "Bottled LPG": 229e-6,
+            "House Coal": 340e-6,
+            "Wood Logs": 390e-6,
+            "Peat Briquettes": 355e-6,
+            "Anthracite": 340e-6,
+        }
+    )
+    heating_demand = (
         bers["main_sh_demand"]
         + bers["suppl_sh_demand"]
         + bers["main_hw_demand"]
         + bers["suppl_hw_demand"]
-    ) * kwh_to_mwh
-    return bers[["small_area", "heat_demand_mwh_per_y"]]
+    )
+    electricity_demand = (bers["pump_fan_demand"] + bers["lighting_demand"]) * 2
+    bers["emissions_tco2_per_y"] = (
+        heating_demand * emission_factors + electricity_demand * kwh_electricity_to_tco2
+    )
+
+    return bers[["small_area", "period_built", "emissions_tco2_per_y"]]
 
 
-def amalgamate_heat_demands_to_small_areas(
+def drop_small_areas_not_in_boundaries(
+    bers: pd.DataFrame, small_area_boundaries: gpd.GeoDataFrame
+) -> pd.DataFrame:
+    small_areas = small_area_boundaries["small_area"].to_numpy()
+    return bers.query("small_area in @small_areas")
+
+
+def amalgamate_emissions_to_small_areas(
     residential: pd.DataFrame, non_residential: pd.DataFrame
 ) -> pd.DataFrame:
     residential_small_areas = (
-        residential.groupby("small_area")["heat_demand_mwh_per_y"]
+        residential.groupby(["small_area", "period_built"])["emissions_tco2_per_y"]
         .sum()
-        .rename("residential_heat_demand_mwh_per_y")
-    )
-    index = residential_small_areas.index
-    non_residential_small_areas = (
-        non_residential.groupby("small_area")["heat_demand_mwh_per_y"]
-        .sum()
-        .reindex(index)
+        .reset_index()
+        .pivot(
+            index="small_area", columns="period_built", values="emissions_tco2_per_y"
+        )
         .fillna(0)
-        .rename("non_residential_heat_demand_mwh_per_y")
+    )
+    non_residential_small_areas = (
+        non_residential.groupby(["small_area", "Benchmark"])["emissions_tco2_per_y"]
+        .sum()
+        .reset_index()
+        .pivot(index="small_area", columns="Benchmark", values="emissions_tco2_per_y")
+        .fillna(0)
     )
     return pd.concat(
         [residential_small_areas, non_residential_small_areas], axis="columns"
-    )
+    ).fillna(0)
 
 
-def convert_from_mwh_per_y_to_tj_per_km2(
-    demand: pd.DataFrame, small_area_boundaries: gpd.GeoDataFrame
-) -> pd.DataFrame:
-    index = demand.index
-    m2_to_km2 = 1e-6
-    small_area_boundaries["polygon_area_km2"] = (
-        small_area_boundaries.geometry.area * m2_to_km2
-    )
-    polygon_area_km2_by_small_area = (
-        small_area_boundaries[["small_area", "polygon_area_km2"]]
-        .set_index("small_area")
-        .squeeze()
-        .reindex(index)
-    )
-    mwh_to_tj = 0.0036
-    demand_tj_per_y = mwh_to_tj * demand
-    return (
-        demand_tj_per_y.divide(polygon_area_km2_by_small_area, axis="rows")
-        .rename(columns=lambda x: x.replace("_mwh_per_y", "_tj_per_km2y"))
-        .assign(total_heat_demand_tj_per_km2y=lambda df: df.sum(axis="columns"))
-        .dropna(how="any")
-    )
-
-
-def link_demands_to_boundaries(
+def link_emissions_to_boundaries(
     demands: pd.DataFrame, boundaries: gpd.GeoDataFrame
 ) -> None:
-    return boundaries.merge(
-        demands, left_on="small_area", right_index=True, how="right"
-    )
+    return boundaries.merge(demands, left_on="small_area", right_index=True, how="left")
 
 
 def save_demand_map(demand_map: gpd.GeoDataFrame, filepath: Path) -> None:

@@ -1,20 +1,25 @@
 from pathlib import Path
 
-from bokeh.io import export_svg
+from bokeh.io import export_png
 from bokeh.io import save
 from bokeh.io import show
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import pandas_bokeh
+import dataframe_image as dfi
 
+import pandas_bokeh
 from globals import DATA_DIR
+
+pandas_bokeh.output_notebook()
+pd.set_option("display.precision", 1)
 
 ## Parametrize
 # overwrite parameters with arguemnts generated in prefect pipeline
 
 # + tags=["parameters"]
 SAVE_AS_HTML: bool = True
+SAVE_AS_IMAGE: bool = True
 DATA_DIR: str = DATA_DIR
 demand_map_filepath: str = (
     DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson"
@@ -136,7 +141,6 @@ for la, la_map, la_table in zip(local_authorities, la_maps, la_tables):
                 "residential_heat_demand_tj_per_km2y": "int32",
                 "non_residential_heat_demand_tj_per_km2y": "int32",
                 "total_heat_demand_tj_per_km2y": "int32",
-                "percentage_share_of_heat_demand": "int8",
             }
         )
         .rename(
@@ -173,6 +177,7 @@ for la, la_map, la_table in zip(local_authorities, la_maps, la_tables):
         ) as file:
             styled_table.to_html(file)
         save(figure, filename=Path(DATA_DIR) / "maps" / f"{filename}.html")
-    else:
-        print(la_table)
-        show(figure)
+
+    if SAVE_AS_IMAGE:
+        dfi.export(styled_table, str(Path(DATA_DIR) / "tables" / f"{filename}.png"))
+        export_png(figure, filename=Path(DATA_DIR) / "maps" / f"{filename}.png")

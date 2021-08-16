@@ -82,7 +82,7 @@ load_benchmarks = prefect.task(
 )
 
 load_small_area_boundaries = prefect.task(
-    functions.read_file,
+    functions.read_geoparquet,
     target="small_area_boundaries.parquet",
     checkpoint=True,
     result=get_geoparquet_result(DATA_DIR / "external"),
@@ -90,7 +90,7 @@ load_small_area_boundaries = prefect.task(
 )
 
 load_local_authority_boundaries = prefect.task(
-    functions.read_file,
+    functions.read_zipped_shp,
     target="local_authority_boundaries.parquet",
     checkpoint=True,
     result=get_geoparquet_result(DATA_DIR / "external"),
@@ -102,9 +102,9 @@ link_small_areas_to_local_authorities = prefect.task(
     name="Link Each Small Areas to their Corresponding Local Authority",
 )
 
-apply_benchmarks_to_valuation_office_floor_areas = prefect.task(
-    functions.apply_benchmarks_to_valuation_office_floor_areas,
-    name="Apply Energy Benchmarks to Valuation Office Floor Areas",
+extract_non_residential_emissions = prefect.task(
+    functions.extract_non_residential_emissions,
+    name="Use Energy Benchmarks on Valuation Office Floor Areas to Estimate Emissions",
 )
 
 link_valuation_office_to_small_areas = prefect.task(
@@ -115,29 +115,26 @@ link_valuation_office_to_small_areas = prefect.task(
     name="Link Valuation Office to Small Area Boundaries",
 )
 
-extract_residential_heat_demand = prefect.task(
-    functions.extract_residential_heat_demand,
-    name="Extract DEAP Residential Heat Demand",
+drop_small_areas_not_in_boundaries = prefect.task(
+    functions.drop_small_areas_not_in_boundaries, name="Drop Invalid Small Areas"
 )
 
-amalgamate_heat_demands_to_small_areas = prefect.task(
-    functions.amalgamate_heat_demands_to_small_areas,
+extract_residential_emissions = prefect.task(
+    functions.extract_residential_emissions,
+    name="Extract DEAP Residential Emissions",
+)
+
+amalgamate_emissions_to_small_areas = prefect.task(
+    functions.amalgamate_emissions_to_small_areas,
     target="dublin_small_area_demand_mwh_per_y.parquet",
     checkpoint=True,
     result=get_parquet_result(DATA_DIR / "processed"),
-    name="Amalgamate Heat Demands to Small Areas",
+    name="Amalgamate Emissions to Small Areas",
 )
 
-convert_from_mwh_per_y_to_tj_per_km2 = prefect.task(
-    functions.convert_from_mwh_per_y_to_tj_per_km2,
-    target="dublin_small_area_demand_tj_per_km2.parquet",
-    checkpoint=True,
-    result=get_parquet_result(DATA_DIR / "processed"),
-    name="Convert Heat Demands from MWh/year to TJ/km2",
-)
-
-link_demands_to_boundaries = prefect.task(
-    functions.link_demands_to_boundaries, name="Link Demands to Boundaries for Mapping"
+link_emissions_to_boundaries = prefect.task(
+    functions.link_emissions_to_boundaries,
+    name="Link Emissions to Boundaries for Mapping",
 )
 
 save_demand_map = prefect.task(
@@ -145,9 +142,9 @@ save_demand_map = prefect.task(
     name="Save Small Area Heat Demand Map",
 )
 
-convert_heat_demand_density_plotting_script_to_ipynb = prefect.task(
+convert_plotting_script_to_ipynb = prefect.task(
     functions.convert_file_to_ipynb,
     name="Convert Heat Demand Density Map Script to ipynb",
 )
 
-execute_hdd_plot_ipynb = ExecuteNotebook()
+execute_plot_ipynb = ExecuteNotebook()
