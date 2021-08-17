@@ -1,0 +1,9 @@
+name: building-emissions
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - geopandas
+  - pandas
+  - pygeos
+  - openpyxl
