@@ -53,5 +53,15 @@ def extract_in_boundary(
     return gpd.sjoin(gdf, boundary.to_crs(epsg=2157), op="intersects")
 
 
-def save_subset_to_gpkg(gdf: gpd.GeoDataFrame, query_str: str, filepath: Path) -> None:
-    gdf.query(query_str).to_file(filepath, driver="GPKG")
+def measure_line_lengths_in_boundaries(
+    gdf: gpd.GeoDataFrame, boundary_column_name: str
+) -> gpd.GeoDataFrame:
+    return gdf.groupby(boundary_column_name).apply(lambda s: s.geometry.length)
+
+
+def query(gdf: gpd.GeoDataFrame, query_str: str) -> gpd.GeoDataFrame:
+    return gdf.query(query_str)
+
+
+def save_to_gpkg(gdf: gpd.GeoDataFrame, filepath: Path) -> None:
+    gdf.to_file(filepath, driver="GPKG")

@@ -34,6 +34,10 @@ extract_lines_in_dublin_boundary = prefect.task(
     result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
     target="centrelines_in_dublin_boundary.parquet",
 )
+measure_line_lengths_in_boundaries = prefect.task(
+    functions.measure_line_lengths_in_boundaries,
+    name="Measure Line Lengths in Each Small Area Boundary",
+)
 cut_lines_on_boundaries = prefect.task(
     functions.cut_lines_on_boundaries,
     name="Cut Lines on Small Area Boundaries",
@@ -41,5 +45,5 @@ cut_lines_on_boundaries = prefect.task(
     result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
     target="centrelines_in_dublin_small_areas.parquet",
 )
-
-save_to_gpkg = prefect.task(functions.save_subset_to_gpkg, name="Save to GPKG")
+query = prefect.task(functions.query, name="Filter By Pressure")
+save_to_gpkg = prefect.task(functions.save_to_gpkg, name="Save to GPKG")
