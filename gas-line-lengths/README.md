@@ -1,4 +1,4 @@
-# Heat Demand Density
+# Gas Line Lengths
 
 ## What `pipeline.py` is doing:
 
@@ -7,7 +7,7 @@
 ## Caveats
 
 To fully reproduce the pipeline the user must:
-- Have access to `ESB Networks` electricity grid infrastructure files
+- Have access to `Gas Networks Ireland` gas grid infrastructure files
 - Be comfortable enough with the command line to create a conda environment from an `environment.yml` and run the pipeline with `python pipeline.py`
 
 ## Setup
