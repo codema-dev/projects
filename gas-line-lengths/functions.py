@@ -56,7 +56,12 @@ def extract_in_boundary(
 def measure_line_lengths_in_boundaries(
     gdf: gpd.GeoDataFrame, boundary_column_name: str
 ) -> gpd.GeoDataFrame:
-    return gdf.groupby(boundary_column_name).apply(lambda s: s.geometry.length)
+    line_lengths = pd.concat([gdf[boundary_column_name], gdf.geometry.length], axis=1)
+    return (
+        line_lengths.groupby(boundary_column_name, as_index=False)
+        .sum()
+        .rename(columns={0: "line_length_m"})
+    )
 
 
 def query(gdf: gpd.GeoDataFrame, query_str: str) -> gpd.GeoDataFrame:
@@ -65,3 +70,7 @@ def query(gdf: gpd.GeoDataFrame, query_str: str) -> gpd.GeoDataFrame:
 
 def save_to_gpkg(gdf: gpd.GeoDataFrame, filepath: Path) -> None:
     gdf.to_file(filepath, driver="GPKG")
+
+
+def save_to_csv(df: pd.DataFrame, filepath: Path) -> None:
+    df.to_csv(filepath)

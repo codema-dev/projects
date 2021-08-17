@@ -89,9 +89,24 @@ with Flow("Extract infrastructure small area line lengths") as flow:
     )
 
     queries = [f"pressure == '{pressure}'" for pressure in PRESSURES]
-    filepaths = [DATA_DIR / "processed" / f"{pressure}.gpkg" for pressure in PRESSURES]
     centrelines_by_pressure = tasks.query.map(unmapped(small_area_centrelines), queries)
-    tasks.save_to_gpkg.map(centrelines_by_pressure, filepaths)
+    tasks.save_to_gpkg.map(
+        centrelines_by_pressure,
+        filepath=[
+            DATA_DIR / "processed" / f"{pressure} - lines.gpkg"
+            for pressure in PRESSURES
+        ],
+    )
+    small_area_centreline_lengths = tasks.measure_small_area_line_lengths.map(
+        centrelines_by_pressure, boundary_column_name=unmapped("small_area")
+    )
+    tasks.save_to_csv.map(
+        small_area_centreline_lengths,
+        filepath=[
+            DATA_DIR / "processed" / f"{pressure} - small_area.csv"
+            for pressure in PRESSURES
+        ],
+    )
 
 state = flow.run()
 flow.visualize(flow_state=state, filename=HERE / "flow", format="png")
