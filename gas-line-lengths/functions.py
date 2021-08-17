@@ -51,3 +51,7 @@ def extract_in_boundary(
     gdf: gpd.GeoDataFrame, boundary: gpd.GeoDataFrame
 ) -> gpd.GeoDataFrame:
     return gpd.sjoin(gdf, boundary.to_crs(epsg=2157), op="intersects")
+
+
+def save_subset_to_gpkg(gdf: gpd.GeoDataFrame, query_str: str, filepath: Path) -> None:
+    gdf.query(query_str).to_file(filepath, driver="GPKG")

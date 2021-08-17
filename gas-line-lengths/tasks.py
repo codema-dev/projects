@@ -21,40 +21,25 @@ def get_geopandas_result(data_dir: Path, filetype: str) -> results.LocalResult:
     )
 
 
-def get_pandas_result(
-    data_dir: Path,
-    filetype: str,
-    serialize_kwargs: Dict[str, Any],
-    deserialize_kwargs: Dict[str, Any],
-) -> results.LocalResult:
-    return results.LocalResult(
-        dir=data_dir,
-        serializer=PandasSerializer(
-            filetype,
-            serialize_kwargs=serialize_kwargs,
-            deserialize_kwargs=deserialize_kwargs,
-        ),
-    )
-
-
 check_file_exists = prefect.task(functions.check_file_exists)
 create_folder_structure = prefect.task(functions.create_folder_structure)
 download_file = prefect.task(functions.download_file)
 read_file = prefect.task(functions.read_file)
+
 concatenate = prefect.task(pd.concat)
-extract_dublin_centrelines = prefect.task(
+extract_lines_in_dublin_boundary = prefect.task(
     functions.extract_in_boundary,
-    name="Extract Dublin Centrelines",
+    name="Extract Lines in Dublin Boundary",
+    checkpoint=True,
+    result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
+    target="centrelines_in_dublin_boundary.parquet",
 )
-extract_dublin_leaderlines = prefect.task(
-    functions.extract_in_boundary,
-    name="Extract Dublin Leaderlines",
-)
-cut_centrelines_on_boundaries = prefect.task(
+cut_lines_on_boundaries = prefect.task(
     functions.cut_lines_on_boundaries,
-    name="Cut Centrelines on Small Area Boundaries",
+    name="Cut Lines on Small Area Boundaries",
+    checkpoint=True,
+    result=get_geopandas_result(DATA_DIR / "interim", filetype="parquet"),
+    target="centrelines_in_dublin_small_areas.parquet",
 )
-cut_leaderlines_on_boundaries = prefect.task(
-    functions.cut_lines_on_boundaries,
-    name="Cut Leaderlines on Small Area Boundaries",
-)
+
+save_to_gpkg = prefect.task(functions.save_subset_to_gpkg, name="Save to GPKG")
