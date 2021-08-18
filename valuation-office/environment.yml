@@ -1,0 +1,13 @@
+name: vo
+channels:
+  - conda-forge
+dependencies:
+  - pyarrow
+  - geopandas
+  - prefect
+  - python-dotenv
+  - s3fs
+  - fsspec
+  - pip
+  - pip:
+    - prefect-geopandas-serializer
