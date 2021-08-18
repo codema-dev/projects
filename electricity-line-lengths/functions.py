@@ -69,6 +69,17 @@ def query(gdf: gpd.GeoDataFrame, query_str: str) -> gpd.GeoDataFrame:
     return gdf.query(query_str)
 
 
+def measure_line_lengths_in_boundaries(
+    gdf: gpd.GeoDataFrame, boundary_column_name: str
+) -> gpd.GeoDataFrame:
+    line_lengths = pd.concat([gdf[boundary_column_name], gdf.geometry.length], axis=1)
+    return (
+        line_lengths.groupby(boundary_column_name, as_index=False)
+        .sum()
+        .rename(columns={0: "line_length_m"})
+    )
+
+
 def cut_lines_on_boundaries(
     lines: gpd.GeoDataFrame, boundaries: gpd.GeoDataFrame
 ) -> gpd.GeoDataFrame:
@@ -81,9 +92,9 @@ def extract_in_boundary(
     return gpd.sjoin(gdf, boundary.to_crs(epsg=2157), op="intersects")
 
 
-def save_subset_to_gpkg(gdf: gpd.GeoDataFrame, query_str: str, filepath: Path) -> None:
-    gdf.query(query_str).to_file(filepath, driver="GPKG")
-
-
 def save_to_gpkg(gdf: gpd.GeoDataFrame, filepath: Path) -> None:
     gdf.to_file(filepath, driver="GPKG")
+
+
+def save_to_csv(df: pd.DataFrame, filepath: Path) -> None:
+    df.to_csv(filepath)
