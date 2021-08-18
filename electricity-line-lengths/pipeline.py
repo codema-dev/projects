@@ -1,7 +1,9 @@
+from os import stat
 from dotenv import load_dotenv
 
 load_dotenv(".prefect")  # load local prefect configuration prior to import!
 from prefect import Flow
+from prefect import unmapped
 
 import tasks
 from globals import HERE
@@ -14,7 +16,6 @@ URLS = {
 }
 
 DIRPATHS = {
-    "gas": DATA_DIR / "external" / "DGN ITM-20210812T133007Z-001",
     "electricity": DATA_DIR / "external" / "ESBdata_20210107",
     "hv_network": DATA_DIR
     / "external"
@@ -51,10 +52,13 @@ FILEPATHS = {
     "220kv_underground": DATA_DIR / "processed" / "220kv_underground.gpkg",
 }
 
+MVLV_LINE_LEVELS = [1, 2, 10, 11]
+HV_LINE_LEVELS = [21, 24, 31, 34, 41, 44]
+STATION_LEVELS = [20, 30, 40]
+
 with Flow("Extract infrastructure small area line lengths") as flow:
     create_folder_structure = tasks.create_folder_structure(DATA_DIR)
 
-    check_gas_data_exists = tasks.check_file_exists(DIRPATHS["gas"])
     check_electricity_data_exists = tasks.check_file_exists(
         DIRPATHS["electricity"], upstream_tasks=[create_folder_structure]
     )
@@ -109,20 +113,17 @@ with Flow("Extract infrastructure small area line lengths") as flow:
         dublin_region_mvlv_network, dublin_boundary
     )
 
-    tasks.save_subset_to_gpkg(
-        gdf=dublin_hv_network,
-        query_str="Level == 20",
-        filepath=FILEPATHS["38kv_stations"],
+    station_query_strs = [f"Level == {level}" for level in STATION_LEVELS]
+    stations = tasks.query.map(
+        unmapped(dublin_hv_network), query_str=station_query_strs
     )
-    tasks.save_subset_to_gpkg(
-        gdf=dublin_hv_network,
-        query_str="Level == 30",
-        filepath=FILEPATHS["110kv_stations"],
-    )
-    tasks.save_subset_to_gpkg(
-        gdf=dublin_hv_network,
-        query_str="Level == 40",
-        filepath=FILEPATHS["220kv_stations"],
+    tasks.save_to_gpkg.map(
+        gdf=stations,
+        filepath=[
+            FILEPATHS["38kv_stations"],
+            FILEPATHS["110kv_stations"],
+            FILEPATHS["220kv_stations"],
+        ],
     )
 
     mvlv_lines = tasks.extract_lines(
@@ -132,54 +133,41 @@ with Flow("Extract infrastructure small area line lengths") as flow:
         dublin_hv_network,
         "Level == 21 or Level == 24 or Level == 31 or Level == 34 or Level == 41 or Level == 44",
     )
-    mvlv_lines_cut = tasks.cut_mvlv_lines_on_boundaries(
+    small_area_mvlv_lines = tasks.cut_mvlv_lines_on_boundaries(
         mvlv_lines, dublin_small_area_boundaries
     )
-    hv_lines_cut = tasks.cut_hv_lines_on_boundaries(
+    small_area_hv_lines = tasks.cut_hv_lines_on_boundaries(
         hv_lines, dublin_small_area_boundaries
     )
 
-    tasks.save_subset_to_gpkg(
-        gdf=mvlv_lines_cut, query_str="Level == 1", filepath=FILEPATHS["lv_three_phase"]
+    mvlv_line_query_strs = [f"Level == {level}" for level in MVLV_LINE_LEVELS]
+    small_area_mvlv_lines_by_voltage = tasks.query.map(
+        unmapped(small_area_mvlv_lines), query_str=mvlv_line_query_strs
     )
-    tasks.save_subset_to_gpkg(
-        gdf=mvlv_lines_cut,
-        query_str="Level == 2",
-        filepath=FILEPATHS["lv_single_phase"],
+    tasks.save_to_gpkg.map(
+        gdf=small_area_mvlv_lines_by_voltage,
+        filepath=[
+            FILEPATHS["lv_three_phase"],
+            FILEPATHS["lv_single_phase"],
+            FILEPATHS["mv_three_phase"],
+            FILEPATHS["mv_single_phase"],
+        ],
     )
-    tasks.save_subset_to_gpkg(
-        gdf=mvlv_lines_cut,
-        query_str="Level == 10",
-        filepath=FILEPATHS["mv_three_phase"],
+
+    hv_line_query_strs = [f"Level == {level}" for level in HV_LINE_LEVELS]
+    small_area_hv_lines_by_voltage = tasks.query.map(
+        unmapped(small_area_hv_lines), query_str=hv_line_query_strs
     )
-    tasks.save_subset_to_gpkg(
-        gdf=mvlv_lines_cut,
-        query_str="Level == 11",
-        filepath=FILEPATHS["mv_single_phase"],
-    )
-    tasks.save_subset_to_gpkg(
-        gdf=hv_lines_cut, query_str="Level == 21", filepath=FILEPATHS["38kv_overhead"]
-    )
-    tasks.save_subset_to_gpkg(
-        gdf=hv_lines_cut,
-        query_str="Level == 24",
-        filepath=FILEPATHS["38kv_underground"],
-    )
-    tasks.save_subset_to_gpkg(
-        gdf=hv_lines_cut, query_str="Level == 31", filepath=FILEPATHS["110kv_overhead"]
-    )
-    tasks.save_subset_to_gpkg(
-        gdf=hv_lines_cut,
-        query_str="Level == 34",
-        filepath=FILEPATHS["110kv_underground"],
-    )
-    tasks.save_subset_to_gpkg(
-        gdf=hv_lines_cut, query_str="Level == 41", filepath=FILEPATHS["220kv_overhead"]
-    )
-    tasks.save_subset_to_gpkg(
-        gdf=hv_lines_cut,
-        query_str="Level == 44",
-        filepath=FILEPATHS["220kv_underground"],
+    tasks.save_to_gpkg.map(
+        gdf=small_area_hv_lines_by_voltage,
+        filepath=[
+            FILEPATHS["38kv_overhead"],
+            FILEPATHS["38kv_underground"],
+            FILEPATHS["110kv_overhead"],
+            FILEPATHS["110kv_underground"],
+            FILEPATHS["220kv_overhead"],
+            FILEPATHS["220kv_underground"],
+        ],
     )
 
 state = flow.run()

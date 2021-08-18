@@ -83,3 +83,7 @@ def extract_in_boundary(
 
 def save_subset_to_gpkg(gdf: gpd.GeoDataFrame, query_str: str, filepath: Path) -> None:
     gdf.query(query_str).to_file(filepath, driver="GPKG")
+
+
+def save_to_gpkg(gdf: gpd.GeoDataFrame, filepath: Path) -> None:
+    gdf.to_file(filepath, driver="GPKG")
