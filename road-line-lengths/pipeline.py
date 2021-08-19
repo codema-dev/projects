@@ -24,7 +24,12 @@ INPUT_FILEPATHS = {
 }
 
 OUTPUT_FILEPATHS = {
-    "roads": DATA_DIR / "processed" / f"osm_roads_{DAY}_{MONTH}_{YEAR}.gpkg",
+    "roads_in_small_areas": DATA_DIR
+    / "processed"
+    / f"osm_roads_{DAY}_{MONTH}_{YEAR}.gpkg",
+    "small_area_line_lengths": DATA_DIR
+    / "processed"
+    / f"osm_road_line_lengths_{DAY}_{MONTH}_{YEAR}.csv",
 }
 
 with Flow("Measure Small Area Road Line lengths") as flow:
@@ -39,15 +44,21 @@ with Flow("Measure Small Area Road Line lengths") as flow:
         filepath=INPUT_FILEPATHS["dublin_small_area_boundaries"],
     )
     dublin_polygon = tasks.dissolve_boundaries_to_polygon(dublin_boundary)
-    osm_highway = tasks.load_roads(
+    highway = tasks.load_roads(
         dublin_polygon, INPUT_FILEPATHS["roads"], columns=["highway", "geometry"]
     )
-    osm_roads = tasks.extract_lines(osm_highway)
-    osm_roads_in_small_areas = tasks.cut_lines_on_boundaries(
-        lines=osm_roads, boundaries=dublin_small_area_boundaries
+    roads = tasks.extract_lines(highway)
+    roads_in_small_areas = tasks.cut_lines_on_boundaries(
+        lines=roads, boundaries=dublin_small_area_boundaries
+    )
+    small_area_line_lengths = tasks.measure_line_lengths_in_boundaries(
+        roads_in_small_areas, "small_area"
     )
 
-    tasks.save_to_gpkg(osm_roads_in_small_areas, OUTPUT_FILEPATHS["roads"])
+    tasks.save_to_gpkg(roads_in_small_areas, OUTPUT_FILEPATHS["roads_in_small_areas"])
+    tasks.save_to_csv(
+        small_area_line_lengths, OUTPUT_FILEPATHS["small_area_line_lengths"]
+    )
 
 state = flow.run()
 flow.visualize(flow_state=state, filename=HERE / "flow", format="png")

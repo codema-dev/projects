@@ -17,5 +17,12 @@ extract_lines = task(functions.extract_lines, name="Extract Lines")
 cut_lines_on_boundaries = task(
     functions.cut_lines_on_boundaries, name="Cut Lines on Boundaries"
 )
+measure_line_lengths_in_boundaries = task(
+    functions.measure_line_lengths_in_boundaries,
+    name="Measure Line Lengths in Boundaries",
+)
 
 save_to_gpkg = task(functions.save_to_gpkg, name="Save to File")
+save_to_csv = task(
+    lambda df, filepath: df.to_csv(filepath, index=False), name="Save to CSV"
+)
