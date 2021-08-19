@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import List
+from typing import Optional
 
 import geopandas as gpd
 import osmnx
@@ -17,13 +18,17 @@ def create_folder_structure(data_dirpath: Path) -> None:
 
 
 def load_file(
-    url: str, filepath: Path, columns: List[str], to_crs="EPSG:4326"
+    url: str, filepath: Path, columns: Optional[List[str]] = None, to_crs="EPSG:4326"
 ) -> gpd.GeoDataFrame:
     if filepath.exists():
-        gdf = gpd.read_parquet(filepath)[columns].to_crs(to_crs)
+        gdf = gpd.read_parquet(filepath)
     else:
-        gdf = gpd.read_file(url)[columns].to_crs(to_crs)
-        gdf.to_parquet(filepath)
+        gdf = gpd.read_file(url).to_crs(to_crs)
+        if columns:
+            gdf = gdf[columns]
+            gdf.to_parquet(filepath)
+        else:
+            gdf.to_parquet(filepath)
     return gdf
 
 
@@ -32,10 +37,24 @@ def dissolve_geometries_to_shapely_polygon(gdf: gpd.GeoDataFrame) -> gpd.GeoData
 
 
 def load_roads(polygon: gpd.GeoDataFrame, filepath: Path, columns: List[str]):
-    breakpoint()
     if filepath.exists():
         roads = gpd.read_parquet(filepath)
     else:
         roads = osmnx.geometries_from_polygon(polygon, tags={"highway": True})
         roads[columns].reset_index().to_parquet(filepath)
     return roads
+
+
+def extract_lines(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    is_line = gdf.geometry.geom_type == "LineString"
+    return gdf[is_line].copy()
+
+
+def cut_lines_on_boundaries(
+    lines: gpd.GeoDataFrame, boundaries: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    return gpd.overlay(lines, boundaries, "union")
+
+
+def save_to_gpkg(gdf: gpd.GeoDataFrame, filepath: Path) -> None:
+    gdf.to_file(filepath, driver="GPKG")
