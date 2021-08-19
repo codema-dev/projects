@@ -37,6 +37,11 @@ def load_parquet(url: str, filepath: Path) -> pd.DataFrame:
     return df
 
 
+def remove_rows(df: pd.DataFrame, column: str, values: List[str]) -> pd.DataFrame:
+    rows_corresponding_to_values = df[column].isin(values)
+    return df[~rows_corresponding_to_values].copy()
+
+
 def estimate_residential_emissions(
     bers: pd.DataFrame,
     electricity_mwh: float,
