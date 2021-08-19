@@ -75,8 +75,8 @@ with Flow("Extract infrastructure small area line lengths") as flow:
     gas_mwh_to_tco2 = 0.2047
 
     # from Eirgrid 2020 Tomorrow's Energy Scenarios
-    data_centre_mwh = 32500000
-    data_centre_tco2 = 10541700
+    data_centre_mwh = 3.25e6
+    data_centre_tco2 = data_centre_mwh * electricity_mwh_to_tco2
 
     # adapted from NTA's 2021 Model
     dart_mwh = 24377.70008318234
