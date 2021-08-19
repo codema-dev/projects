@@ -1,0 +1,15 @@
+name: stats
+channels:
+  - conda-forge
+dependencies:
+  - pandas
+  - pyarrow
+  - fsspec
+  - s3fs
+  - seaborn
+  - python-dotenv
+  - prefect
+  - graphviz
+  - pip
+  - pip:
+    - graphviz

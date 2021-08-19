@@ -33,8 +33,8 @@ Via [conda](https://github.com/conda-forge/miniforge):
 
 - Minimal
 ```bash
-conda env create --file environment.yml
-conda activate hdd
+conda env create --file environment.yml --name stats
+conda activate stats
 ```
 
 Now run the pipeline:
