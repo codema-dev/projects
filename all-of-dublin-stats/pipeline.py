@@ -104,7 +104,7 @@ with Flow("Extract infrastructure small area line lengths") as flow:
     ).set_upstream(create_folder_structure)
 
     # from Valuation Office
-    commercial_buildings = tasks.load_commercial(
+    raw_commercial_buildings = tasks.load_commercial(
         URLS["commercial"], INPUT_FILEPATHS["commercial"]
     ).set_upstream(create_folder_structure)
 
@@ -149,6 +149,21 @@ with Flow("Extract infrastructure small area line lengths") as flow:
         ],
     )
 
+    commercial_without_public_sector = tasks.remove_rows(
+        raw_commercial_buildings,
+        "Benchmark",
+        [
+            "Emergency services",
+            "Hospital (clinical and research)",
+            "Schools and seasonal public buildings",
+        ],
+    )
+    commercial_without_data_centres = tasks.remove_rows(
+        commercial_without_public_sector,
+        "Benchmark",
+        ["Data Centre"],
+    )
+    commercial_buildings = commercial_without_public_sector
     commercial_electricity_mwh = (
         tasks.sum_column(commercial_buildings, "electricity_demand_kwh_per_y")
         * kwh_to_mwh

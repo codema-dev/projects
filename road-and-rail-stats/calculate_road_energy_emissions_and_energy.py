@@ -15,13 +15,11 @@
 from pathlib import Path
 
 import geopandas as gpd
-import matplotlib.pyplot as plt
 import pandas as pd
 from shapely.geometry import box
 
 # +
 data_dir = Path("data")
-plot = False
 FILEPATHS = {
     "small_area_boundaries": data_dir
     / "external"

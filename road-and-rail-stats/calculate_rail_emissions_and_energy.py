@@ -15,13 +15,11 @@
 from pathlib import Path
 
 import geopandas as gpd
-import matplotlib.pyplot as plt
 import pandas as pd
 from shapely.geometry import box
 
 # +
 data_dir = Path("data")
-plot = False
 FILEPATHS = {
     "rail_links": data_dir / "external" / "Dublin_Rail_Links" / "Dublin_Rail_Links.shp",
     "small_area_boundaries": data_dir
@@ -98,15 +96,6 @@ total_journeys_per_small_area = gpd.overlay(
 total_journeys_per_small_area["line_length_km"] = (
     total_journeys_per_small_area.geometry.length * 10 ** -3
 )
-
-# +
-if plot:
-    f, ax = plt.subplots(figsize=(20, 20))
-    dublin_small_area_boundaries.plot(ax=ax, facecolor="none", edgecolor="blue")
-    total_journeys.plot(ax=ax, linewidth=20, color="grey", alpha=0.5)
-    total_journeys_per_small_area.plot(
-        ax=ax, column="line_length_km", linewidth=10
-    )  # using index values from nta_grid_boundaries as unique identifiers
 
 # +
 # ## Link Small Areas to Number of Journeys for linkID

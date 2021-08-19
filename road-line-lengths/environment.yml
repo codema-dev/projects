@@ -1,0 +1,21 @@
+name: line-lengths
+channels:
+  - conda-forge
+dependencies:
+  - prefect
+  - geopandas
+  - pyarrow
+  - python-dotenv
+  - graphviz
+  - osmnx
+  - requests
+  - aiohttp
+
+  # dev
+  - black
+  - mypy
+  - ipython
+
+  - pip
+  - pip:
+    - graphviz

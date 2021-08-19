@@ -16,6 +16,8 @@ read_csv = prefect.task(pd.read_csv)
 read_parquet = prefect.task(pd.read_parquet)
 read_json = prefect.task(pd.read_json)
 
+remove_rows = prefect.task(functions.remove_rows, name="Remove Rows")
+
 sum_column = prefect.task(lambda df, c: float(df[c].sum()), name="Sum Column")
 estimate_residential_emissions = prefect.task(functions.estimate_residential_emissions)
 create_series = prefect.task(pd.Series)
