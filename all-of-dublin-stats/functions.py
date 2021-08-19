@@ -1,6 +1,10 @@
 from pathlib import Path
 from typing import Dict
 from typing import List
+from urllib.request import urlretrieve
+
+import fsspec
+
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -20,6 +24,16 @@ def create_folder_structure(data_dirpath: Path) -> None:
     interim_dir.mkdir(exist_ok=True)
     processed_dir = data_dirpath / "processed"
     processed_dir.mkdir(exist_ok=True)
+
+
+def load_parquet(url: str, filepath: Path) -> pd.DataFrame:
+    if filepath.exists():
+        df = pd.read_parquet(filepath)
+    else:
+        with fsspec.open(url) as f:
+            df = pd.read_parquet(f)
+        df.to_parquet(filepath)
+    return df
 
 
 def estimate_residential_emissions(

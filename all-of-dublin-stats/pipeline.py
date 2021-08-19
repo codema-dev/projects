@@ -1,3 +1,5 @@
+from os import getenv
+
 from dotenv import load_dotenv
 
 load_dotenv(".prefect")  # load local prefect configuration prior to import!
@@ -7,12 +9,18 @@ import tasks
 from globals import HERE
 from globals import DATA_DIR
 
+URLS = {
+    "commercial": "s3://codema-dev/valuation_office_dublin_april_2021.parquet",
+    "residential": "s3://codema-dev/bers_dublin_june_2021.parquet",
+    "municipal": "s3://codema-dev/monitoring_and_reporting_dublin_21_1_20.parquet",
+}
+
 INPUT_FILEPATHS = {
-    "public_sector_buildings": DATA_DIR
+    "municipal": DATA_DIR
     / "external"
-    / "monitoring_and_reporting_geocoded_by_osm.csv",
-    "residential_buildings": DATA_DIR / "external" / "small_area_bers.parquet",
-    "commercial_buildings": DATA_DIR / "external" / "valuation_office_demands.csv",
+    / "monitoring_and_reporting_dublin_21_1_20.parquet",
+    "residential": DATA_DIR / "external" / "bers_dublin_june_2021.parquet",
+    "commercial": DATA_DIR / "external" / "valuation_office_dublin_april_2021.parquet",
 }
 
 OUTPUT_FILEPATHS = {
@@ -42,11 +50,23 @@ FUELS_TO_EMISSION_FACTORS_KWH_TO_TCO2 = {
     "Anthracite": 340e-6,
 }
 
+load_dotenv(".env")
+message = f"""
+
+    Please create a .env file
+    
+    In this directory: {HERE.resolve()}
+
+    With the following contents:
+    
+    AWS_ACCESS_KEY_ID=YOUR_KEY
+    AWS_SECRET_ACCESS_KEY=YOUR_SECRET_KEY
+"""
+assert getenv("AWS_ACCESS_KEY_ID") is not None, message
+assert getenv("AWS_SECRET_ACCESS_KEY") is not None, message
+
 with Flow("Extract infrastructure small area line lengths") as flow:
     create_folder_structure = tasks.create_folder_structure(DATA_DIR)
-    check_data_exists = tasks.check_file_exists.map(
-        list(INPUT_FILEPATHS.values())
-    ).set_upstream(create_folder_structure)
 
     kwh_to_mwh = 1e-3
 
@@ -74,9 +94,20 @@ with Flow("Extract infrastructure small area line lengths") as flow:
     road_tco2 = 1727902.3409237664
 
     # from SEAI's Monitoring & Reporting
-    public_sector_buildings = tasks.read_csv(
-        INPUT_FILEPATHS["public_sector_buildings"]
-    ).set_upstream(check_data_exists)
+    public_sector_buildings = tasks.load_municipal(
+        URLS["municipal"], INPUT_FILEPATHS["municipal"]
+    ).set_upstream(create_folder_structure)
+
+    # from SEAI's Small Area BERs
+    residential_buildings = tasks.load_residential(
+        URLS["residential"], INPUT_FILEPATHS["residential"]
+    ).set_upstream(create_folder_structure)
+
+    # from Valuation Office
+    commercial_buildings = tasks.load_commercial(
+        URLS["commercial"], INPUT_FILEPATHS["commercial"]
+    ).set_upstream(create_folder_structure)
+
     public_sector_electricity_mwh = (
         tasks.sum_column(public_sector_buildings, "electricity_kwh_2018") * kwh_to_mwh
     )
@@ -87,12 +118,6 @@ with Flow("Extract infrastructure small area line lengths") as flow:
         public_sector_electricity_mwh * electricity_mwh_to_tco2
         + public_sector_gas_mwh * gas_mwh_to_tco2
     )
-    #  public_sector_heat_mwh
-
-    # from SEAI's Small Area BERs
-    residential_buildings = tasks.read_parquet(
-        INPUT_FILEPATHS["residential_buildings"]
-    ).set_upstream(check_data_exists)
 
     # assume electricity ~= 5 * (pump_fan_demand + lighting_demand)
     # ... SEAI's 2013 Energy in the Residential Sector estimates lighting is 16%
@@ -124,10 +149,6 @@ with Flow("Extract infrastructure small area line lengths") as flow:
         ],
     )
 
-    # from Valuation Office
-    commercial_buildings = tasks.read_csv(
-        INPUT_FILEPATHS["commercial_buildings"]
-    ).set_upstream(check_data_exists)
     commercial_electricity_mwh = (
         tasks.sum_column(commercial_buildings, "electricity_demand_kwh_per_y")
         * kwh_to_mwh
@@ -154,6 +175,7 @@ with Flow("Extract infrastructure small area line lengths") as flow:
             "data_centres": data_centre_tco2,
         }
     )
+
     tasks.plot_pie(tco2, filepath=OUTPUT_FILEPATHS["plot"]["tco2"])
     tasks.save_to_csv(tco2, filepath=OUTPUT_FILEPATHS["data"]["tco2"], index=True)
 
