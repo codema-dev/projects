@@ -34,15 +34,30 @@ with Flow("Amalgamate Buildings to Electoral Districts") as flow:
     small_areas_to_electoral_districts = tasks.extract_columns(
         small_area_boundaries, columns=["small_area", "cso_ed_id"]
     )
-    commercial_with_eds = tasks.merge(
-        commercial, small_areas_to_electoral_districts, on="small_area"
-    )
-    residential_with_eds = tasks.merge(
-        residential, small_areas_to_electoral_districts, on="small_area"
-    )
-
     public_sector_with_eds = tasks.sjoin(
         public_sector, small_area_boundaries, op="within"
+    )
+
+    electoral_district_commercial_floor_areas = tasks.amalgamate_to_electoral_district(
+        commercial,
+        granularity="cso_ed_id",
+        columns="Benchmark",
+        on="Total_SQM",
+    )
+    electoral_district_commercial = tasks.count_in_electoral_district(
+        commercial,
+        granularity="cso_ed_id",
+        columns="Benchmark",
+    )
+    electoral_district_residential = tasks.count_in_electoral_district(
+        residential,
+        granularity="cso_ed_id",
+        columns="period_built",
+    )
+    electoral_district_public_sector = tasks.count_in_electoral_district(
+        public_sector_with_eds,
+        granularity="cso_ed_id",
+        columns="category",
     )
 
     # Manually specify missing links

@@ -29,11 +29,20 @@ def convert_to_geodataframe(
 def amalgamate_to_granularity(
     df: pd.DataFrame, granularity: str, columns: str, on: str
 ):
-    breakpoint()
     return (
         df.groupby([granularity, columns])[on]
         .sum()
         .reset_index()
         .pivot(index=granularity, columns=columns, values=on)
+        .fillna(0)
+    )
+
+
+def count_in_granularity(df: pd.DataFrame, granularity: str, columns: str):
+    return (
+        df.groupby([granularity, columns])
+        .size()
+        .reset_index()
+        .pivot(index=granularity, columns=columns, values=0)
         .fillna(0)
     )

@@ -63,3 +63,6 @@ sjoin = task(gpd.sjoin, name="Spatial Join")
 amalgamate_to_electoral_district = task(
     functions.amalgamate_to_granularity, name="Amalgamate Column to Electoral District"
 )
+count_in_electoral_district = task(
+    functions.count_in_granularity, name="Count Occurences in Electoral District"
+)
