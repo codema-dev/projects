@@ -48,4 +48,6 @@ amalgamate_to_small_areas = task(
 )
 
 save_to_csv = task(lambda df, filepath: df.to_csv(filepath), name="Save to CSV")
-save_to_gpkg = task(lambda gdf, filepath: gdf.to_csv(filepath), name="Save to GPKG")
+save_to_gpkg = task(
+    lambda gdf, filepath: gdf.to_file(filepath, driver="GPKG"), name="Save to GPKG"
+)
