@@ -13,10 +13,12 @@ URLS = {
 }
 
 OUTPUT_FILEPATHS = {
-    "small_area_lv_capacity": DATA_DIR / "processed" / "small_area_lv_capacity.csv",
-    "lv_substations_in_small_areas": DATA_DIR
+    "electoral_district_lv_capacity": DATA_DIR
     / "processed"
-    / "lv_substations_in_small_areas.gpkg",
+    / "electoral_district_lv_capacity.csv",
+    "lv_substations_in_electoral_districts": DATA_DIR
+    / "processed"
+    / "lv_substations_in_electoral_districts.gpkg",
 }
 
 with Flow("Estimate LV capacity") as flow:
@@ -27,6 +29,12 @@ with Flow("Estimate LV capacity") as flow:
     small_area_boundaries = tasks.load_small_area_boundaries(
         URLS["small_area_boundaries"]
     ).set_upstream(create_folder_structure)
+    raw_electoral_district_boundaries = tasks.dissolve(
+        small_area_boundaries, by="cso_ed_id"
+    )
+    electoral_district_boundaries = tasks.drop_column(
+        raw_electoral_district_boundaries, columns=["small_area"]
+    )
 
     substations = tasks.convert_to_geodataframe(
         raw_substations,
@@ -36,21 +44,26 @@ with Flow("Estimate LV capacity") as flow:
         to_crs="EPSG:2157",
     )
     lv_substations = tasks.query(substations, "`Voltage Class` == 'LV'")
-    lv_substations_in_small_areas = tasks.link_to_small_area_boundaries(
-        left_df=lv_substations, right_df=small_area_boundaries, op="within"
+    lv_substations_in_electoral_districts = tasks.link_to_electoral_district_boundaries(
+        left_df=lv_substations, right_df=electoral_district_boundaries, op="within"
     )
-    small_area_lv_capacity = tasks.amalgamate_to_small_areas(
-        lv_substations_in_small_areas,
-        by=["small_area"],
-        on_columns=["Installed Capacity MVA", "Demand Available MVA"],
+    electoral_district_lv_capacity = tasks.amalgamate_to_electoral_district(
+        lv_substations_in_electoral_districts,
+        by=["cso_ed_id"],
+        on_columns=[
+            "SLR Load MVA",
+            "Installed Capacity MVA",
+            "Demand Available MVA",
+        ],
     )
 
     tasks.save_to_csv(
-        small_area_lv_capacity, filepath=OUTPUT_FILEPATHS["small_area_lv_capacity"]
+        electoral_district_lv_capacity,
+        filepath=OUTPUT_FILEPATHS["electoral_district_lv_capacity"],
     )
     tasks.save_to_gpkg(
-        lv_substations_in_small_areas,
-        filepath=OUTPUT_FILEPATHS["lv_substations_in_small_areas"],
+        lv_substations_in_electoral_districts,
+        filepath=OUTPUT_FILEPATHS["lv_substations_in_electoral_districts"],
     )
 
 state = flow.run()
