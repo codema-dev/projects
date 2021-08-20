@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import fsspec
 import geopandas as gpd
 import pandas as pd
 
@@ -12,6 +13,26 @@ def create_folder_structure(data_dirpath: Path) -> None:
     interim_dir.mkdir(exist_ok=True)
     processed_dir = data_dirpath / "processed"
     processed_dir.mkdir(exist_ok=True)
+
+
+def load_parquet(url: str, filepath: Path) -> pd.DataFrame:
+    if filepath.exists():
+        df = pd.read_parquet(filepath)
+    else:
+        with fsspec.open(url) as f:
+            df = pd.read_parquet(f)
+        df.to_parquet(filepath)
+    return df
+
+
+def load_file(url: str, filepath: Path) -> pd.DataFrame:
+    if filepath.exists():
+        df = pd.read_parquet(filepath)
+    else:
+        with fsspec.open(url) as f:
+            df = gpd.read_file(f)
+        df.to_parquet(filepath)
+    return df
 
 
 def convert_to_geodataframe(

@@ -1,3 +1,5 @@
+from os import getenv
+
 from dotenv import load_dotenv
 
 load_dotenv(".prefect")
@@ -12,6 +14,17 @@ URLS = {
     "residential": "s3://codema-dev/bers_dublin_june_2021.parquet",
     "public_sector": "s3://codema-dev/monitoring_and_reporting_dublin_21_1_20.parquet",
     "small_area_boundaries": "s3://codema-dev/dublin_small_area_boundaries_in_routing_keys.gpkg",
+}
+
+INPUT_FILEPATHS = {
+    "commercial": DATA_DIR / "external" / "valuation_office_dublin_april_2021.csv",
+    "residential": DATA_DIR / "external" / "bers_dublin_june_2021.csv",
+    "public_sector": DATA_DIR
+    / "external"
+    / "monitoring_and_reporting_dublin_21_1_20.csv",
+    "small_area_boundaries": DATA_DIR
+    / "external"
+    / "dublin_small_area_boundaries_in_routing_keys.gpkg",
 }
 
 OUTPUT_FILEPATHS = {
@@ -29,14 +42,34 @@ OUTPUT_FILEPATHS = {
     / "public_sector_in_electoral_districts_dublin_21_1_20.csv",
 }
 
+load_dotenv(".env")
+message = f"""
+
+    Please create a .env file
+    
+    In this directory: {HERE.resolve()}
+
+    With the following contents:
+    
+    AWS_ACCESS_KEY_ID=YOUR_KEY
+    AWS_SECRET_ACCESS_KEY=YOUR_SECRET_KEY
+"""
+assert getenv("AWS_ACCESS_KEY_ID") is not None, message
+assert getenv("AWS_SECRET_ACCESS_KEY") is not None, message
 
 with Flow("Amalgamate Buildings to Electoral Districts") as flow:
     create_folder_structure = tasks.create_folder_structure(DATA_DIR)
-    commercial = tasks.load_commercial(URLS["commercial"])
-    raw_public_sector = tasks.load_public_sector(URLS["public_sector"])
-    residential = tasks.load_residential(URLS["residential"])
+    commercial = tasks.load_commercial(
+        URLS["commercial"], INPUT_FILEPATHS["commercial"]
+    )
+    raw_public_sector = tasks.load_public_sector(
+        URLS["public_sector"], INPUT_FILEPATHS["public_sector"]
+    )
+    residential = tasks.load_residential(
+        URLS["residential"], INPUT_FILEPATHS["residential"]
+    )
     small_area_boundaries = tasks.load_small_area_boundaries(
-        URLS["small_area_boundaries"]
+        URLS["small_area_boundaries"], INPUT_FILEPATHS["small_area_boundaries"]
     )
 
     public_sector = tasks.convert_to_geodataframe(

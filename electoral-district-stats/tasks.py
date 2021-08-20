@@ -18,40 +18,20 @@ INPUT_FILENAMES = {
 
 create_folder_structure = task(functions.create_folder_structure)
 load_commercial = task(
-    pd.read_parquet,
+    functions.load_parquet,
     name="Load Commercial Buildings",
-    checkpoint=True,
-    target=INPUT_FILENAMES["commercial"],
-    result=LocalResult(
-        dir=DATA_DIR / "external", serializer=PandasSerializer("parquet")
-    ),
 )
 load_residential = task(
-    pd.read_parquet,
+    functions.load_parquet,
     name="Load Residential Buildings",
-    checkpoint=True,
-    target=INPUT_FILENAMES["residential"],
-    result=LocalResult(
-        dir=DATA_DIR / "external", serializer=PandasSerializer("parquet")
-    ),
 )
 load_public_sector = task(
-    pd.read_parquet,
+    functions.load_parquet,
     name="Load Public Sector Buildings",
-    checkpoint=True,
-    target=INPUT_FILENAMES["public_sector"],
-    result=LocalResult(
-        dir=DATA_DIR / "external", serializer=PandasSerializer("parquet")
-    ),
 )
 load_small_area_boundaries = task(
-    gpd.read_file,
+    functions.load_file,
     name="Load Small Area Boundaries",
-    checkpoint=True,
-    target=INPUT_FILENAMES["small_area_boundaries"],
-    result=LocalResult(
-        dir=DATA_DIR / "external", serializer=GeoPandasSerializer("parquet")
-    ),
 )
 
 convert_to_geodataframe = task(
