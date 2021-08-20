@@ -34,17 +34,22 @@ load_small_area_boundaries = task(
         dir=DATA_DIR / "external", serializer=GeoPandasSerializer("parquet")
     ),
 )
+
+dissolve = task(
+    lambda gdf, by: gdf.dissolve(by=by).reset_index(), name="Dissolve GeoDataFrame"
+)
 convert_to_geodataframe = task(
     functions.convert_to_geodataframe, name="Convert to GeoDataFrame"
 )
-query = task(lambda df, query_str: df.query(query_str), name="Query")
-link_to_small_area_boundaries = task(
+query = task(lambda df, query_str: df.query(query_str), name="Query")  #
+drop_column = task(lambda df, columns: df.drop(columns=columns), name="Drop Columns")
+link_to_electoral_district_boundaries = task(
     gpd.sjoin,
-    name="Link to Small Area Boundaries",
+    name="Link to Electoral District Boundaries",
 )
-amalgamate_to_small_areas = task(
+amalgamate_to_electoral_district = task(
     functions.groupby_sum,
-    name="Amalgamate to Small Areas",
+    name="Amalgamate to Electoral District",
 )
 
 save_to_csv = task(lambda df, filepath: df.to_csv(filepath), name="Save to CSV")
