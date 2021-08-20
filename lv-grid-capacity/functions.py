@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List
 
 import geopandas as gpd
 import pandas as pd
@@ -26,5 +27,9 @@ def convert_to_geodataframe(
     ).to_crs(to_crs)
 
 
-def aggregate_within_boundary():
-    pass
+def groupby_sum(
+    gdf: gpd.GeoDataFrame,
+    by: List[str],
+    on_columns: List[str],
+) -> gpd.GeoDataFrame:
+    return gdf.groupby(by)[on_columns].sum()
