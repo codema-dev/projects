@@ -16,3 +16,4 @@ dependencies:
   - pip
   - pip:
     - graphviz
+    - prefect-geopandas-serializer

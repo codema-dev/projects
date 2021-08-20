@@ -8,14 +8,20 @@ from globals import DATA_DIR
 from globals import HERE
 
 URLS = {
-    "grid": "https://codema-dev.s3.eu-west-1.amazonaws.com/heatmap-download-version-nov-2020.csv"
+    "grid": "https://codema-dev.s3.eu-west-1.amazonaws.com/heatmap-download-version-nov-2020.csv",
+    "small_area_boundaries": "https://codema-dev.s3.eu-west-1.amazonaws.com/dublin_small_area_boundaries_in_routing_keys.gpkg",
 }
+
 
 with Flow("Estimate LV capacity") as flow:
     create_folder_structure = tasks.create_folder_structure(DATA_DIR)
     raw_substations = tasks.load_esb_substation_data(URLS["grid"]).set_upstream(
         create_folder_structure
     )
+    small_area_boundaries = tasks.load_small_area_boundaries(
+        URLS["small_area_boundaries"]
+    ).set_upstream(create_folder_structure)
+
     substations = tasks.convert_to_geodataframe(
         raw_substations,
         x="Longitude",
