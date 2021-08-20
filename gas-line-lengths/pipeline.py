@@ -42,6 +42,42 @@ PRESSURES = [
     "75 bar (High Pressure)",
     "145 bar (High Pressure)",
 ]
+DIAMETERS = [
+    "125mm",
+    "90mm",
+    "180mm",
+    "315mm",
+    "63mm",
+    "100mm",
+    "200mm",
+    "250mm",
+    "32mm",
+    "150mm",
+    "20mm",
+    "2 In",
+    "3 In",
+    "4 In",
+    "6 In",
+    "8 In",
+    "25mm",
+    "10 In",
+    "300mm",
+    "50mm",
+    "16 In",
+    "400mm",
+    "1 In",
+    "80mm",
+    "900mm",
+    "450mm",
+    "750mm",
+    "600mm",
+    "500mm",
+    "12 In",
+    "75mm",
+    "18 In",
+    "24 In",
+    "1.5 In",
+]
 
 with Flow("Extract infrastructure small area line lengths") as flow:
     create_folder_structure = tasks.create_folder_structure(DATA_DIR)
@@ -88,8 +124,32 @@ with Flow("Extract infrastructure small area line lengths") as flow:
         dublin_centrelines, dublin_small_area_boundaries
     )
 
-    queries = [f"pressure == '{pressure}'" for pressure in PRESSURES]
-    centrelines_by_pressure = tasks.query.map(unmapped(small_area_centrelines), queries)
+    diameter_queries = [f"diameter == '{diameter}'" for diameter in DIAMETERS]
+    centrelines_by_diameter = tasks.query.map(
+        unmapped(small_area_centrelines), diameter_queries
+    )
+    tasks.save_to_gpkg.map(
+        centrelines_by_diameter,
+        filepath=[
+            DATA_DIR / "processed" / f"{diameter} - lines.gpkg"
+            for diameter in DIAMETERS
+        ],
+    )
+    small_area_line_lengths_by_diameter = tasks.measure_small_area_line_lengths.map(
+        centrelines_by_diameter, boundary_column_name=unmapped("small_area")
+    )
+    tasks.save_to_csv.map(
+        small_area_line_lengths_by_diameter,
+        filepath=[
+            DATA_DIR / "processed" / f"{diameter} - small_area.csv"
+            for diameter in DIAMETERS
+        ],
+    )
+
+    pressure_queries = [f"pressure == '{pressure}'" for pressure in PRESSURES]
+    centrelines_by_pressure = tasks.query.map(
+        unmapped(small_area_centrelines), pressure_queries
+    )
     tasks.save_to_gpkg.map(
         centrelines_by_pressure,
         filepath=[
@@ -97,11 +157,11 @@ with Flow("Extract infrastructure small area line lengths") as flow:
             for pressure in PRESSURES
         ],
     )
-    small_area_centreline_lengths = tasks.measure_small_area_line_lengths.map(
+    small_area_line_lengths_by_pressure = tasks.measure_small_area_line_lengths.map(
         centrelines_by_pressure, boundary_column_name=unmapped("small_area")
     )
     tasks.save_to_csv.map(
-        small_area_centreline_lengths,
+        small_area_line_lengths_by_pressure,
         filepath=[
             DATA_DIR / "processed" / f"{pressure} - small_area.csv"
             for pressure in PRESSURES
