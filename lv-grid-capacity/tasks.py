@@ -38,3 +38,14 @@ convert_to_geodataframe = task(
     functions.convert_to_geodataframe, name="Convert to GeoDataFrame"
 )
 query = task(lambda df, query_str: df.query(query_str), name="Query")
+link_to_small_area_boundaries = task(
+    gpd.sjoin,
+    name="Link to Small Area Boundaries",
+)
+amalgamate_to_small_areas = task(
+    functions.groupby_sum,
+    name="Amalgamate to Small Areas",
+)
+
+save_to_csv = task(lambda df, filepath: df.to_csv(filepath), name="Save to CSV")
+save_to_gpkg = task(lambda gdf, filepath: gdf.to_csv(filepath), name="Save to GPKG")
