@@ -14,6 +14,21 @@ URLS = {
     "small_area_boundaries": "s3://codema-dev/dublin_small_area_boundaries_in_routing_keys.gpkg",
 }
 
+OUTPUT_FILEPATHS = {
+    "commercial_floor_areas": DATA_DIR
+    / "processed"
+    / "commercial_in_electoral_districts_dublin_april_2021.csv",
+    "commercial": DATA_DIR
+    / "processed"
+    / "commercial_floor_areas_in_electoral_districts_dublin_april_2021.csv",
+    "residential": DATA_DIR
+    / "processed"
+    / "residential_in_electoral_districts_dublin_june_2021.csv",
+    "public_sector": DATA_DIR
+    / "processed"
+    / "public_sector_in_electoral_districts_dublin_21_1_20.csv",
+}
+
 
 with Flow("Amalgamate Buildings to Electoral Districts") as flow:
     create_folder_structure = tasks.create_folder_structure(DATA_DIR)
@@ -58,6 +73,16 @@ with Flow("Amalgamate Buildings to Electoral Districts") as flow:
         public_sector_with_eds,
         granularity="cso_ed_id",
         columns="category",
+    )
+
+    tasks.save_to_csv(
+        electoral_district_commercial_floor_areas,
+        OUTPUT_FILEPATHS["commercial_floor_areas"],
+    )
+    tasks.save_to_csv(electoral_district_commercial, OUTPUT_FILEPATHS["commercial"])
+    tasks.save_to_csv(electoral_district_residential, OUTPUT_FILEPATHS["residential"])
+    tasks.save_to_csv(
+        electoral_district_public_sector, OUTPUT_FILEPATHS["public_sector"]
     )
 
     # Manually specify missing links

@@ -66,3 +66,5 @@ amalgamate_to_electoral_district = task(
 count_in_electoral_district = task(
     functions.count_in_granularity, name="Count Occurences in Electoral District"
 )
+
+save_to_csv = task(lambda df, filepath: df.to_csv(filepath), name="Save to CSV")
