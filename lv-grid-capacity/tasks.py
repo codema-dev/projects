@@ -18,3 +18,7 @@ load_esb_substation_data = task(
         dir=DATA_DIR / "external", serializer=PandasSerializer("parquet")
     ),
 )
+convert_to_geodataframe = task(
+    functions.convert_to_geodataframe, name="Convert to GeoDataFrame"
+)
+query = task(lambda df, query_str: df.query(query_str), name="Query")
