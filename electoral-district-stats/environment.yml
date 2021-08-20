@@ -1,0 +1,20 @@
+name: stats
+channels:
+  - conda-forge
+dependencies:
+  - pandas
+  - pyarrow
+  - seaborn
+  - python-dotenv
+  - prefect
+  - graphviz
+
+  # Dev
+  - ipython
+  - pdbpp
+  - black
+  - mypy
+
+  - pip
+  - pip:
+    - graphviz
