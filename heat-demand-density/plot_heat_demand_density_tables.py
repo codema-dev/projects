@@ -162,9 +162,11 @@ for la in local_authorities:
     filename = la.replace(" ", "-").replace("ú", "u")
     if SAVE_AS_HTML:
         with open(
-            Path(DATA_DIR) / "tables" / f"{filename}.html", "w", encoding="utf-8"
+            Path(DATA_DIR) / "maps" / f"Glossary-{filename}.html", "w", encoding="utf-8"
         ) as file:
             styled_table.to_html(file)
 
     if SAVE_AS_IMAGE:
-        dfi.export(styled_table, str(Path(DATA_DIR) / "tables" / f"{filename}.png"))
+        dfi.export(
+            styled_table, str(Path(DATA_DIR) / "maps" / f"Glossary-{filename}.png")
+        )

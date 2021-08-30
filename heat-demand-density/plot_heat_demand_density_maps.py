@@ -23,6 +23,9 @@ hdd_map_filepath: Path = (
 )
 # -
 
+if not SAVE_AS_HTML:
+    pandas_bokeh.output_notebook()
+
 ## Load
 
 hdd_map = gpd.read_file(hdd_map_filepath)
@@ -57,12 +60,6 @@ hdd_map["category"] = hdd_map["feasibility"].cat.codes
 ## Plot Demand Map & Glossary
 
 for la in local_authorities:
-
-    if SAVE_AS_HTML:
-        filename = la.replace(" ", "-").replace("ú", "u")
-        pandas_bokeh.output_file(Path(DATA_DIR) / "maps" / f"{filename}.html")
-    else:
-        pandas_bokeh.output_notebook()
 
     la_map = hdd_map.query("local_authority == @la").reset_index(drop=True)
 
@@ -105,5 +102,13 @@ for la in local_authorities:
         show_figure=False,
     )
 
+    if SAVE_AS_HTML:
+        filename = la.replace(" ", "-").replace("ú", "u")
+        save(
+            obj=figure,
+            filename=Path(DATA_DIR) / "maps" / f"Map-{filename}.html",
+            title="Heat Demand Density",
+        )
+
     if SAVE_AS_IMAGE:
-        export_png(figure, filename=Path(DATA_DIR) / "maps" / f"{filename}.png")
+        export_png(figure, filename=Path(DATA_DIR) / "maps" / f"Map-{filename}.png")
