@@ -17,7 +17,7 @@ pd.set_option("display.precision", 1)
 # + tags=["parameters"]
 SAVE_AS_HTML: bool = True
 SAVE_AS_IMAGE: bool = True
-DATA_DIR: Path = DATA_DIR
+DATA_DIR: Path = Path(DATA_DIR)
 hdd_map_filepath: Path = (
     DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson"
 )

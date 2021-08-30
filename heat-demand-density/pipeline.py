@@ -22,7 +22,7 @@ filepaths = {
     },
     "ipynb": {
         "map": DATA_DIR / "notebooks" / "plot_heat_demand_density_maps.ipynb",
-        "tables": DATA_DIR / "notebooks" / "plot_heat_demand_density_tables.ipynb",
+        "table": DATA_DIR / "notebooks" / "plot_heat_demand_density_tables.ipynb",
     },
 }
 
@@ -76,7 +76,7 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
         demand_map=demand_map,
         filepath=filepaths["data"]["map"],
     )
-    plot_heat_demand_densities = tasks.execute_python_file(
+    plot_heat_demand_density_maps = tasks.execute_python_file(
         py_filepath=filepaths["pynb"]["map"],
         ipynb_filepath=filepaths["ipynb"]["map"],
         parameters={
@@ -85,8 +85,18 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
             "hdd_map_filepath": str(filepaths["data"]["map"]),
         },
     )
+    plot_heat_demand_density_tables = tasks.execute_python_file(
+        py_filepath=filepaths["pynb"]["table"],
+        ipynb_filepath=filepaths["ipynb"]["table"],
+        parameters={
+            "SAVE_PLOTS": True,
+            "DATA_DIR": str(DATA_DIR),
+            "hdd_map_filepath": str(filepaths["data"]["map"]),
+        },
+    )
 
     # Manually set dependencies where no data is passed between tasks
-    plot_heat_demand_densities.set_upstream(save_heat_demand_densities)
+    plot_heat_demand_density_maps.set_upstream(save_heat_demand_densities)
+    plot_heat_demand_density_tables.set_upstream(save_heat_demand_densities)
 
 flow.run()
