@@ -8,20 +8,22 @@ import dataframe_image as dfi
 import pandas_bokeh
 from globals import DATA_DIR
 
-pandas_bokeh.output_notebook()
 pd.set_option("display.precision", 1)
 
 ## Parametrize
 # overwrite parameters with arguemnts generated in prefect pipeline
 
 # + tags=["parameters"]
-SAVE_AS_HTML: bool = True
-SAVE_AS_IMAGE: bool = True
+SAVE_AS_HTML: bool = False
+SAVE_AS_IMAGE: bool = False
 DATA_DIR: Path = Path(DATA_DIR)
 hdd_map_filepath: Path = (
     DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson"
 )
 # -
+
+if not SAVE_AS_HTML:
+    pandas_bokeh.output_notebook()
 
 ## Load
 
@@ -61,13 +63,7 @@ hdd_map["category"] = hdd_map["feasibility"].cat.codes
 ## Amalgamate Demands to Local Authority Level
 
 hdd_map_table = (
-    hdd_map.drop(
-        columns=[
-            "small_area",
-            "category",
-            "geometry",
-        ]
-    )
+    hdd_map.drop(columns=["small_area", "category", "geometry", "polygon_area_km2"])
     .groupby(["local_authority", "feasibility"])
     .sum()
     .round()
@@ -109,9 +105,6 @@ for la in local_authorities:
                 "residential_heat_demand_tj_per_km2y": "int32",
                 "non_residential_heat_demand_tj_per_km2y": "int32",
                 "total_heat_demand_tj_per_km2y": "int32",
-                "number_of_residential_buildings": "int32",
-                "number_of_non_residential_buildings": "int32",
-                "polygon_area_km2": "int32",
             }
         )
         .rename(
@@ -122,9 +115,6 @@ for la in local_authorities:
                 "total_heat_demand_tj_per_km2y": "Total [TJ/km²year]",
                 "band": "Band [TJ/km²year]",
                 "percentage_share_of_heat_demand": "% Share [MWh/year]",
-                "number_of_residential_buildings": "Residential Buildings",
-                "number_of_non_residential_buildings": "Non-Residential Buildings",
-                "polygon_area_km2": "Area [km²]",
             }
         )
         .drop(

@@ -80,7 +80,8 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
         py_filepath=filepaths["pynb"]["map"],
         ipynb_filepath=filepaths["ipynb"]["map"],
         parameters={
-            "SAVE_PLOTS": True,
+            "SAVE_AS_HTML": True,
+            "SAVE_AS_IMAGE": True,
             "DATA_DIR": str(DATA_DIR),
             "hdd_map_filepath": str(filepaths["data"]["map"]),
         },
@@ -89,7 +90,8 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
         py_filepath=filepaths["pynb"]["table"],
         ipynb_filepath=filepaths["ipynb"]["table"],
         parameters={
-            "SAVE_PLOTS": True,
+            "SAVE_AS_HTML": True,
+            "SAVE_AS_IMAGE": True,
             "DATA_DIR": str(DATA_DIR),
             "hdd_map_filepath": str(filepaths["data"]["map"]),
         },

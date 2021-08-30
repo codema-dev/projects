@@ -15,8 +15,8 @@ pd.set_option("display.precision", 1)
 # overwrite parameters with arguemnts generated in prefect pipeline
 
 # + tags=["parameters"]
-SAVE_AS_HTML: bool = True
-SAVE_AS_IMAGE: bool = True
+SAVE_AS_HTML: bool = False
+SAVE_AS_IMAGE: bool = False
 DATA_DIR: Path = Path(DATA_DIR)
 hdd_map_filepath: Path = (
     DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson"
@@ -65,6 +65,8 @@ for la in local_authorities:
 
     hovertool_string = """
     <h4>@feasibility</h4>
+    <p>Small Area: @small_area</p>
+
     <table>
         <t>
             <th>Category</th>

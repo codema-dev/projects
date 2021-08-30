@@ -87,18 +87,31 @@ def apply_benchmarks_to_valuation_office_floor_areas(
     benchmarks: pd.DataFrame,
     assumed_boiler_efficiency: float,
 ) -> pd.Series:
+
+    # link to benchmarks based on building use
     valuation_office["use"] = valuation_office["Use1"].map(benchmark_uses)
     with_benchmarks = valuation_office.merge(
         benchmarks, left_on="use", right_on="Benchmark", how="left", indicator=True
     )
+
+    # replace unexpectedly large floor areas with a typical area
+    with_benchmarks["bounded_area_m2"] = with_benchmarks["Total_SQM"]
+    where_area_greater_than_expected = (
+        with_benchmarks["Total_SQM"] > with_benchmarks["Area Upper Bound [m²]"]
+    )
+    with_benchmarks.loc[
+        where_area_greater_than_expected, "bounded_area_m2"
+    ] = with_benchmarks.loc[where_area_greater_than_expected, "Typical Area [m²]"]
+
+    # calculate heat demand
     non_industrial_heat_demand_kwh_per_y = (
         with_benchmarks["Typical fossil fuel [kWh/m²y]"]
-        * with_benchmarks["Total_SQM"]
+        * with_benchmarks["bounded_area_m2"]
         * with_benchmarks["% Suitable for DH or HP"]
     ) / assumed_boiler_efficiency
     industrial_heat_demand_kwh_per_y = (
         with_benchmarks["Industrial space heat [kWh/m²y]"]
-        * with_benchmarks["Total_SQM"]
+        * with_benchmarks["bounded_area_m2"]
         * with_benchmarks["% Suitable for DH or HP"]
     )
     kwh_to_mwh = 1e-3
@@ -106,6 +119,7 @@ def apply_benchmarks_to_valuation_office_floor_areas(
         non_industrial_heat_demand_kwh_per_y.fillna(0)
         + industrial_heat_demand_kwh_per_y.fillna(0)
     ) * kwh_to_mwh
+
     return with_benchmarks
 
 
@@ -164,16 +178,9 @@ def convert_from_mwh_per_y_to_tj_per_km2(
 ) -> pd.DataFrame:
     index = demand.index
     m2_to_km2 = 1e-6
-    small_area_boundaries["polygon_area_km2"] = (
-        small_area_boundaries.geometry.area * m2_to_km2
-    )
-    polygon_area_km2 = (
-        small_area_boundaries[["small_area", "polygon_area_km2"]]
-        .set_index("small_area")
-        .squeeze()
-        .reindex(index)
-    )
+    polygon_area_km2 = (small_area_boundaries.geometry.area * m2_to_km2).reindex(index)
     mwh_to_tj = 0.0036
+    demand["polygon_area_km2"] = polygon_area_km2
     demand["residential_heat_demand_tj_per_km2y"] = (
         demand["residential_heat_demand_mwh_per_y"]
         .multiply(mwh_to_tj)
