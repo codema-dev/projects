@@ -103,7 +103,7 @@ def apply_benchmarks_to_valuation_office_floor_areas(
         non_industrial_heat_demand_kwh_per_y.fillna(0)
         + industrial_heat_demand_kwh_per_y.fillna(0)
     ) * kwh_to_mwh
-    return with_benchmarks[["small_area", "heat_demand_mwh_per_y"]]
+    return with_benchmarks
 
 
 def extract_residential_heat_demand(bers: pd.DataFrame) -> pd.Series:
@@ -114,27 +114,45 @@ def extract_residential_heat_demand(bers: pd.DataFrame) -> pd.Series:
         + bers["main_hw_demand"]
         + bers["suppl_hw_demand"]
     ) * kwh_to_mwh
-    return bers[["small_area", "heat_demand_mwh_per_y"]]
+    return bers
 
 
 def amalgamate_heat_demands_to_small_areas(
     residential: pd.DataFrame, non_residential: pd.DataFrame
 ) -> pd.DataFrame:
-    residential_small_areas = (
+    residential_small_area_demand = (
         residential.groupby("small_area")["heat_demand_mwh_per_y"]
         .sum()
         .rename("residential_heat_demand_mwh_per_y")
     )
-    index = residential_small_areas.index
-    non_residential_small_areas = (
+    residential_small_area_count = (
+        residential.groupby("small_area")["heat_demand_mwh_per_y"]
+        .size()
+        .rename("number_of_residential_buildings")
+    )
+    index = residential_small_area_demand.index
+    non_residential_small_area_demand = (
         non_residential.groupby("small_area")["heat_demand_mwh_per_y"]
         .sum()
         .reindex(index)
         .fillna(0)
         .rename("non_residential_heat_demand_mwh_per_y")
     )
+    non_residential_small_area_count = (
+        non_residential.groupby("small_area")["heat_demand_mwh_per_y"]
+        .size()
+        .reindex(index)
+        .fillna(0)
+        .rename("number_of_non_residential_buildings")
+    )
     return pd.concat(
-        [residential_small_areas, non_residential_small_areas], axis="columns"
+        [
+            residential_small_area_demand,
+            non_residential_small_area_demand,
+            residential_small_area_count,
+            non_residential_small_area_count,
+        ],
+        axis="columns",
     )
 
 
@@ -146,20 +164,28 @@ def convert_from_mwh_per_y_to_tj_per_km2(
     small_area_boundaries["polygon_area_km2"] = (
         small_area_boundaries.geometry.area * m2_to_km2
     )
-    polygon_area_km2_by_small_area = (
+    polygon_area_km2 = (
         small_area_boundaries[["small_area", "polygon_area_km2"]]
         .set_index("small_area")
         .squeeze()
         .reindex(index)
     )
     mwh_to_tj = 0.0036
-    demand_tj_per_y = mwh_to_tj * demand
-    return (
-        demand_tj_per_y.divide(polygon_area_km2_by_small_area, axis="rows")
-        .rename(columns=lambda x: x.replace("_mwh_per_y", "_tj_per_km2y"))
-        .assign(total_heat_demand_tj_per_km2y=lambda df: df.sum(axis="columns"))
-        .dropna(how="any")
+    demand["residential_heat_demand_tj_per_km2y"] = (
+        demand["residential_heat_demand_mwh_per_y"]
+        .multiply(mwh_to_tj)
+        .divide(polygon_area_km2, axis="rows")
     )
+    demand["non_residential_heat_demand_tj_per_km2y"] = (
+        demand["non_residential_heat_demand_mwh_per_y"]
+        .multiply(mwh_to_tj)
+        .divide(polygon_area_km2, axis="rows")
+    )
+    demand["total_heat_demand_tj_per_km2y"] = (
+        demand["residential_heat_demand_tj_per_km2y"]
+        + demand["non_residential_heat_demand_mwh_per_y"]
+    )
+    return demand.dropna(how="any")
 
 
 def link_demands_to_boundaries(

@@ -105,6 +105,9 @@ link_small_areas_to_local_authorities = prefect.task(
 apply_benchmarks_to_valuation_office_floor_areas = prefect.task(
     functions.apply_benchmarks_to_valuation_office_floor_areas,
     name="Apply Energy Benchmarks to Valuation Office Floor Areas",
+    checkpoint=True,
+    target="valuation_office_demands.parquet",
+    result=get_parquet_result(DATA_DIR / "interim"),
 )
 
 link_valuation_office_to_small_areas = prefect.task(
@@ -118,6 +121,9 @@ link_valuation_office_to_small_areas = prefect.task(
 extract_residential_heat_demand = prefect.task(
     functions.extract_residential_heat_demand,
     name="Extract DEAP Residential Heat Demand",
+    checkpoint=True,
+    target="ber_demands.parquet",
+    result=get_parquet_result(DATA_DIR / "interim"),
 )
 
 amalgamate_heat_demands_to_small_areas = prefect.task(
