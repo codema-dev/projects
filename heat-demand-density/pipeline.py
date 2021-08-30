@@ -99,4 +99,5 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
     plot_heat_demand_density_maps.set_upstream(save_heat_demand_densities)
     plot_heat_demand_density_tables.set_upstream(save_heat_demand_densities)
 
-flow.run()
+state = flow.run()
+flow.visualize(flow_state=state, filename=BASE_DIR / "flow", format="png")

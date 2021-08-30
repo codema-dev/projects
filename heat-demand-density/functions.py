@@ -181,10 +181,6 @@ def convert_from_mwh_per_y_to_tj_per_km2(
         .multiply(mwh_to_tj)
         .divide(polygon_area_km2, axis="rows")
     )
-    demand["total_heat_demand_tj_per_km2y"] = (
-        demand["residential_heat_demand_tj_per_km2y"]
-        + demand["non_residential_heat_demand_mwh_per_y"]
-    )
     return demand.dropna(how="any")
 
 

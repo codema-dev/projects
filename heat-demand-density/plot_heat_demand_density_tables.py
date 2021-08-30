@@ -31,6 +31,18 @@ hdd_map = gpd.read_file(hdd_map_filepath)
 
 local_authorities = hdd_map["local_authority"].unique()
 
+## Calculate Totals
+
+hdd_map["total_heat_demand_tj_per_km2y"] = (
+    hdd_map["residential_heat_demand_tj_per_km2y"]
+    + hdd_map["non_residential_heat_demand_tj_per_km2y"]
+)
+
+hdd_map["total_heat_demand_mwh_per_y"] = (
+    hdd_map["residential_heat_demand_tj_per_km2y"]
+    + hdd_map["non_residential_heat_demand_tj_per_km2y"]
+)
+
 ## Categorise demands
 
 hdd_map["feasibility"] = pd.cut(
@@ -72,9 +84,9 @@ for la in local_authorities:
     la_table = (
         hdd_map_table.query("local_authority == @la").copy().reset_index(drop=True)
     )
-    total_heat = la_table["total_heat_demand_tj_per_km2y"].sum()
+    total_heat = la_table["total_heat_demand_mwh_per_y"].sum()
     la_table["percentage_share_of_heat_demand"] = (
-        la_table["total_heat_demand_tj_per_km2y"]
+        la_table["total_heat_demand_mwh_per_y"]
         .divide(total_heat)
         .multiply(100)
         .round(1)
@@ -97,7 +109,7 @@ for la in local_authorities:
                 "non_residential_heat_demand_tj_per_km2y": "Non-Residential [TJ/km²year]",
                 "total_heat_demand_tj_per_km2y": "Total [TJ/km²year]",
                 "band": "Band [TJ/km²year]",
-                "percentage_share_of_heat_demand": "% Share",
+                "percentage_share_of_heat_demand": "% Share [MWh/year]",
             }
         )
         .set_index("Feasibility")

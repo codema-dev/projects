@@ -31,6 +31,13 @@ hdd_map = gpd.read_file(hdd_map_filepath)
 
 local_authorities = hdd_map["local_authority"].unique()
 
+## Calculate Totals
+
+hdd_map["total_heat_demand_tj_per_km2y"] = (
+    hdd_map["residential_heat_demand_tj_per_km2y"]
+    + hdd_map["non_residential_heat_demand_tj_per_km2y"]
+)
+
 ## Categorise demands
 
 hdd_map["feasibility"] = pd.cut(
