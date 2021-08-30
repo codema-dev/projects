@@ -146,9 +146,9 @@ link_demands_to_boundaries = prefect.task(
     functions.link_demands_to_boundaries, name="Link Demands to Boundaries for Mapping"
 )
 
-save_to_geojson = prefect.task(
-    functions.save_to_geojson,
-    name="Save GeoJSON",
+save_to_gpkg = prefect.task(
+    functions.save_to_gpkg,
+    name="Save GPKG",
 )
 execute_python_file = prefect.task(
     functions.execute_python_file, name="Execute Python File"

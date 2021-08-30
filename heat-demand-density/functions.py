@@ -202,8 +202,8 @@ def link_demands_to_boundaries(
     )
 
 
-def save_to_geojson(demand_map: gpd.GeoDataFrame, filepath: Path) -> None:
-    demand_map.to_file(filepath, driver="GeoJSON")
+def save_to_gpkg(demand_map: gpd.GeoDataFrame, filepath: Path) -> None:
+    demand_map.to_file(filepath, driver="GPKG")
 
 
 def _convert_py_to_ipynb(

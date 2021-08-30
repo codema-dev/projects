@@ -19,7 +19,7 @@ SAVE_AS_HTML: bool = False
 SAVE_AS_IMAGE: bool = False
 DATA_DIR: Path = Path(DATA_DIR)
 hdd_map_filepath: Path = (
-    DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson"
+    DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.gpkg"
 )
 # -
 

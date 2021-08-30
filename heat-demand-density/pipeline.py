@@ -14,7 +14,7 @@ tasks.check_if_s3_keys_are_defined()
 
 filepaths = {
     "data": {
-        "map": DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson",
+        "map": DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.gpkg",
     },
     "pynb": {
         "map": BASE_DIR / "plot_heat_demand_density_maps.py",
@@ -72,7 +72,7 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
     )
 
     # Plot
-    save_heat_demand_densities = tasks.save_to_geojson(
+    save_heat_demand_densities = tasks.save_to_gpkg(
         demand_map=demand_map,
         filepath=filepaths["data"]["map"],
     )
