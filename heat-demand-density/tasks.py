@@ -74,7 +74,7 @@ load_benchmark_uses = prefect.task(
 )
 
 load_benchmarks = prefect.task(
-    functions.read_excel,
+    functions.read_csv,
     target="benchmarks.parquet",
     checkpoint=True,
     result=get_parquet_result(DATA_DIR / "external"),

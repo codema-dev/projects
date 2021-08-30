@@ -12,9 +12,9 @@ import pandas as pd
 from prefect.tasks.jupyter import ExecuteNotebook
 
 
-def read_excel(url: str) -> pd.DataFrame:
+def read_csv(url: str) -> pd.DataFrame:
     with fsspec.open(url) as f:
-        return pd.read_excel(f)
+        return pd.read_csv(f)
 
 
 def read_parquet(url: str) -> pd.DataFrame:
@@ -92,11 +92,14 @@ def apply_benchmarks_to_valuation_office_floor_areas(
         benchmarks, left_on="use", right_on="Benchmark", how="left", indicator=True
     )
     non_industrial_heat_demand_kwh_per_y = (
-        with_benchmarks["Typical fossil fuel [kWh/m²y]"] * with_benchmarks["Total_SQM"]
+        with_benchmarks["Typical fossil fuel [kWh/m²y]"]
+        * with_benchmarks["Total_SQM"]
+        * with_benchmarks["% Suitable for DH or HP"]
     ) / assumed_boiler_efficiency
     industrial_heat_demand_kwh_per_y = (
         with_benchmarks["Industrial space heat [kWh/m²y]"]
         * with_benchmarks["Total_SQM"]
+        * with_benchmarks["% Suitable for DH or HP"]
     )
     kwh_to_mwh = 1e-3
     with_benchmarks["heat_demand_mwh_per_y"] = (
