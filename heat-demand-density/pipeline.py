@@ -14,14 +14,16 @@ tasks.check_if_s3_keys_are_defined()
 
 filepaths = {
     "data": {
-        "demand_map": DATA_DIR
-        / "processed"
-        / "dublin_small_area_demand_tj_per_km2.geojson",
+        "map": DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.geojson",
     },
     "pynb": {
-        "demand_map": BASE_DIR / "map_heat_demand_densities.py",
+        "map": BASE_DIR / "plot_heat_demand_density_maps.py",
+        "table": BASE_DIR / "plot_heat_demand_density_tables.py",
     },
-    "ipynb": {"demand_map": DATA_DIR / "notebooks" / "map_heat_demand_densities.ipynb"},
+    "ipynb": {
+        "map": DATA_DIR / "notebooks" / "plot_heat_demand_density_maps.ipynb",
+        "tables": DATA_DIR / "notebooks" / "plot_heat_demand_density_tables.ipynb",
+    },
 }
 
 
@@ -72,21 +74,21 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
     # Plot
     save_demand_map = tasks.save_demand_map(
         demand_map=demand_map,
-        filepath=filepaths["data"]["demand_map"],
+        filepath=filepaths["data"]["map"],
     )
     convert_heat_demand_density_plotting_script_to_ipynb = (
         tasks.convert_heat_demand_density_plotting_script_to_ipynb(
-            input_filepath=filepaths["pynb"]["demand_map"],
-            output_filepath=filepaths["ipynb"]["demand_map"],
+            input_filepath=filepaths["pynb"]["map"],
+            output_filepath=filepaths["ipynb"]["map"],
             fmt="py:light",
         )
     )
     execute_hdd_plot_ipynb = tasks.execute_hdd_plot_ipynb(
-        path=filepaths["ipynb"]["demand_map"],
+        path=filepaths["ipynb"]["map"],
         parameters={
             "SAVE_PLOTS": True,
             "DATA_DIR": str(DATA_DIR),
-            "demand_map_filepath": str(filepaths["data"]["demand_map"]),
+            "demand_map_filepath": str(filepaths["data"]["map"]),
         },
     )
 
