@@ -61,7 +61,13 @@ hdd_map["category"] = hdd_map["feasibility"].cat.codes
 ## Amalgamate Demands to Local Authority Level
 
 hdd_map_table = (
-    hdd_map.drop(columns=["small_area", "category", "geometry"])
+    hdd_map.drop(
+        columns=[
+            "small_area",
+            "category",
+            "geometry",
+        ]
+    )
     .groupby(["local_authority", "feasibility"])
     .sum()
     .round()
@@ -82,7 +88,10 @@ hdd_map_table["band"] = hdd_map_table["feasibility"].map(
 for la in local_authorities:
 
     la_table = (
-        hdd_map_table.query("local_authority == @la").copy().reset_index(drop=True)
+        hdd_map_table.query("local_authority == @la")
+        .copy()
+        .reset_index(drop=True)
+        .drop(columns="local_authority")
     )
     total_heat = la_table["total_heat_demand_mwh_per_y"].sum()
     la_table["percentage_share_of_heat_demand"] = (
@@ -100,6 +109,9 @@ for la in local_authorities:
                 "residential_heat_demand_tj_per_km2y": "int32",
                 "non_residential_heat_demand_tj_per_km2y": "int32",
                 "total_heat_demand_tj_per_km2y": "int32",
+                "number_of_residential_buildings": "int32",
+                "number_of_non_residential_buildings": "int32",
+                "polygon_area_km2": "int32",
             }
         )
         .rename(
@@ -110,7 +122,17 @@ for la in local_authorities:
                 "total_heat_demand_tj_per_km2y": "Total [TJ/km²year]",
                 "band": "Band [TJ/km²year]",
                 "percentage_share_of_heat_demand": "% Share [MWh/year]",
+                "number_of_residential_buildings": "Residential Buildings",
+                "number_of_non_residential_buildings": "Non-Residential Buildings",
+                "polygon_area_km2": "Area [km²]",
             }
+        )
+        .drop(
+            columns=[
+                "residential_heat_demand_mwh_per_y",
+                "non_residential_heat_demand_mwh_per_y",
+                "total_heat_demand_mwh_per_y",
+            ]
         )
         .set_index("Feasibility")
         .style
