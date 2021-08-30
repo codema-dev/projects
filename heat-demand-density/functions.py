@@ -1,5 +1,7 @@
 from collections import defaultdict
 from pathlib import Path
+from typing import Any
+from typing import Dict
 
 import jupytext
 from jupytext import kernels
@@ -7,6 +9,7 @@ from jupytext import header
 import fsspec
 import geopandas as gpd
 import pandas as pd
+from prefect.tasks.jupyter import ExecuteNotebook
 
 
 def read_excel(url: str) -> pd.DataFrame:
@@ -167,16 +170,24 @@ def link_demands_to_boundaries(
     )
 
 
-def save_demand_map(demand_map: gpd.GeoDataFrame, filepath: Path) -> None:
+def save_to_geojson(demand_map: gpd.GeoDataFrame, filepath: Path) -> None:
     demand_map.to_file(filepath, driver="GeoJSON")
 
 
-def convert_file_to_ipynb(
+def _convert_py_to_ipynb(
     input_filepath: Path,
     output_filepath: Path,
-    fmt: str,
-    language: str = "python",
 ) -> None:
     notebook = jupytext.read(input_filepath)
-    notebook["metadata"]["kernelspec"] = kernels.kernelspec_from_language(language)
-    jupytext.write(notebook, output_filepath, fmt=fmt)
+    notebook["metadata"]["kernelspec"] = kernels.kernelspec_from_language("python")
+    jupytext.write(notebook, output_filepath, fmt="py:light")
+
+
+def execute_python_file(
+    py_filepath: Path,
+    ipynb_filepath: Path,
+    parameters: Dict[str, Any],
+) -> None:
+    _convert_py_to_ipynb(py_filepath, ipynb_filepath)
+    exe = ExecuteNotebook()
+    exe.run(path=ipynb_filepath, parameters=parameters)

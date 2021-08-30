@@ -72,30 +72,21 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
     )
 
     # Plot
-    save_demand_map = tasks.save_demand_map(
+    save_heat_demand_densities = tasks.save_to_geojson(
         demand_map=demand_map,
         filepath=filepaths["data"]["map"],
     )
-    convert_heat_demand_density_plotting_script_to_ipynb = (
-        tasks.convert_heat_demand_density_plotting_script_to_ipynb(
-            input_filepath=filepaths["pynb"]["map"],
-            output_filepath=filepaths["ipynb"]["map"],
-            fmt="py:light",
-        )
-    )
-    execute_hdd_plot_ipynb = tasks.execute_hdd_plot_ipynb(
-        path=filepaths["ipynb"]["map"],
+    plot_heat_demand_densities = tasks.execute_python_file(
+        py_filepath=filepaths["pynb"]["map"],
+        ipynb_filepath=filepaths["ipynb"]["map"],
         parameters={
             "SAVE_PLOTS": True,
             "DATA_DIR": str(DATA_DIR),
-            "demand_map_filepath": str(filepaths["data"]["map"]),
+            "hdd_map_filepath": str(filepaths["data"]["map"]),
         },
     )
 
-    # Manually set dependencies where no inputs are passed between tasks
-    convert_heat_demand_density_plotting_script_to_ipynb.set_upstream(save_demand_map)
-    execute_hdd_plot_ipynb.set_upstream(
-        convert_heat_demand_density_plotting_script_to_ipynb
-    )
+    # Manually set dependencies where no data is passed between tasks
+    plot_heat_demand_densities.set_upstream(save_heat_demand_densities)
 
 flow.run()

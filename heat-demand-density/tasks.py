@@ -4,7 +4,7 @@ from pathlib import Path
 import prefect
 from prefect.engine import results
 from prefect.engine import serializers
-from prefect.tasks.jupyter import ExecuteNotebook
+
 
 import functions
 from globals import BASE_DIR
@@ -140,14 +140,10 @@ link_demands_to_boundaries = prefect.task(
     functions.link_demands_to_boundaries, name="Link Demands to Boundaries for Mapping"
 )
 
-save_demand_map = prefect.task(
-    functions.save_demand_map,
-    name="Save Small Area Heat Demand Map",
+save_to_geojson = prefect.task(
+    functions.save_to_geojson,
+    name="Save GeoJSON",
 )
-
-convert_heat_demand_density_plotting_script_to_ipynb = prefect.task(
-    functions.convert_file_to_ipynb,
-    name="Convert Heat Demand Density Map Script to ipynb",
+execute_python_file = prefect.task(
+    functions.execute_python_file, name="Execute Python File"
 )
-
-execute_hdd_plot_ipynb = ExecuteNotebook()
