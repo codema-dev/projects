@@ -94,6 +94,10 @@ def apply_benchmarks_to_valuation_office_floor_areas(
         benchmarks, left_on="use", right_on="Benchmark", how="left", indicator=True
     )
 
+    # replace unknown benchmarks with 'Unknown'
+    where_benchmark_is_unknown = with_benchmarks["Benchmark"].isnull()
+    with_benchmarks.loc[where_benchmark_is_unknown, "Benchmark"] = "Unknown"
+
     # replace unexpectedly large floor areas with a typical area
     with_benchmarks["bounded_area_m2"] = with_benchmarks["Total_SQM"]
     where_area_greater_than_expected = (
@@ -120,7 +124,10 @@ def apply_benchmarks_to_valuation_office_floor_areas(
         + industrial_heat_demand_kwh_per_y.fillna(0)
     ) * kwh_to_mwh
 
-    return with_benchmarks
+    # Drop buildings with zero floor area or with a zero demand benchmark
+    where_floor_area_is_zero = with_benchmarks["Total_SQM"] > 0
+    where_benchmark_is_none = with_benchmarks["Benchmark"] != "None"
+    return with_benchmarks.loc[where_floor_area_is_zero & where_benchmark_is_none]
 
 
 def extract_residential_heat_demand(bers: pd.DataFrame) -> pd.Series:
@@ -173,33 +180,32 @@ def amalgamate_heat_demands_to_small_areas(
     )
 
 
-def convert_from_mwh_per_y_to_tj_per_km2(
-    demand: pd.DataFrame, small_area_boundaries: gpd.GeoDataFrame
-) -> pd.DataFrame:
-    index = demand.index
-    m2_to_km2 = 1e-6
-    polygon_area_km2 = (small_area_boundaries.geometry.area * m2_to_km2).reindex(index)
-    mwh_to_tj = 0.0036
-    demand["polygon_area_km2"] = polygon_area_km2
-    demand["residential_heat_demand_tj_per_km2y"] = (
-        demand["residential_heat_demand_mwh_per_y"]
-        .multiply(mwh_to_tj)
-        .divide(polygon_area_km2, axis="rows")
-    )
-    demand["non_residential_heat_demand_tj_per_km2y"] = (
-        demand["non_residential_heat_demand_mwh_per_y"]
-        .multiply(mwh_to_tj)
-        .divide(polygon_area_km2, axis="rows")
-    )
-    return demand.dropna(how="any")
-
-
 def link_demands_to_boundaries(
     demands: pd.DataFrame, boundaries: gpd.GeoDataFrame
 ) -> None:
     return boundaries.merge(
         demands, left_on="small_area", right_index=True, how="right"
     )
+
+
+def convert_from_mwh_per_y_to_tj_per_km2(demand_map: pd.DataFrame) -> pd.DataFrame:
+    m2_to_km2 = 1e-6
+    polygon_area_km2 = demand_map.geometry.area * m2_to_km2
+    demand_map["polygon_area_km2"] = polygon_area_km2
+
+    mwh_to_tj = 0.0036
+    demand_map["residential_heat_demand_tj_per_km2y"] = (
+        demand_map["residential_heat_demand_mwh_per_y"]
+        .multiply(mwh_to_tj)
+        .divide(polygon_area_km2, axis="rows")
+    )
+    demand_map["non_residential_heat_demand_tj_per_km2y"] = (
+        demand_map["non_residential_heat_demand_mwh_per_y"]
+        .multiply(mwh_to_tj)
+        .divide(polygon_area_km2, axis="rows")
+    )
+
+    return demand_map.dropna(how="any")
 
 
 def save_to_gpkg(demand_map: gpd.GeoDataFrame, filepath: Path) -> None:

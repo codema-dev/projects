@@ -58,22 +58,21 @@ with prefect.Flow("Estimate Heat Demand Density") as flow:
         assumed_boiler_efficiency=assumed_boiler_efficiency,
     )
     residential_demand = tasks.extract_residential_heat_demand(bers)
+
     demand_mwh_per_y = tasks.amalgamate_heat_demands_to_small_areas(
         residential=residential_demand, non_residential=non_residential_demand
     )
-    demand_tj_per_km2 = tasks.convert_from_mwh_per_y_to_tj_per_km2(
-        demand=demand_mwh_per_y, small_area_boundaries=small_area_boundaries
-    )
-
-    # Convert to Map
-    demand_map = tasks.link_demands_to_boundaries(
-        demands=demand_tj_per_km2,
+    demand_mwh_per_y_map = tasks.link_demands_to_boundaries(
+        demands=demand_mwh_per_y,
         boundaries=small_area_boundaries,
+    )
+    demand_tj_per_km2_map = tasks.convert_from_mwh_per_y_to_tj_per_km2(
+        demand_map=demand_mwh_per_y_map
     )
 
     # Plot
     save_heat_demand_densities = tasks.save_to_gpkg(
-        demand_map=demand_map,
+        demand_map=demand_tj_per_km2_map,
         filepath=filepaths["data"]["map"],
     )
     plot_heat_demand_density_maps = tasks.execute_python_file(

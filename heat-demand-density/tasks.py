@@ -5,7 +5,6 @@ import prefect
 from prefect.engine import results
 from prefect.engine import serializers
 
-
 import functions
 from globals import BASE_DIR
 from globals import DATA_DIR
