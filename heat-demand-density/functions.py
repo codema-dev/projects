@@ -147,7 +147,7 @@ def apply_benchmarks_to_valuation_office_floor_areas(
         with_benchmarks["bounded_area_m2"].fillna(0)
         * with_benchmarks["fossil_fuel_heat_kwh_per_m2y"].fillna(0)
         * kwh_to_mwh
-        / assumed_boiler_efficiency
+        * assumed_boiler_efficiency
     ).fillna(0)
     industrial_heat_demand_mwh_per_y = (
         with_benchmarks["bounded_area_m2"].fillna(0)
