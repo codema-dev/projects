@@ -236,9 +236,7 @@ def amalgamate_heat_demands_to_small_areas(
 def link_demands_to_boundaries(
     demands: pd.DataFrame, boundaries: gpd.GeoDataFrame
 ) -> None:
-    return boundaries.merge(
-        demands, left_on="small_area", right_index=True, how="right"
-    )
+    return boundaries.merge(demands, left_on="small_area", right_index=True, how="left")
 
 
 def convert_from_mwh_per_y_to_tj_per_km2(demand_map: pd.DataFrame) -> pd.DataFrame:
@@ -258,7 +256,7 @@ def convert_from_mwh_per_y_to_tj_per_km2(demand_map: pd.DataFrame) -> pd.DataFra
         .divide(polygon_area_km2, axis="rows")
     )
 
-    return demand_map.dropna(how="any")
+    return demand_map
 
 
 def save_to_gpkg(demand_map: gpd.GeoDataFrame, filepath: Path) -> None:
