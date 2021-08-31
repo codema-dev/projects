@@ -189,6 +189,17 @@ def amalgamate_heat_demands_to_small_areas(
         .size()
         .rename("number_of_residential_buildings")
     )
+    residential["total_floor_area"] = (
+        residential["ground_floor_area"]
+        + residential["first_floor_area"]
+        + residential["second_floor_area"]
+        + residential["third_floor_area"]
+    )
+    residential_small_area_floor_areas = (
+        residential.groupby("small_area")["total_floor_area"]
+        .sum()
+        .rename("residential_floor_area_m2")
+    )
     index = residential_small_area_demand.index
     non_residential_small_area_demand = (
         non_residential.groupby("small_area")["heat_demand_mwh_per_y"]
@@ -204,12 +215,19 @@ def amalgamate_heat_demands_to_small_areas(
         .fillna(0)
         .rename("number_of_non_residential_buildings")
     )
+    non_residential_small_area_floor_areas = (
+        non_residential.groupby("small_area")["bounded_area_m2"]
+        .sum()
+        .rename("non_residential_floor_area_m2")
+    )
     return pd.concat(
         [
             residential_small_area_demand,
             non_residential_small_area_demand,
             residential_small_area_count,
             non_residential_small_area_count,
+            residential_small_area_floor_areas,
+            non_residential_small_area_floor_areas,
         ],
         axis="columns",
     )
