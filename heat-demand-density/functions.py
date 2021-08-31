@@ -87,7 +87,7 @@ def extract_normalised_benchmarks_for_weather(
     # 5y average for Dublin Airport from 2015 to 2020
     dublin_degree_days = 2175
     tm46_degree_days = 2021
-    degree_day_factor = tm46_degree_days / dublin_degree_days
+    degree_day_factor = dublin_degree_days / tm46_degree_days
     fossil_fuel_heat = (
         benchmarks["Typical fossil fuel [kWh/m²y]"]
         * benchmarks["Percentage fossil fuel pro-rated to degree days"]
