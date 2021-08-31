@@ -137,7 +137,7 @@ convert_from_mwh_per_y_to_tj_per_km2 = prefect.task(
     functions.convert_from_mwh_per_y_to_tj_per_km2,
     target="dublin_small_area_demand_tj_per_km2.parquet",
     checkpoint=True,
-    result=get_parquet_result(DATA_DIR / "processed"),
+    result=get_geoparquet_result(DATA_DIR / "processed"),
     name="Convert Heat Demands from MWh/year to TJ/km2",
 )
 

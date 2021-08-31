@@ -81,6 +81,37 @@ def link_small_areas_to_local_authorities(
     )
 
 
+def extract_normalised_benchmarks_for_weather(
+    benchmarks: pd.DataFrame,
+) -> pd.DataFrame:
+    # 5y average for Dublin Airport from 2015 to 2020
+    dublin_degree_days = 2175
+    tm46_degree_days = 2021
+    degree_day_factor = tm46_degree_days / dublin_degree_days
+    fossil_fuel_heat = (
+        benchmarks["Typical fossil fuel [kWh/m²y]"]
+        * benchmarks["Percentage fossil fuel pro-rated to degree days"]
+        * degree_day_factor
+        + benchmarks["Typical fossil fuel [kWh/m²y]"]
+        * (1 - benchmarks["Percentage fossil fuel pro-rated to degree days"])
+    ) * benchmarks["% Suitable for DH or HP"]
+    industrial_heat = (
+        benchmarks["Industrial space heat [kWh/m²y]"] * degree_day_factor
+        + benchmarks["Industrial process energy [kWh/m²y]"]
+        * benchmarks["% Suitable for DH or HP"]
+        * degree_day_factor
+    )
+    return pd.DataFrame(
+        {
+            "benchmark": benchmarks["Benchmark"],
+            "typical_area_m2": benchmarks["Typical Area [m²]"],
+            "area_upper_bound_m2": benchmarks["Area Upper Bound [m²]"],
+            "fossil_fuel_heat_kwh_per_m2y": fossil_fuel_heat,
+            "industrial_heat_kwh_per_m2y": industrial_heat,
+        }
+    )
+
+
 def apply_benchmarks_to_valuation_office_floor_areas(
     valuation_office: pd.DataFrame,
     benchmark_uses: pd.DataFrame,
@@ -101,28 +132,29 @@ def apply_benchmarks_to_valuation_office_floor_areas(
     # replace unexpectedly large floor areas with a typical area
     with_benchmarks["bounded_area_m2"] = with_benchmarks["Total_SQM"]
     where_area_greater_than_expected = (
-        with_benchmarks["Total_SQM"] > with_benchmarks["Area Upper Bound [m²]"]
+        with_benchmarks["Total_SQM"] > with_benchmarks["area_upper_bound_m2"]
     )
     with_benchmarks.loc[
         where_area_greater_than_expected, "bounded_area_m2"
-    ] = with_benchmarks.loc[where_area_greater_than_expected, "Typical Area [m²]"]
+    ] = with_benchmarks.loc[where_area_greater_than_expected, "typical_area_m2"]
 
     # calculate heat demand
-    non_industrial_heat_demand_kwh_per_y = (
-        with_benchmarks["Typical fossil fuel [kWh/m²y]"]
-        * with_benchmarks["bounded_area_m2"]
-        * with_benchmarks["% Suitable for DH or HP"]
-    ) / assumed_boiler_efficiency
-    industrial_heat_demand_kwh_per_y = (
-        with_benchmarks["Industrial space heat [kWh/m²y]"]
-        * with_benchmarks["bounded_area_m2"]
-        * with_benchmarks["% Suitable for DH or HP"]
-    )
     kwh_to_mwh = 1e-3
+    fossil_fuel_heat_demand_mwh_per_y = (
+        with_benchmarks["bounded_area_m2"].fillna(0)
+        * with_benchmarks["fossil_fuel_heat_kwh_per_m2y"].fillna(0)
+        * kwh_to_mwh
+        / assumed_boiler_efficiency
+    ).fillna(0)
+    industrial_heat_demand_mwh_per_y = (
+        with_benchmarks["bounded_area_m2"].fillna(0)
+        * with_benchmarks["industrial_heat_kwh_per_m2y"].fillna(0)
+        * kwh_to_mwh
+    )
+
     with_benchmarks["heat_demand_mwh_per_y"] = (
-        non_industrial_heat_demand_kwh_per_y.fillna(0)
-        + industrial_heat_demand_kwh_per_y.fillna(0)
-    ) * kwh_to_mwh
+        fossil_fuel_heat_demand_mwh_per_y + industrial_heat_demand_mwh_per_y
+    )
 
     # Drop buildings with zero floor area or with a zero demand benchmark
     where_floor_area_is_zero = with_benchmarks["Total_SQM"] > 0
