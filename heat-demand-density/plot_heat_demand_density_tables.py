@@ -122,6 +122,8 @@ for la in local_authorities:
                 "residential_heat_demand_mwh_per_y",
                 "non_residential_heat_demand_mwh_per_y",
                 "total_heat_demand_mwh_per_y",
+                "number_of_residential_buildings",
+                "number_of_non_residential_buildings",
             ]
         )
         .set_index("Feasibility")
