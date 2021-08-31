@@ -2,6 +2,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 from typing import Dict
+from zipfile import ZipFile
 
 import jupytext
 from jupytext import kernels
@@ -35,10 +36,13 @@ def read_file(url: str) -> pd.DataFrame:
 def read_benchmark_uses(url: str, filesystem_name: str) -> pd.DataFrame:
     fs = fsspec.filesystem(filesystem_name)
     uses_grouped_by_category = defaultdict()
-    for file in fs.glob(url + "/*.txt"):
-        name = file.split("/")[-1].replace(".txt", "")
-        with fs.open(file, "r") as f:
-            uses_grouped_by_category[name] = [line.rstrip() for line in f]
+    with ZipFile(fs.open(url)) as zf:
+        for filename in zf.namelist():
+            name = filename.split("/")[-1].replace(".txt", "")
+            with zf.open(filename, "r") as f:
+                uses_grouped_by_category[name] = [
+                    line.rstrip().decode("utf-8") for line in f
+                ]
     return {i: k for k, v in uses_grouped_by_category.items() for i in v}
 
 
