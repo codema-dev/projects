@@ -101,6 +101,11 @@ link_small_areas_to_local_authorities = prefect.task(
     name="Link Each Small Areas to their Corresponding Local Authority",
 )
 
+normalised_benchmarks_for_weather = prefect.task(
+    functions.extract_normalised_benchmarks_for_weather,
+    name="Normalise CIBSE Benchmarks for Dublin Weather",
+)
+
 apply_benchmarks_to_valuation_office_floor_areas = prefect.task(
     functions.apply_benchmarks_to_valuation_office_floor_areas,
     name="Apply Energy Benchmarks to Valuation Office Floor Areas",

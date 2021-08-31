@@ -94,20 +94,19 @@ def extract_normalised_benchmarks_for_weather(
     degree_day_factor = dublin_degree_days / tm46_degree_days
     fossil_fuel_heat = (
         benchmarks["Typical fossil fuel [kWh/m²y]"]
-        * benchmarks["Percentage fossil fuel pro-rated to degree days"]
+        * benchmarks["% fossil fuel pro-rated to degree days"]
         * degree_day_factor
         + benchmarks["Typical fossil fuel [kWh/m²y]"]
-        * (1 - benchmarks["Percentage fossil fuel pro-rated to degree days"])
-    ) * benchmarks["% Suitable for DH or HP"]
+        * (1 - benchmarks["% fossil fuel pro-rated to degree days"])
+    ) * benchmarks["% suitable for DH or HP"]
     industrial_heat = (
         benchmarks["Industrial space heat [kWh/m²y]"] * degree_day_factor
         + benchmarks["Industrial process energy [kWh/m²y]"]
-        * benchmarks["% Suitable for DH or HP"]
-        * degree_day_factor
+        * benchmarks["% suitable for DH or HP"]
     )
     return pd.DataFrame(
         {
-            "benchmark": benchmarks["Benchmark"],
+            "Benchmark": benchmarks["Benchmark"],
             "typical_area_m2": benchmarks["Typical Area [m²]"],
             "area_upper_bound_m2": benchmarks["Area Upper Bound [m²]"],
             "fossil_fuel_heat_kwh_per_m2y": fossil_fuel_heat,
