@@ -30,7 +30,7 @@ with Flow("Retrofit all Dublin Dwellings to HLP=2") as flow:
         savedir=FILEPATHS["external"],
     )
 
-    plot_heat_demand_density_tables = estimate_retrofit_costs(
+    estimate_retrofit_costs_task = estimate_retrofit_costs(
         py_filepath="estimate_retrofit_costs.py",
         ipynb_filepath="estimate_retrofit_costs.ipynb",
         parameters={

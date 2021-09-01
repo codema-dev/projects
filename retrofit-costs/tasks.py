@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 from typing import Any
@@ -8,7 +9,10 @@ from fs.tools import copy_file_data
 import jupytext
 from jupytext import kernels
 from jupytext import header
+import pandas as pd
 from prefect.tasks.jupyter import ExecuteNotebook
+from rcbm import fab
+from rcbm import htuse
 
 
 def get_data(filepath: str) -> Path:
@@ -67,3 +71,27 @@ def execute_python_file(
     _convert_py_to_ipynb(py_filepath, ipynb_filepath)
     exe = ExecuteNotebook()
     exe.run(path=ipynb_filepath, parameters=parameters)
+
+
+def estimate_cost_of_fabric_retrofits(
+    is_selected: pd.Series,
+    cost: float,
+    areas: pd.Series,
+) -> pd.Series:
+    return pd.Series([cost] * is_selected * areas, dtype="int64")
+
+
+def calculate_fabric_heat_loss_w_per_k(buildings: pd.DataFrame) -> pd.Series:
+    return fab.calculate_fabric_heat_loss(
+        roof_area=buildings["roof_area"],
+        roof_uvalue=buildings["roof_uvalue"],
+        wall_area=buildings["wall_area"],
+        wall_uvalue=buildings["wall_uvalue"],
+        floor_area=buildings["floor_area"],
+        floor_uvalue=buildings["floor_uvalue"],
+        window_area=buildings["window_area"],
+        window_uvalue=buildings["window_uvalue"],
+        door_area=buildings["door_area"],
+        door_uvalue=buildings["door_uvalue"],
+        thermal_bridging_factor=0.05,
+    )
