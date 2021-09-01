@@ -14,8 +14,8 @@ pd.set_option("display.precision", 1)
 # overwrite parameters with arguemnts generated in prefect pipeline
 
 # + tags=["parameters"]
-SAVE_AS_HTML: bool = False
-SAVE_AS_IMAGE: bool = False
+SAVE_AS_HTML: bool = True
+SAVE_AS_IMAGE: bool = True
 DATA_DIR: Path = Path(DATA_DIR)
 hdd_map_filepath: Path = (
     DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.gpkg"
@@ -41,8 +41,8 @@ hdd_map["total_heat_demand_tj_per_km2y"] = (
 )
 
 hdd_map["total_heat_demand_mwh_per_y"] = (
-    hdd_map["residential_heat_demand_tj_per_km2y"]
-    + hdd_map["non_residential_heat_demand_tj_per_km2y"]
+    hdd_map["residential_heat_demand_mwh_per_y"]
+    + hdd_map["non_residential_heat_demand_mwh_per_y"]
 )
 
 ## Categorise demands
@@ -62,8 +62,15 @@ hdd_map["category"] = hdd_map["feasibility"].cat.codes
 
 ## Amalgamate Demands to Local Authority Level
 
+use_columns = [
+    "local_authority",
+    "residential_heat_demand_mwh_per_y",
+    "non_residential_heat_demand_mwh_per_y",
+    "total_heat_demand_mwh_per_y",
+    "feasibility",
+]
 hdd_map_table = (
-    hdd_map.drop(columns=["small_area", "category", "geometry", "polygon_area_km2"])
+    hdd_map.loc[:, use_columns]
     .groupby(["local_authority", "feasibility"])
     .sum()
     .round()
@@ -102,29 +109,20 @@ for la in local_authorities:
     styled_table = (
         la_table.astype(
             {
-                "residential_heat_demand_tj_per_km2y": "int32",
-                "non_residential_heat_demand_tj_per_km2y": "int32",
-                "total_heat_demand_tj_per_km2y": "int32",
+                "residential_heat_demand_mwh_per_y": "int32",
+                "non_residential_heat_demand_mwh_per_y": "int32",
+                "total_heat_demand_mwh_per_y": "int32",
             }
         )
         .rename(
             columns={
                 "feasibility": "Feasibility",
-                "residential_heat_demand_tj_per_km2y": "Residential [TJ/km²year]",
-                "non_residential_heat_demand_tj_per_km2y": "Non-Residential [TJ/km²year]",
-                "total_heat_demand_tj_per_km2y": "Total [TJ/km²year]",
+                "residential_heat_demand_mwh_per_y": "Residential [MWh/year]",
+                "non_residential_heat_demand_mwh_per_y": "Non-Residential [MWh/year]",
+                "total_heat_demand_mwh_per_y": "Total [MWh/year]",
                 "band": "Band [TJ/km²year]",
                 "percentage_share_of_heat_demand": "% Share [MWh/year]",
             }
-        )
-        .drop(
-            columns=[
-                "residential_heat_demand_mwh_per_y",
-                "non_residential_heat_demand_mwh_per_y",
-                "total_heat_demand_mwh_per_y",
-                "number_of_residential_buildings",
-                "number_of_non_residential_buildings",
-            ]
         )
         .set_index("Feasibility")
         .style
