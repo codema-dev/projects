@@ -1,8 +1,14 @@
 import os
 from pathlib import Path
+from typing import Any
+from typing import Dict
 
 import fs
 from fs.tools import copy_file_data
+import jupytext
+from jupytext import kernels
+from jupytext import header
+from prefect.tasks.jupyter import ExecuteNotebook
 
 
 def get_data(filepath: str) -> Path:
@@ -42,3 +48,22 @@ def fetch_s3_file(bucket: str, filename: str, savedir: Path) -> None:
         with s3fs.open(filename, "rb") as remote_file:
             with open(savedir / filename, "wb") as local_file:
                 copy_file_data(remote_file, local_file)
+
+
+def _convert_py_to_ipynb(
+    input_filepath: Path,
+    output_filepath: Path,
+) -> None:
+    notebook = jupytext.read(input_filepath)
+    notebook["metadata"]["kernelspec"] = kernels.kernelspec_from_language("python")
+    jupytext.write(notebook, output_filepath, fmt="py:percent")
+
+
+def execute_python_file(
+    py_filepath: Path,
+    ipynb_filepath: Path,
+    parameters: Dict[str, Any],
+) -> None:
+    _convert_py_to_ipynb(py_filepath, ipynb_filepath)
+    exe = ExecuteNotebook()
+    exe.run(path=ipynb_filepath, parameters=parameters)

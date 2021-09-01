@@ -3,11 +3,16 @@ channels:
   - conda-forge
 dependencies:
 
+  - fs-s3fs
+  - ipykernel
+  - papermill
+  - nbconvert
+  - jupytext
+
   # fugue dependencies
   - pandas
   - pyarrow
   - sqlalchemy
-  - dask
   
   # qpd dependencies
   - antlr4-python3-runtime
