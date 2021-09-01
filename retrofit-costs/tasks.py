@@ -9,6 +9,7 @@ from fs.tools import copy_file_data
 import jupytext
 from jupytext import kernels
 from jupytext import header
+import numpy as np
 import pandas as pd
 from prefect.tasks.jupyter import ExecuteNotebook
 from rcbm import fab
@@ -95,3 +96,48 @@ def calculate_fabric_heat_loss_w_per_k(buildings: pd.DataFrame) -> pd.Series:
         door_uvalue=buildings["door_uvalue"],
         thermal_bridging_factor=0.05,
     )
+
+
+def get_ber_rating(energy_values: pd.Series) -> pd.Series:
+    return (
+        pd.cut(
+            energy_values,
+            [
+                -np.inf,
+                25,
+                50,
+                75,
+                100,
+                125,
+                150,
+                175,
+                200,
+                225,
+                260,
+                300,
+                340,
+                380,
+                450,
+                np.inf,
+            ],
+            labels=[
+                "A1",
+                "A2",
+                "A3",
+                "B1",
+                "B2",
+                "B3",
+                "C1",
+                "C2",
+                "C3",
+                "D1",
+                "D2",
+                "E1",
+                "E2",
+                "F",
+                "G",
+            ],
+        )
+        .rename("energy_rating")
+        .astype("string")
+    )  # streamlit & altair don't recognise category

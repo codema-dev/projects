@@ -58,7 +58,6 @@ pre_retrofit = bers
 post_retrofit = bers[post_retrofit_columns].copy()
 
 # %%
-dict_of_costs = defaultdict(list)
 for component, properties in defaults.items():
     uvalue_column_name = component + "_uvalue"
     uvalues = pre_retrofit[uvalue_column_name].copy()
@@ -68,28 +67,57 @@ for component, properties in defaults.items():
     uvalues.loc[where_uvalue_is_viable] = properties["uvalue"]["target"]
     post_retrofit[uvalue_column_name] = uvalues
 
-    area_column_name = component + "_area"
-    areas = pre_retrofit[area_column_name].copy()
-    cost_lower = tasks.estimate_cost_of_fabric_retrofits(
-        is_selected=where_uvalue_is_viable,
-        cost=properties["cost"]["lower"],
-        areas=areas,
-    )
-    cost_upper = tasks.estimate_cost_of_fabric_retrofits(
-        is_selected=where_uvalue_is_viable,
-        cost=properties["cost"]["upper"],
-        areas=areas,
-    )
-    dict_of_costs[component + "_cost_lower"] = cost_lower
-    dict_of_costs[component + "_cost_upper"] = cost_upper
-
-retrofit_costs = pd.DataFrame(dict_of_costs)
+# %%
+pre_retrofit_fabric_heat_loss_w_per_k = tasks.calculate_fabric_heat_loss_w_per_k(
+    pre_retrofit
+)
 
 # %%
-retrofit_costs["small_area"] = pre_retrofit["small_area"]
+post_retrofit_fabric_heat_loss_w_per_k = tasks.calculate_fabric_heat_loss_w_per_k(
+    post_retrofit
+)
 
 # %%
-small_area_total = retrofit_costs.groupby("small_area").sum().divide(1e6)
+heat_loss_parameter_improvement = (
+    pre_retrofit_fabric_heat_loss_w_per_k - post_retrofit_fabric_heat_loss_w_per_k
+) / total_floor_area
 
 # %%
-small_area_total.to_csv(Path(DATA_DIR) / "processed" / "small_area_retrofit_cost.csv")
+post_retrofit_heat_loss_parameter = (
+    pre_retrofit["heat_loss_parameter"] - heat_loss_parameter_improvement
+)
+
+
+# %%
+pre_retrofit_fabric_heat_loss_kwh_per_year = tasks.htuse.calculate_heat_loss_per_year(
+    pre_retrofit_fabric_heat_loss_w_per_k
+)
+
+# %%
+post_retrofit_fabric_heat_loss_kwh_per_year = tasks.htuse.calculate_heat_loss_per_year(
+    post_retrofit_fabric_heat_loss_w_per_k
+)
+
+# %%
+pre_retrofit_fabric_heat_loss_kwh_per_year = tasks.htuse.calculate_heat_loss_per_year(
+    pre_retrofit_fabric_heat_loss_w_per_k
+)
+
+# %%
+post_retrofit_fabric_heat_loss_kwh_per_year = tasks.htuse.calculate_heat_loss_per_year(
+    post_retrofit_fabric_heat_loss_w_per_k
+)
+
+# %%
+energy_rating_improvement = (
+    pre_retrofit_fabric_heat_loss_kwh_per_year
+    - post_retrofit_fabric_heat_loss_kwh_per_year
+) / total_floor_area
+
+# %%
+post_retrofit_energy_value = pre_retrofit["energy_value"] - energy_rating_improvement
+
+# %%
+post_retrofit_energy_rating = tasks.get_ber_rating(post_retrofit_energy_value)
+
+# %%
