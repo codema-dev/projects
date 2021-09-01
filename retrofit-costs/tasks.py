@@ -1,9 +1,8 @@
 import os
 from pathlib import Path
 
-from fugue import FugueWorkflow
-import fsspec
-import pandas as pd
+import fs
+from fs.tools import copy_file_data
 
 
 def get_data(filepath: str) -> Path:
@@ -36,5 +35,10 @@ def check_if_s3_keys_are_defined() -> None:
     assert os.getenv("AWS_SECRET_ACCESS_KEY") is not None, message
 
 
-def open_file(url: str, filepath: Path) -> None:
-    return fsspec.open("filecache::" + url, filecache={"cache_storage": filepath})
+def fetch_s3_file(bucket: str, filename: str, savedir: Path) -> None:
+    savepath = savedir / filename
+    if not savepath.exists():
+        s3fs = fs.open_fs(bucket)
+        with s3fs.open(filename, "rb") as remote_file:
+            with open(savedir / filename, "wb") as local_file:
+                copy_file_data(remote_file, local_file)
