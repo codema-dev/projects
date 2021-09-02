@@ -16,19 +16,20 @@ ber_filepath = Path(
 bers = pd.read_parquet(ber_filepath)
 
 # %%
+# where target uvalues are taken from gov.ie 2021 Technical Guidance Document Table 5
 defaults = {
     "wall": {
-        "uvalue": {"target": 0.2, "threshold": 0.5},
+        "uvalue": {"target": 0.35, "threshold": 1},
         "cost": {"lower": 50, "upper": 300},
         "typical_area": 70,
     },
     "roof": {
-        "uvalue": {"target": 0.13, "threshold": 0.5},
+        "uvalue": {"target": 0.25, "threshold": 1},
         "cost": {"lower": 5, "upper": 30},
         "typical_area": 50,
     },
     "window": {
-        "uvalue": {"target": 0.2, "threshold": 0.5},
+        "uvalue": {"target": 1.4, "threshold": 2},
         "cost": {"lower": 30, "upper": 150},
         "typical_area": 16,
     },
