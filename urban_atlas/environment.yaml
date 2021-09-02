@@ -1,0 +1,6 @@
+name: urban_atlas
+channels:
+  - conda-forge
+dependencies:
+  - geopandas
+  - ipykernel

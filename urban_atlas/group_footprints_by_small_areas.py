@@ -12,17 +12,21 @@
 # ---
 
 # %%
+from pathlib import Path
 import geopandas as gpd
 
 # %% tags=["parameters"]
-upstream = {
-    "download_small_areas": "data/external/dublin_small_area_boundaries_in_routing_keys.gpkg",
-    "upload_urban_atlas": "data/raw/Urban Atlas",
-}
-product = {"data": "data/processed/urban_atlas_small_area_item_area.csv.gz"}
+upstream = None
+product = None
+urban_atlas_filepath = None
 
 # %%
-urban_atlas = gpd.read_file(upstream["upload_urban_atlas"])
+assert Path(
+    urban_atlas_filepath
+).exists(), f"Please upload {Path(urban_atlas_filepath).name} to data/raw"
+
+# %%
+urban_atlas = gpd.read_file(urban_atlas_filepath)
 
 # %%
 small_areas = gpd.read_file(upstream["download_small_areas"])
@@ -54,6 +58,4 @@ urban_atlas_small_area_item_area = (
 )
 
 # %%
-urban_atlas_small_area_item_area.to_csv(
-    product["data"]["urban_atlas_small_area_item_area"]
-)
+urban_atlas_small_area_item_area.to_csv(product["data"])
