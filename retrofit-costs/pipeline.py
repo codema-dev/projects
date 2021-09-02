@@ -26,7 +26,7 @@ with Flow("Retrofit all Dublin Dwellings to HLP=2") as flow:
     create_data_folders_task = create_data_folders(FILEPATHS["data"])
     download_bers_task = download_bers(
         bucket="s3://codema-dev",
-        filename="small_area_bers.parquet",
+        filename="dublin_census_2016_filled_with_ber_public_14_05_2021.parquet",
         savedir=FILEPATHS["external"],
     )
 
@@ -42,6 +42,7 @@ with Flow("Retrofit all Dublin Dwellings to HLP=2") as flow:
     # set dependencies
     create_data_folders_task.set_upstream(check_s3_credentials_are_defined_task)
     download_bers_task.set_upstream(create_data_folders_task)
+    estimate_retrofit_costs_task.set_upstream(download_bers_task)
 
 
 state = flow.run()
