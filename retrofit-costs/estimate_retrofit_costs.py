@@ -65,8 +65,10 @@ dict_of_costs = defaultdict(list)
 for component, properties in defaults.items():
     uvalue_column_name = component + "_uvalue"
     uvalues = pre_retrofit[uvalue_column_name].copy()
-    where_uvalue_is_viable = (uvalues > properties["uvalue"]["threshold"]) & (
-        pre_retrofit["heat_loss_parameter"] > 2
+    where_uvalue_is_viable = (
+        (uvalues > properties["uvalue"]["threshold"])
+        & (pre_retrofit["heat_loss_parameter"] > 2)
+        & (pre_retrofit["period_built"] != "PRE19")
     )
     uvalues.loc[where_uvalue_is_viable] = properties["uvalue"]["target"]
     post_retrofit[uvalue_column_name] = uvalues
