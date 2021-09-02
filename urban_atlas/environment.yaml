@@ -4,3 +4,4 @@ channels:
 dependencies:
   - geopandas
   - ipykernel
+  - fs-s3fs
