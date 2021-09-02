@@ -73,15 +73,11 @@ for component, properties in defaults.items():
 
     area_column_name = component + "_area"
     areas = pre_retrofit[area_column_name].copy()
-    cost_lower = tasks.estimate_cost_of_fabric_retrofits(
-        is_selected=where_uvalue_is_viable,
-        cost=properties["cost"]["lower"],
-        areas=areas,
+    cost_lower = pd.Series(
+        [properties["cost"]["lower"]] * where_uvalue_is_viable * areas, dtype="int64"
     )
-    cost_upper = tasks.estimate_cost_of_fabric_retrofits(
-        is_selected=where_uvalue_is_viable,
-        cost=properties["cost"]["upper"],
-        areas=areas,
+    cost_upper = pd.Series(
+        [properties["cost"]["upper"]] * where_uvalue_is_viable * areas, dtype="int64"
     )
     dict_of_costs[component + "_cost_lower"] = cost_lower
     dict_of_costs[component + "_cost_upper"] = cost_upper
