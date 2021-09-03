@@ -1,0 +1,14 @@
+meta:
+  extract_upstream: False
+
+tasks:
+  - source: environmental_variables.load_environmental_variables
+    name: load_environmental_variables
+    product: ""
+
+  - source: download.fetch_s3_file
+    name: download_small_area_boundaries
+    params:
+      bucket: codema-dev
+    product: data/external/dublin_small_area_boundaries_in_routing_keys.gpkg
+    upstream: load_environmental_variables

@@ -1,0 +1,10 @@
+name: boiler-map
+channels:
+  - conda-forge
+  - patrikhlobil
+dependencies:
+  - geopandas
+  - ploomber
+  - pandas-bokeh
+  - python-dotenv
+  - fs-s3fs
