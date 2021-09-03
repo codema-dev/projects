@@ -136,3 +136,4 @@ dmypy.json
 **/html
 *.ipynb
 cache/
+*metadata*
