@@ -92,37 +92,3 @@ dublin_small_area_boiler_statistics.plot_bokeh(
     hovertool_string=hovertool_string,
     fill_alpha=0.75,
 )
-
-
-# %%
-pandas_bokeh.output_file(product["barchart"])
-
-# %%
-use_columns = [
-    "local_authority",
-    "No central heating",
-    "Oil",
-    "Natural gas",
-    "Electricity",
-    "Coal (incl. anthracite)",
-    "Peat (incl. turf)",
-    "Liquid petroleum gas (LPG)",
-    "Wood (incl. wood pellets)",
-    "Other",
-    "Not stated",
-]
-
-local_authority_boiler_statistics = (
-    dublin_small_area_boiler_statistics[use_columns].groupby("local_authority").sum().T
-)
-
-# %%
-local_authority_boiler_statistics[
-    "All of Dublin"
-] = local_authority_boiler_statistics.sum(axis=1)
-
-# %%
-local_authority_boiler_statistics.plot_bokeh(kind="barh")
-
-# %%
-local_authority_boiler_statistics.to_csv(product["local_authority_stats"])

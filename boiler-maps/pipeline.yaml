@@ -39,11 +39,18 @@ tasks:
       - download_small_area_boundaries
       - download_small_area_statistics
 
-  - source: plot_dublin_boiler_census_statistics.py
-    name: plot_dublin_boiler_census_statistics
+  - source: plot_dublin_boiler_census_map.py
+    name: plot_dublin_boiler_census_map
     product:
-      nb: data/notebooks/plot_dublin_boiler_census_statistics.ipynb
+      nb: data/notebooks/plot_dublin_boiler_census_map.ipynb
       map: data/html/dublin_small_area_boiler_map.html
+    upstream:
+      - extract_dublin_boiler_statistics
+
+  - source: plot_dublin_boiler_census_barchart.py
+    name: plot_dublin_boiler_census_barchart
+    product:
+      nb: data/notebooks/plot_dublin_boiler_census_barchart.ipynb
       barchart: data/html/dublin_small_area_boilers_barchart.html
       local_authority_stats: data/processed/local_authority_boiler_statistics.csv
     upstream:
