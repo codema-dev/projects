@@ -2,7 +2,11 @@ meta:
   extract_upstream: False
 
 tasks:
-  - source: environmental_variables.load_environmental_variables
+  - source: hooks.create_folder_structure
+    name: create_folder_structure
+    product: "data/"
+
+  - source: hooks.load_environmental_variables
     name: load_environmental_variables
     product: ""
 
@@ -34,3 +38,13 @@ tasks:
     upstream:
       - download_small_area_boundaries
       - download_small_area_statistics
+
+  - source: plot_dublin_boiler_census_statistics.py
+    name: plot_dublin_boiler_census_statistics
+    product:
+      nb: data/notebooks/plot_dublin_boiler_census_statistics.ipynb
+      map: data/html/dublin_small_area_boiler_map.html
+      barchart: data/html/dublin_small_area_boilers_barchart.html
+      local_authority_stats: data/processed/local_authority_boiler_statistics.csv
+    upstream:
+      - extract_dublin_boiler_statistics
