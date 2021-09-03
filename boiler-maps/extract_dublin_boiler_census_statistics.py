@@ -12,16 +12,8 @@
 # ---
 
 # %%
-from pathlib import Path
-import re
-
-from bokeh.palettes import diverging_palette
 import geopandas as gpd
 import pandas as pd
-
-import pandas_bokeh
-
-pandas_bokeh.output_notebook()
 
 # %% tags=["parameters"]
 product = None
