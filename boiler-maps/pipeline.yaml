@@ -18,10 +18,19 @@ tasks:
       bucket: codema-dev
     product: data/external/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
     upstream: load_environmental_variables
-    
+
   - source: download.fetch_s3_file
     name: download_small_area_boundaries
     params:
       bucket: codema-dev
     product: data/external/dublin_small_area_boundaries_in_routing_keys.gpkg
     upstream: load_environmental_variables
+
+  - source: extract_dublin_boiler_census_statistics.py
+    name: extract_dublin_boiler_statistics
+    product:
+      nb: data/notebooks/extract_dublin_boiler_census_statistics.ipynb
+      data: data/processed/dublin_small_area_boiler_census_statistics.gpkg
+    upstream:
+      - download_small_area_boundaries
+      - download_small_area_statistics
