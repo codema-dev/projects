@@ -12,6 +12,8 @@
 # ---
 
 # %%
+from pathlib import Path
+
 import geopandas as gpd
 import pandas as pd
 
@@ -55,5 +57,9 @@ dublin_small_area_boiler_statistics = dublin_small_area_boundaries_2016.merge(
     ireland_small_area_boiler_statistics
 )
 
+
 # %%
-dublin_small_area_boiler_statistics.to_file(product["data"], driver="GPKG")
+output_filepath = Path(product["data"])
+if not output_filepath.parent.exists():
+    output_filepath.parent.mkdir()
+dublin_small_area_boiler_statistics.to_file(output_filepath, driver="GPKG")
