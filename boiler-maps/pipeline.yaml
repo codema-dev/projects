@@ -13,6 +13,13 @@ tasks:
     product: data/external/SAPS2016_SA2017.csv
 
   - source: download.fetch_s3_file
+    name: download_buildings
+    params:
+      bucket: codema-dev
+    product: data/external/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
+    upstream: load_environmental_variables
+    
+  - source: download.fetch_s3_file
     name: download_small_area_boundaries
     params:
       bucket: codema-dev
