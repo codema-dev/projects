@@ -76,6 +76,15 @@ tasks:
       stats: data/processed/dublin_boiler_synthetic_stock_trendline.csv
     upstream:
       - download_buildings
+    
+  - source: plot_dublin_boiler_synthetic_stock_energy_piechart.py
+    product:
+      nb: data/notebooks/plot_dublin_boiler_synthetic_stock_energy_piechart.ipynb
+      piechart: data/html/dublin_boiler_synthetic_stock_energy_piechart.html
+      stats: data/processed/dublin_boiler_synthetic_stock_energy_piechart.csv
+    upstream:
+      - download_buildings
+      - download_small_area_boundaries
 
   - source: extract_dublin_boiler_synthetic_stock_data.py
     name: extract_dublin_boiler_synthetic_stock_data
