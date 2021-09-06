@@ -67,3 +67,12 @@ tasks:
     upstream:
       - download_buildings
       - download_small_area_boundaries
+
+  - source: plot_dublin_boiler_synthetic_stock_trendline.py
+    name: plot_dublin_boiler_synthetic_stock_trendline
+    product:
+      nb: data/notebooks/plot_dublin_boiler_synthetic_stock_trendline.ipynb
+      trendline: data/html/dublin_boiler_synthetic_stock_trendline.html
+      stats: data/processed/dublin_boiler_synthetic_stock_trendline.csv
+    upstream:
+      - download_buildings
