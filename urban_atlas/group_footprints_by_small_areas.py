@@ -18,15 +18,9 @@ import geopandas as gpd
 # %% tags=["parameters"]
 upstream = None
 product = None
-urban_atlas_filepath = None
 
 # %%
-assert Path(
-    urban_atlas_filepath
-).exists(), f"Please upload {Path(urban_atlas_filepath).name} to data/raw"
-
-# %%
-urban_atlas = gpd.read_file(urban_atlas_filepath)
+urban_atlas = gpd.read_file(upstream["check_urban_atlas_is_uploaded"])
 
 # %%
 small_areas = gpd.read_file(upstream["download_small_areas"])
@@ -58,4 +52,4 @@ urban_atlas_small_area_item_area = (
 )
 
 # %%
-urban_atlas_small_area_item_area.to_csv(product["data"])
+urban_atlas_small_area_item_area.to_csv(product["csv"])

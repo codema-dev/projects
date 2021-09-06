@@ -13,3 +13,7 @@ def fetch_s3_file(product: str, bucket: str) -> None:
         with s3fs.open(filename, "rb") as remote_file:
             with open(filepath, "wb") as local_file:
                 copy_file_data(remote_file, local_file)
+
+
+def check_file_exists(product: str, filepath: str):
+    assert Path(filepath).exists(), f"Please upload {Path(filepath).name} to data/raw"

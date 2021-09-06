@@ -8,13 +8,19 @@ tasks:
       bucket: codema-dev
     product: data/external/dublin_small_area_boundaries_in_routing_keys.gpkg
 
+  - source: download.check_file_exists
+    name: check_urban_atlas_is_uploaded
+    params:
+      filepath: data/raw/Urban Atlas
+    product: data/raw/Urban Atlas
+
   - source: group_footprints_by_small_areas.py
     name: group_footprints_by_small_areas
-    params:
-      small_area_filepath: data/external/dublin_small_area_boundaries_in_routing_keys.gpkg
-      urban_atlas_filepath: data/raw/Urban Atlas
     product:
       nb: data/notebooks/group_footprints_by_small_areas.ipynb
-      data: data/processed/urban_atlas_small_area_item_area.csv.gz
-    upstream: download_small_areas
+      gpkg: data/processed/urban_atlas_in_small_areas.gpkg
+      csv: data/processed/urban_atlas_small_area_item_area.csv.gz
+    upstream:
+      - download_small_areas
+      - check_urban_atlas_is_uploaded
 
