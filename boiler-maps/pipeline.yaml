@@ -40,10 +40,10 @@ tasks:
       - download_small_area_statistics
 
   - source: plot_dublin_boiler_census_map.py
-    name: plot_dublin_boiler_census_map
     product:
       nb: data/notebooks/plot_dublin_boiler_census_map.ipynb
       map: data/html/dublin_boiler_census_map.html
+      csv: data/processed/dublin_census_boiler_map.csv
     upstream:
       - extract_dublin_boiler_statistics
 
