@@ -93,3 +93,11 @@ tasks:
       by_dwelling_type: data/processed/small_area_boiler_types_by_dwelling_type.csv
     upstream:
       - download_buildings
+
+  - source: plot_dublin_boiler_synthetic_stock_map.py
+    product:
+      nb: data/notebooks/plot_dublin_boiler_synthetic_stock_map.ipynb
+      map: data/html/dublin_boiler_synthetic_stock_boiler_map.html
+    upstream:
+      - download_buildings
+      - download_small_area_boundaries
