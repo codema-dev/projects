@@ -26,23 +26,14 @@ urban_atlas = gpd.read_file(upstream["check_urban_atlas_is_uploaded"])
 small_areas = gpd.read_file(upstream["download_small_areas"])
 
 # %%
-urban_atlas_representative_points = (
-    urban_atlas.geometry.representative_point()
-    .to_frame()
-    .rename(columns={0: "geometry"})
+urban_atlas_in_small_areas = gpd.overlay(
+    urban_atlas.to_crs(epsg=2157),
+    small_areas.to_crs(epsg=2157),
+    how="intersection",
 )
 
 # %%
-urban_atlas_in_small_areas = (
-    gpd.sjoin(
-        urban_atlas_representative_points.to_crs(epsg=2157),
-        small_areas.to_crs(epsg=2157),
-        op="within",
-    )
-    .drop(columns="geometry")
-    .join(urban_atlas)
-    .drop(columns="index_right")
-)
+urban_atlas_in_small_areas.to_file(product["gpkg"], driver="GPKG")
 
 # %%
 urban_atlas_small_area_item_area = (
