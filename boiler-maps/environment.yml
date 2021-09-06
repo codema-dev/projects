@@ -8,3 +8,4 @@ dependencies:
   - pandas-bokeh
   - python-dotenv
   - fs-s3fs
+  - pyarrow
