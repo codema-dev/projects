@@ -1,0 +1,95 @@
+meta:
+  extract_upstream: False
+
+tasks:
+  - source: hooks.create_folder_structure
+    name: create_folder_structure
+    product: "data/"
+
+  - source: hooks.load_environmental_variables
+    name: load_environmental_variables
+    product: ""
+
+  - source: download.fetch_https_file
+    name: download_small_area_statistics
+    params:
+      url: https://www.cso.ie/en/media/csoie/census/census2016/census2016boundaryfiles/SAPS2016_SA2017.csv
+    product: data/external/SAPS2016_SA2017.csv
+
+  - source: download.fetch_s3_file
+    name: download_buildings
+    params:
+      bucket: codema-dev
+    product: data/external/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
+    upstream: load_environmental_variables
+
+  - source: download.fetch_s3_file
+    name: download_small_area_boundaries
+    params:
+      bucket: codema-dev
+    product: data/external/dublin_small_area_boundaries_in_routing_keys.gpkg
+    upstream: load_environmental_variables
+
+  - source: extract_dublin_boiler_census_statistics.py
+    name: extract_dublin_boiler_statistics
+    product:
+      nb: data/notebooks/extract_dublin_boiler_census_statistics.ipynb
+      data: data/processed/dublin_small_area_boiler_census_statistics.gpkg
+    upstream:
+      - download_small_area_boundaries
+      - download_small_area_statistics
+
+  - source: plot_dublin_boiler_census_map.py
+    name: plot_dublin_boiler_census_map
+    product:
+      nb: data/notebooks/plot_dublin_boiler_census_map.ipynb
+      map: data/html/dublin_boiler_census_map.html
+    upstream:
+      - extract_dublin_boiler_statistics
+
+  - source: plot_dublin_boiler_census_barchart.py
+    name: plot_dublin_boiler_census_barchart
+    product:
+      nb: data/notebooks/plot_dublin_boiler_census_barchart.ipynb
+      barchart: data/html/dublin_boiler_census_barchart.html
+      local_authority_stats: data/processed/local_authority_boiler_census_statistics.csv
+    upstream:
+      - extract_dublin_boiler_statistics
+
+  - source: plot_dublin_boiler_synthetic_stock_barchart.py
+    name: plot_dublin_boiler_synthetic_stock_barchart
+    product:
+      nb: data/notebooks/plot_dublin_boiler_synthetic_stock_barchart.ipynb
+      sh_barchart: data/html/dublin_boiler_synthetic_stock_space_heat_barchart.html
+      hw_barchart: data/html/dublin_boiler_synthetic_stock_hot_water_barchart.html
+      sh_stats: data/processed/local_authority_boiler_synthetic_stock_space_heat_statistics.csv
+      hw_stats: data/processed/local_authority_boiler_synthetic_stock_hot_water_statistics.csv
+    upstream:
+      - download_buildings
+      - download_small_area_boundaries
+
+  - source: plot_dublin_boiler_synthetic_stock_trendline.py
+    name: plot_dublin_boiler_synthetic_stock_trendline
+    product:
+      nb: data/notebooks/plot_dublin_boiler_synthetic_stock_trendline.ipynb
+      trendline: data/html/dublin_boiler_synthetic_stock_trendline.html
+      stats: data/processed/dublin_boiler_synthetic_stock_trendline.csv
+    upstream:
+      - download_buildings
+    
+  - source: plot_dublin_boiler_synthetic_stock_energy_piechart.py
+    product:
+      nb: data/notebooks/plot_dublin_boiler_synthetic_stock_energy_piechart.ipynb
+      piechart: data/html/dublin_boiler_synthetic_stock_energy_piechart.html
+      stats: data/processed/dublin_boiler_synthetic_stock_energy_piechart.csv
+    upstream:
+      - download_buildings
+      - download_small_area_boundaries
+
+  - source: extract_dublin_boiler_synthetic_stock_data.py
+    name: extract_dublin_boiler_synthetic_stock_data
+    product:
+      nb: data/notebooks/extract_dublin_boiler_synthetic_stock_data.ipynb
+      by_dwelling_type: data/processed/small_area_boiler_types_by_dwelling_type.csv
+    upstream:
+      - download_buildings
