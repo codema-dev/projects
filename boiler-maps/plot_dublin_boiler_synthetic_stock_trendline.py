@@ -67,6 +67,7 @@ p = trendline.plot_bokeh(
     sizing_mode="scale_width",
     vertical_xlabel=True,
     fontsize_legend="8px",
+    stacked=True,
 )
 
 # %%
