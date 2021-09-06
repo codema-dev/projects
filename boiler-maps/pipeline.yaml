@@ -76,3 +76,11 @@ tasks:
       stats: data/processed/dublin_boiler_synthetic_stock_trendline.csv
     upstream:
       - download_buildings
+
+  - source: extract_dublin_boiler_synthetic_stock_data.py
+    name: extract_dublin_boiler_synthetic_stock_data
+    product:
+      nb: data/notebooks/extract_dublin_boiler_synthetic_stock_data.ipynb
+      by_dwelling_type: data/processed/small_area_boiler_types_by_dwelling_type.csv
+    upstream:
+      - download_buildings
