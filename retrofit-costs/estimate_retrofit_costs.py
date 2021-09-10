@@ -85,6 +85,11 @@ for component, properties in defaults.items():
     retrofit_flag_column_name = component + "_is_retrofitted"
     dict_of_costs[retrofit_flag_column_name] = where_uvalue_is_viable
 
+    not_retrofit_flag_column_name = component + "_is_not_retrofitted"
+    dict_of_costs[not_retrofit_flag_column_name] = ~where_uvalue_is_viable
+
+dict_of_costs["is_pre1919"] = pre_retrofit["period_built"] == "PRE19"
+
 retrofit_costs = pd.DataFrame(dict_of_costs)
 
 # %%
