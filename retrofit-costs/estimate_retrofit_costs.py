@@ -75,14 +75,15 @@ for component, properties in defaults.items():
 
     area_column_name = component + "_area"
     areas = pre_retrofit[area_column_name].copy()
-    cost_lower = pd.Series(
+    dict_of_costs[component + "_cost_lower"] = pd.Series(
         [properties["cost"]["lower"]] * where_uvalue_is_viable * areas, dtype="int64"
     )
-    cost_upper = pd.Series(
+    dict_of_costs[component + "_cost_upper"] = pd.Series(
         [properties["cost"]["upper"]] * where_uvalue_is_viable * areas, dtype="int64"
     )
-    dict_of_costs[component + "_cost_lower"] = cost_lower
-    dict_of_costs[component + "_cost_upper"] = cost_upper
+
+    retrofit_flag_column_name = component + "_is_retrofitted"
+    dict_of_costs[retrofit_flag_column_name] = where_uvalue_is_viable
 
 retrofit_costs = pd.DataFrame(dict_of_costs)
 
@@ -90,7 +91,7 @@ retrofit_costs = pd.DataFrame(dict_of_costs)
 retrofit_costs["small_area"] = pre_retrofit["small_area"]
 
 # %%
-small_area_total = retrofit_costs.groupby("small_area").sum().divide(1e6)
+small_area_total = retrofit_costs.groupby("small_area").sum()
 
 # %%
 small_area_total.to_csv(Path(DATA_DIR) / "processed" / "small_area_retrofit_cost.csv")
