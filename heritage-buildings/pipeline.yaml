@@ -1,0 +1,20 @@
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_sites_and_monuments_record_buildings
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/2021_05_dublin_sites_and_monuments_record_buildings.gpkg
+    product: data/external/2021_05_dublin_sites_and_monuments_record_buildings.gpkg
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_ireland_national_inventory_of_architectural_heritage_buildings
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/2021_05_ireland_national_inventory_of_architectural_heritage_buildings.gpkg
+    product: data/external/2021_05_ireland_national_inventory_of_architectural_heritage_buildings.gpkg
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_small_area_boundaries
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/dublin_small_area_boundaries_in_routing_keys.gpkg
+    product: data/external/dublin_small_area_boundaries_in_routing_keys.gpkg
+  - source: tasks.extract_dublin_niah_houses
+    product: data/processed/dublin_national_inventory_of_architectural_heritage_buildings.gpkg
+  - source: tasks.extract_dublin_smr_houses
+    product: data/processed/dublin_sites_and_monuments_record_houses.gpkg
