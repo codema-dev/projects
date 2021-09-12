@@ -1,0 +1,9 @@
+name: heritage
+channels:
+  - conda-forge
+dependencies:
+  - geopandas
+  - ploomber
+  - pip
+  - pip:
+    - git+https://github.com/codema-dev/tasks
