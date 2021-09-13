@@ -1,4 +1,4 @@
-# %%
+# +
 from collections import defaultdict
 from pathlib import Path
 
@@ -6,16 +6,13 @@ import pandas as pd
 
 import tasks
 
-# %% tags=["parameters"]
-DATA_DIR = Path("data")
-ber_filepath = Path(
-    "data/external/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet"
-)
+# + tags=["parameters"]
+upstream = ["download_buildings"]
+product = None
+# -
 
-# %%
-bers = pd.read_parquet(ber_filepath)
+bers = pd.read_parquet(upstream["download_buildings"])
 
-# %%
 # where target uvalues are taken from gov.ie 2021 Technical Guidance Document Table 5
 defaults = {
     "wall": {
@@ -36,7 +33,6 @@ defaults = {
 }
 
 
-# %%
 total_floor_area = (
     bers["ground_floor_area"]
     + bers["first_floor_area"]
@@ -44,7 +40,6 @@ total_floor_area = (
     + bers["third_floor_area"]
 )
 
-# %%
 post_retrofit_columns = [
     "door_area",
     "floor_area",
@@ -56,11 +51,10 @@ post_retrofit_columns = [
     "door_uvalue",
 ]
 
-# %%
 pre_retrofit = bers
 post_retrofit = bers[post_retrofit_columns].copy()
 
-# %%
+# +
 dict_of_costs = defaultdict(list)
 for component, properties in defaults.items():
     uvalue_column_name = component + "_uvalue"
@@ -91,14 +85,12 @@ for component, properties in defaults.items():
 dict_of_costs["is_pre1919"] = pre_retrofit["period_built"] == "PRE19"
 
 retrofit_costs = pd.DataFrame(dict_of_costs)
+# -
 
-# %%
 retrofit_costs["small_area"] = pre_retrofit["small_area"]
 
-# %%
 small_area_total = retrofit_costs.groupby("small_area").sum()
 
-# %%
-small_area_total.to_csv(Path(DATA_DIR) / "processed" / "small_area_retrofit_cost.csv")
+small_area_total.to_csv(product["small_area"])
 
-# %%
+retrofit_costs.to_csv(product["raw"])

@@ -8,6 +8,7 @@ dependencies:
   - papermill
   - nbconvert
   - jupytext
+  - ploomber >=12.8
 
   # fugue dependencies
   - pandas

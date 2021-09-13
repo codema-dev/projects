@@ -1,0 +1,14 @@
+on_render:
+  dotted_path: codema_dev_tasks.hooks.load_environmental_variables
+  dotenv_path: ".env"
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_buildings
+    params:
+      url: s3://codema-dev/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
+    product: data/external/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
+  - source: estimate_retrofit_costs.py
+    product:
+      nb: data/notebooks/estimate_retrofit_costs.ipynb
+      raw: data/processed/2021_05_individual_building_retrofit_costs.csv
+      small_area: data/processed/2021_05_small_area_retrofit_costs.csv
