@@ -66,14 +66,12 @@ def weather_adjust_benchmarks(upstream: Any, product: Any) -> None:
 
 
 def link_valuation_office_to_benchmarks(upstream: Any, product: Any) -> None:
-    valuation_office = pd.read_csv(upstream["download_buildings"])
+    buildings = pd.read_csv(upstream["download_buildings"])
     benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
     with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
         benchmark_uses = json.load(f)
 
-    valuation_office["Benchmark"] = valuation_office["Use1"].map(benchmark_uses)
-    valuation_office_with_benchmarks = valuation_office.merge(
-        benchmarks, on="Benchmark", how="left"
-    )
+    benchmarks = buildings["Use1"].map(benchmark_uses).rename("Benchmark")
+    propertyno_benchmark_map = pd.concat([buildings["PropertyNo"], benchmarks], axis=1)
 
-    valuation_office_with_benchmarks.to_csv(product)
+    propertyno_benchmark_map.to_csv(product, index=False)
