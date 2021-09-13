@@ -65,34 +65,18 @@ def weather_adjust_benchmarks(upstream: Any, product: Any) -> None:
     normalised_benchmarks.to_csv(product)
 
 
-def link_valuation_office_to_benchmarks(upstream: Any, product: Any) -> None:
+def replace_unexpectedly_large_floor_areas_with_typical_values(
+    upstream: Any, product: Any
+) -> None:
     buildings = pd.read_csv(upstream["download_buildings"])
     benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
     with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
         benchmark_uses = json.load(f)
 
-    benchmarks = (
+    buildings["Benchmark"] = (
         buildings["Use1"].map(benchmark_uses).rename("Benchmark").fillna("Unknown")
     )
-    propertyno_benchmark_map = pd.concat(
-        [buildings[["PropertyNo", "Use1"]], benchmarks], axis=1
-    )
-
-    propertyno_benchmark_map.to_csv(product, index=False)
-
-
-def replace_unexpectedly_large_floor_areas_with_typical_values(
-    upstream: Any, product: Any
-) -> None:
-    buildings = pd.read_csv(upstream["download_buildings"])
-    propertyno_benchmark_map = pd.read_csv(
-        upstream["link_valuation_office_to_benchmarks"]
-    )
-    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
-
-    buildings_with_benchmarks = pd.concat(
-        [buildings, propertyno_benchmark_map], axis=1
-    ).merge(benchmarks)
+    buildings_with_benchmarks = buildings.merge(benchmarks)
 
     bounded_area_m2 = buildings_with_benchmarks["Total_SQM"]
     typical_area = buildings_with_benchmarks["typical_area_m2"]
@@ -113,14 +97,14 @@ def replace_unexpectedly_large_floor_areas_with_typical_values(
 
 def save_propertyno_of_valid_buildings(upstream: Any, product: Any) -> None:
     buildings = pd.read_csv(upstream["download_buildings"])
-    propertyno_benchmark_map = pd.read_csv(
-        upstream["link_valuation_office_to_benchmarks"]
-    )
     benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
+    with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
+        benchmark_uses = json.load(f)
 
-    buildings_with_benchmarks = pd.concat(
-        [buildings, propertyno_benchmark_map], axis=1
-    ).merge(benchmarks)
+    buildings["Benchmark"] = (
+        buildings["Use1"].map(benchmark_uses).rename("Benchmark").fillna("Unknown")
+    )
+    buildings_with_benchmarks = buildings.merge(benchmarks)
 
     floor_area_is_nonzero = buildings_with_benchmarks["Total_SQM"] > 0
     benchmark_has_an_energy_demand = (
@@ -133,13 +117,19 @@ def save_propertyno_of_valid_buildings(upstream: Any, product: Any) -> None:
 
 
 def save_unknown_benchmark_uses(upstream: Any, product: Any) -> None:
-    propertyno_benchmark_map = pd.read_csv(
-        upstream["link_valuation_office_to_benchmarks"]
-    )
+    buildings = pd.read_csv(upstream["download_buildings"])
+    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
+    with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
+        benchmark_uses = json.load(f)
 
-    benchmark_is_unknown = propertyno_benchmark_map["Benchmark"] == "Unknown"
+    buildings["Benchmark"] = (
+        buildings["Use1"].map(benchmark_uses).rename("Benchmark").fillna("Unknown")
+    )
+    buildings_with_benchmarks = buildings.merge(benchmarks)
+
+    benchmark_is_unknown = buildings_with_benchmarks["Benchmark"] == "Unknown"
     unknown_benchmark_uses = pd.Series(
-        propertyno_benchmark_map.loc[benchmark_is_unknown, "Use1"].unique(),
+        buildings_with_benchmarks.loc[benchmark_is_unknown, "Use1"].unique(),
         name="Use1",
     )
     unknown_benchmark_uses.to_csv(product, index=False)
