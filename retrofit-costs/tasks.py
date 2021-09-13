@@ -234,7 +234,7 @@ def estimate_small_area_retrofit_costs(upstream: Any, product: Any) -> None:
 
 
 def estimate_individual_building_retrofit_energy_saving(
-    upstream: Any, product: Any
+    upstream: Any, product: Any, rebound_effect: float = 1
 ) -> None:
 
     pre_retrofit = pd.read_parquet(upstream["download_buildings"])
@@ -242,12 +242,16 @@ def estimate_individual_building_retrofit_energy_saving(
         upstream["replace_uvalues_with_target_uvalues"], index_col=0
     )
 
-    pre_retrofit_fabric_heat_loss_w_per_k = pre_retrofit.pipe(
-        calculate_fabric_heat_loss_w_per_k
-    ).rename("pre_retrofit_fabric_heat_loss_w_per_k")
-    post_retrofit_fabric_heat_loss_w_per_k = post_retrofit.pipe(
-        calculate_fabric_heat_loss_w_per_k
-    ).rename("post_retrofit_fabric_heat_loss_w_per_k")
+    pre_retrofit_fabric_heat_loss_w_per_k = (
+        pre_retrofit.pipe(calculate_fabric_heat_loss_w_per_k)
+        .multiply(rebound_effect)
+        .rename("pre_retrofit_fabric_heat_loss_w_per_k")
+    )
+    post_retrofit_fabric_heat_loss_w_per_k = (
+        post_retrofit.pipe(calculate_fabric_heat_loss_w_per_k)
+        .multiply(rebound_effect)
+        .rename("post_retrofit_fabric_heat_loss_w_per_k")
+    )
     pre_retrofit_fabric_heat_loss_kwh_per_year = (
         pre_retrofit_fabric_heat_loss_w_per_k.pipe(htuse.calculate_heat_loss_per_year)
     ).rename("pre_retrofit_fabric_heat_loss_kwh_per_year")
