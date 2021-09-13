@@ -1,19 +1,11 @@
-import json
-import os
 from pathlib import Path
-from typing import Any
-from typing import Dict
 
 import fs
 from fs.tools import copy_file_data
-import jupytext
-from jupytext import kernels
-from jupytext import header
 import numpy as np
 import pandas as pd
-from prefect.tasks.jupyter import ExecuteNotebook
+
 from rcbm import fab
-from rcbm import htuse
 
 
 def get_data(filepath: str) -> Path:
@@ -30,22 +22,6 @@ def create_folder_structure(data_dirpath: Path) -> None:
     processed_dir.mkdir(exist_ok=True)
 
 
-def check_if_s3_keys_are_defined() -> None:
-    message = f"""
-
-        Please create a .env file
-        
-        In this directory: {Path.cwd().resolve()}
-
-        With the following contents:
-        
-        AWS_ACCESS_KEY_ID=YOUR_KEY
-        AWS_SECRET_ACCESS_KEY=YOUR_SECRET_KEY
-    """
-    assert os.getenv("AWS_ACCESS_KEY_ID") is not None, message
-    assert os.getenv("AWS_SECRET_ACCESS_KEY") is not None, message
-
-
 def fetch_s3_file(bucket: str, filename: str, savedir: Path) -> None:
     savepath = savedir / filename
     if not savepath.exists():
@@ -53,25 +29,6 @@ def fetch_s3_file(bucket: str, filename: str, savedir: Path) -> None:
         with s3fs.open(filename, "rb") as remote_file:
             with open(savedir / filename, "wb") as local_file:
                 copy_file_data(remote_file, local_file)
-
-
-def _convert_py_to_ipynb(
-    input_filepath: Path,
-    output_filepath: Path,
-) -> None:
-    notebook = jupytext.read(input_filepath)
-    notebook["metadata"]["kernelspec"] = kernels.kernelspec_from_language("python")
-    jupytext.write(notebook, output_filepath, fmt="py:percent")
-
-
-def execute_python_file(
-    py_filepath: Path,
-    ipynb_filepath: Path,
-    parameters: Dict[str, Any],
-) -> None:
-    _convert_py_to_ipynb(py_filepath, ipynb_filepath)
-    exe = ExecuteNotebook()
-    exe.run(path=ipynb_filepath, parameters=parameters)
 
 
 def estimate_cost_of_fabric_retrofits(
