@@ -7,6 +7,8 @@ tasks:
     params:
       url: s3://codema-dev/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
     product: data/external/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
+  - source: tasks.load_defaults
+    product: data/interim/defaults.json
   - source: estimate_retrofit_costs.py
     product:
       nb: data/notebooks/estimate_retrofit_costs.ipynb

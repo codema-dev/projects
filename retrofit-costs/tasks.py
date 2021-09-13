@@ -1,4 +1,6 @@
+import json
 from pathlib import Path
+from typing import Any
 
 import fs
 from fs.tools import copy_file_data
@@ -98,3 +100,25 @@ def get_ber_rating(energy_values: pd.Series) -> pd.Series:
         .rename("energy_rating")
         .astype("string")
     )  # streamlit & altair don't recognise category
+
+
+def load_defaults(product: Any) -> None:
+    defaults = {
+        "wall": {
+            "uvalue": {"target": 0.35, "threshold": 1},
+            "cost": {"lower": 50, "upper": 300},
+            "typical_area": 70,
+        },
+        "roof": {
+            "uvalue": {"target": 0.25, "threshold": 1},
+            "cost": {"lower": 5, "upper": 30},
+            "typical_area": 50,
+        },
+        "window": {
+            "uvalue": {"target": 1.4, "threshold": 2},
+            "cost": {"lower": 30, "upper": 150},
+            "typical_area": 16,
+        },
+    }
+    with open(product, "w") as f:
+        json.dump(defaults, f)
