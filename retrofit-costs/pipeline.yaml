@@ -29,4 +29,6 @@ tasks:
   - source: tasks.estimate_individual_building_retrofit_hlp_improvement
     product: data/processed/2021_05_ber_heat_loss_parameter_after_targets_no_rebound.csv
   - source: tasks.calculate_pre_retrofit_small_area_heat_pump_viability
-    product: data/processed/2021_05_ber_small_area_heat_pump_viability.csv
+    product: data/processed/2021_05_ber_small_area_heat_pump_viability_pre_retrofit.csv
+  - source: tasks.calculate_post_retrofit_small_area_heat_pump_viability
+    product: data/processed/2021_05_ber_small_area_heat_pump_viability_post_retrofit.csv

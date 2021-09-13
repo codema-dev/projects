@@ -394,3 +394,35 @@ def calculate_pre_retrofit_small_area_heat_pump_viability(
     )
 
     small_area_heat_pump_viability.to_csv(product)
+
+
+def calculate_post_retrofit_small_area_heat_pump_viability(
+    upstream: Any, product: Any
+) -> None:
+    use_columns = ["small_area", "post_retrofit_heat_loss_parameter"]
+
+    buildings = pd.read_csv(
+        upstream["estimate_individual_building_retrofit_hlp_improvement"], index_col=0
+    ).loc[:, use_columns]
+
+    is_heat_pump_ready = buildings["post_retrofit_heat_loss_parameter"] < 2
+
+    number_of_heat_pump_ready_dwellings_per_small_area = (
+        pd.concat([buildings["small_area"], is_heat_pump_ready], axis=1)
+        .groupby("small_area", sort=False)["post_retrofit_heat_loss_parameter"]
+        .sum()
+    )
+
+    total_dwellings_per_small_area = buildings["small_area"].value_counts(sort=False)
+
+    small_area_heat_pump_viability = (
+        number_of_heat_pump_ready_dwellings_per_small_area.divide(
+            total_dwellings_per_small_area
+        )
+        .multiply(100)
+        .round(2)
+        .rename("percentage_of_heat_pump_ready_dwellings")
+        .to_frame()
+    )
+
+    small_area_heat_pump_viability.to_csv(product)
