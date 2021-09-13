@@ -1,11 +1,15 @@
 name: retrofit
 channels:
   - conda-forge
+  - patrikhlobil
 dependencies:
   - fs-s3fs
   - ipykernel
-  - ploomber >=12.8
-  - pandas
+  - ploomber >= 0.12.8
+  - pandas-bokeh
+  - geopandas
+  - seaborn
+  - python-dotenv
 
   - pip
   - pip:

@@ -37,3 +37,8 @@ tasks:
     product: data/processed/2021_05_ber_small_area_heat_pump_viability_pre_retrofit.csv
   - source: tasks.calculate_post_retrofit_small_area_heat_pump_viability
     product: data/processed/2021_05_ber_small_area_heat_pump_viability_post_retrofit.csv
+  - source: map_heat_pump_viability.py
+    product:
+      nb: data/notebooks/map_heat_pump_viability.ipynb
+      html: data/processed/2021_05_heat_pump_viability.html
+      gpkg: data/processed/2021_05_heat_pump_viability.gpkg
