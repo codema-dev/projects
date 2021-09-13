@@ -2,26 +2,12 @@ name: retrofit
 channels:
   - conda-forge
 dependencies:
-
   - fs-s3fs
   - ipykernel
-  - papermill
-  - nbconvert
-  - jupytext
   - ploomber >=12.8
-
-  # fugue dependencies
   - pandas
-  - pyarrow
-  - sqlalchemy
-  
-  # qpd dependencies
-  - antlr4-python3-runtime
-  - ciso8601
-  - fs
 
   - pip
   - pip:
-    - fugue
     - rcbm
     - git+https://github.com/codema-dev/tasks
