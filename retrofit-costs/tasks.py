@@ -310,3 +310,57 @@ def estimate_small_area_retrofit_energy_saving_with_rebound(
         c for c in small_area_statistics.columns if "fabric_heat_loss" in c
     ] + ["energy_saving_kwh_per_y"]
     small_area_statistics[use_columns].to_csv(product)
+
+
+def estimate_individual_building_retrofit_hlp_improvement(
+    upstream: Any, product: Any, rebound_effect: float = 1
+) -> None:
+
+    pre_retrofit = pd.read_parquet(upstream["download_buildings"])
+    post_retrofit = pd.read_csv(
+        upstream["replace_uvalues_with_target_uvalues"], index_col=0
+    )
+
+    total_floor_area = (
+        pre_retrofit["ground_floor_area"]
+        + pre_retrofit["first_floor_area"]
+        + pre_retrofit["second_floor_area"]
+        + pre_retrofit["third_floor_area"]
+    ).rename("total_floor_area")
+
+    pre_retrofit_fabric_heat_loss_w_per_k = pre_retrofit.pipe(
+        calculate_fabric_heat_loss_w_per_k
+    ).rename("pre_retrofit_fabric_heat_loss_w_per_k")
+    post_retrofit_fabric_heat_loss_w_per_k = post_retrofit.pipe(
+        calculate_fabric_heat_loss_w_per_k
+    ).rename("post_retrofit_fabric_heat_loss_w_per_k")
+    heat_loss_parameter_improvement = pre_retrofit_fabric_heat_loss_w_per_k.subtract(
+        post_retrofit_fabric_heat_loss_w_per_k
+    ).divide(total_floor_area)
+    post_retrofit_heat_loss_parameter = (
+        pre_retrofit["heat_loss_parameter"]
+        .subtract(heat_loss_parameter_improvement)
+        .rename("post_retrofit_heat_loss_parameter")
+    )
+
+    use_columns = [
+        "small_area",
+        "dwelling_type",
+        "year_of_construction",
+        "period_built",
+        "archetype",
+        "heat_loss_parameter",
+    ] + [c for c in pre_retrofit.columns if "uvalue" in c]
+    statistics = pd.concat(
+        [
+            pre_retrofit[use_columns].rename(
+                columns=lambda c: "pre_retrofit_" + c if "uvalue" in c else c
+            ),
+            pre_retrofit_fabric_heat_loss_w_per_k,
+            post_retrofit_fabric_heat_loss_w_per_k,
+            total_floor_area,
+            post_retrofit_heat_loss_parameter,
+        ],
+        axis=1,
+    )
+    statistics.to_csv(product)
