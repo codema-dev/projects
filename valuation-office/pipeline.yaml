@@ -5,8 +5,8 @@ tasks:
   - source: codema_dev_tasks.requests.fetch_file
     name: download_buildings
     params:
-      url: s3://codema-dev/valuation_office_dublin_april_2021.parquet
-    product: data/external/valuation_office_dublin_april_2021.parquet
+      url: s3://codema-dev/2021_04_dublin_valuation_office.csv
+    product: data/external/2021_04_dublin_valuation_office.csv
   - source: codema_dev_tasks.requests.fetch_file
     name: download_benchmarks
     params:
