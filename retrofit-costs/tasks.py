@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 from rcbm import fab
+from rcbm import htuse
 
 
 def get_data(filepath: str) -> Path:
@@ -230,3 +231,51 @@ def estimate_small_area_retrofit_costs(upstream: Any, product: Any) -> None:
         axis=1,
     )
     small_area_statistics.to_csv(product)
+
+
+def estimate_individual_building_retrofit_energy_saving(
+    upstream: Any, product: Any
+) -> None:
+
+    pre_retrofit = pd.read_parquet(upstream["download_buildings"])
+    post_retrofit = pd.read_csv(
+        upstream["replace_uvalues_with_target_uvalues"], index_col=0
+    )
+
+    pre_retrofit_fabric_heat_loss_w_per_k = pre_retrofit.pipe(
+        calculate_fabric_heat_loss_w_per_k
+    ).rename("pre_retrofit_fabric_heat_loss_w_per_k")
+    post_retrofit_fabric_heat_loss_w_per_k = post_retrofit.pipe(
+        calculate_fabric_heat_loss_w_per_k
+    ).rename("post_retrofit_fabric_heat_loss_w_per_k")
+    pre_retrofit_fabric_heat_loss_kwh_per_year = (
+        pre_retrofit_fabric_heat_loss_w_per_k.pipe(htuse.calculate_heat_loss_per_year)
+    ).rename("pre_retrofit_fabric_heat_loss_kwh_per_year")
+    post_retrofit_fabric_heat_loss_kwh_per_year = (
+        post_retrofit_fabric_heat_loss_w_per_k.pipe(htuse.calculate_heat_loss_per_year)
+    ).rename("post_retrofit_fabric_heat_loss_kwh_per_year")
+    energy_saving_kwh_per_y = pre_retrofit_fabric_heat_loss_kwh_per_year.subtract(
+        post_retrofit_fabric_heat_loss_kwh_per_year
+    ).rename("energy_saving_kwh_per_y")
+
+    use_columns = [
+        "small_area",
+        "dwelling_type",
+        "year_of_construction",
+        "period_built",
+        "archetype",
+    ] + [c for c in pre_retrofit.columns if "uvalue" in c]
+    statistics = pd.concat(
+        [
+            pre_retrofit[use_columns].rename(
+                columns=lambda c: "pre_retrofit_" + c if "uvalue" in c else c
+            ),
+            pre_retrofit_fabric_heat_loss_w_per_k,
+            post_retrofit_fabric_heat_loss_w_per_k,
+            pre_retrofit_fabric_heat_loss_kwh_per_year,
+            post_retrofit_fabric_heat_loss_kwh_per_year,
+            energy_saving_kwh_per_y,
+        ],
+        axis=1,
+    )
+    statistics.to_csv(product)

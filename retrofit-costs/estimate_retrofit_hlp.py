@@ -8,7 +8,9 @@ import tasks
 
 # %% tags=["parameters"]
 DATA_DIR = Path("data")
-ber_filepath = Path("data/external/small_area_bers.parquet")
+ber_filepath = Path(
+    "data/external/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet"
+)
 
 # %%
 bers = pd.read_parquet(ber_filepath)
