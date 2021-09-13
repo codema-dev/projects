@@ -71,7 +71,9 @@ def link_valuation_office_to_benchmarks(upstream: Any, product: Any) -> None:
     with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
         benchmark_uses = json.load(f)
 
-    benchmarks = buildings["Use1"].map(benchmark_uses).rename("Benchmark")
+    benchmarks = (
+        buildings["Use1"].map(benchmark_uses).rename("Benchmark").fillna("Unknown")
+    )
     propertyno_benchmark_map = pd.concat([buildings["PropertyNo"], benchmarks], axis=1)
 
     propertyno_benchmark_map.to_csv(product, index=False)
