@@ -24,6 +24,8 @@ tasks:
     product: data/external/dublin_small_area_boundaries_in_routing_keys.gpkg
   - source: ploomber_tasks.convert_benchmark_uses_to_json
     product: data/interim/benchmark_uses.json
+  - source: ploomber_tasks.weather_adjust_benchmarks
+    product: data/interim/weather_adjusted_benchmarks.csv
   - source: ploomber_tasks.link_valuation_office_to_benchmarks
     product: data/interim/valuation_office_with_benchmarks.csv
   
