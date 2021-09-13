@@ -22,4 +22,6 @@ tasks:
     params:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/dublin_small_area_boundaries_in_routing_keys.gpkg
     product: data/external/dublin_small_area_boundaries_in_routing_keys.gpkg
+  - source: ploomber_tasks.convert_benchmark_uses_to_json
+    product: data/interim/benchmark_uses.json
   
