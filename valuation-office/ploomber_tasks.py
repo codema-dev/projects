@@ -107,3 +107,24 @@ def replace_unexpectedly_large_floor_areas_with_typical_values(
     )
 
     propertyno_bounded_area_map.to_csv(product, index=False)
+
+
+def save_propertyno_of_valid_buildings(upstream: Any, product: Any) -> None:
+    buildings = pd.read_csv(upstream["download_buildings"])
+    propertyno_benchmark_map = pd.read_csv(
+        upstream["link_valuation_office_to_benchmarks"]
+    )
+    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
+
+    buildings_with_benchmarks = pd.concat(
+        [buildings, propertyno_benchmark_map], axis=1
+    ).merge(benchmarks)
+
+    floor_area_is_nonzero = buildings_with_benchmarks["Total_SQM"] > 0
+    benchmark_has_an_energy_demand = (
+        buildings_with_benchmarks["Benchmark"] != "None"
+    ) & (buildings_with_benchmarks["Benchmark"] != "Unknown")
+    is_valid_building = floor_area_is_nonzero & floor_area_is_nonzero
+    property_no_valid_buildings = buildings[is_valid_building]["PropertyNo"]
+
+    property_no_valid_buildings.to_csv(product, index=False)
