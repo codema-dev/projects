@@ -9,6 +9,8 @@ tasks:
     product: data/external/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
   - source: tasks.load_defaults
     product: data/interim/defaults.json
+  - source: tasks.replace_uvalues_with_target_uvalues
+    product: data/processed/2021_05_retrofitted_uvalues.csv
   - source: estimate_retrofit_costs.py
     product:
       nb: data/notebooks/estimate_retrofit_costs.ipynb

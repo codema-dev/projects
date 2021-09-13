@@ -122,3 +122,42 @@ def load_defaults(product: Any) -> None:
     }
     with open(product, "w") as f:
         json.dump(defaults, f)
+
+
+def replace_uvalues_with_target_uvalues(upstream: Any, product: Any) -> None:
+
+    with open(upstream["load_defaults"], "r") as f:
+        defaults = json.load(f)
+    pre_retrofit = pd.read_parquet(upstream["download_buildings"])
+
+    post_retrofit_columns = [
+        "small_area",
+        "dwelling_type",
+        "year_of_construction",
+        "period_built",
+        "archetype",
+        "door_area",
+        "floor_area",
+        "roof_area",
+        "small_area",
+        "wall_area",
+        "window_area",
+        "floor_uvalue",
+        "door_uvalue",
+    ]
+    post_retrofit = pre_retrofit[post_retrofit_columns].copy()
+
+    for component, properties in defaults.items():
+        uvalue_column = component + "_uvalue"
+        is_retrofitted_column = component + "_is_retrofitted"
+        uvalues = pre_retrofit[uvalue_column].copy()
+        where_uvalue_is_viable = (
+            (uvalues > properties["uvalue"]["threshold"])
+            & (pre_retrofit["heat_loss_parameter"] > 2)
+            & (pre_retrofit["period_built"] != "PRE19")
+        )
+        uvalues.loc[where_uvalue_is_viable] = properties["uvalue"]["target"]
+        post_retrofit[uvalue_column] = uvalues
+        post_retrofit[is_retrofitted_column] = where_uvalue_is_viable
+
+    post_retrofit.to_csv(product)
