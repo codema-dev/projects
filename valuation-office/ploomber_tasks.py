@@ -77,3 +77,33 @@ def link_valuation_office_to_benchmarks(upstream: Any, product: Any) -> None:
     propertyno_benchmark_map = pd.concat([buildings["PropertyNo"], benchmarks], axis=1)
 
     propertyno_benchmark_map.to_csv(product, index=False)
+
+
+def replace_unexpectedly_large_floor_areas_with_typical_values(
+    upstream: Any, product: Any
+) -> None:
+    buildings = pd.read_csv(upstream["download_buildings"])
+    propertyno_benchmark_map = pd.read_csv(
+        upstream["link_valuation_office_to_benchmarks"]
+    )
+    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
+
+    buildings_with_benchmarks = pd.concat(
+        [buildings, propertyno_benchmark_map], axis=1
+    ).merge(benchmarks)
+
+    bounded_area_m2 = buildings_with_benchmarks["Total_SQM"]
+    typical_area = buildings_with_benchmarks["typical_area_m2"]
+    area_is_greater_than_expected = (
+        buildings_with_benchmarks["Total_SQM"]
+        > buildings_with_benchmarks["area_upper_bound_m2"]
+    )
+    bounded_area_m2.loc[area_is_greater_than_expected] = typical_area.loc[
+        area_is_greater_than_expected
+    ]
+
+    propertyno_bounded_area_map = pd.concat(
+        [buildings["PropertyNo"], bounded_area_m2], axis=1
+    )
+
+    propertyno_bounded_area_map.to_csv(product, index=False)

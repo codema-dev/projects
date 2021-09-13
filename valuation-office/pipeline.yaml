@@ -29,4 +29,5 @@ tasks:
     product: data/interim/weather_adjusted_benchmarks.csv
   - source: ploomber_tasks.link_valuation_office_to_benchmarks
     product: data/interim/propertyno_benchmarks_map.csv
-  
+  - source: ploomber_tasks.replace_unexpectedly_large_floor_areas_with_typical_values
+    product: data/interim/propertyno_bounded_area_map.csv
