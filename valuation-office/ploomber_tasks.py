@@ -74,7 +74,9 @@ def link_valuation_office_to_benchmarks(upstream: Any, product: Any) -> None:
     benchmarks = (
         buildings["Use1"].map(benchmark_uses).rename("Benchmark").fillna("Unknown")
     )
-    propertyno_benchmark_map = pd.concat([buildings["PropertyNo"], benchmarks], axis=1)
+    propertyno_benchmark_map = pd.concat(
+        [buildings[["PropertyNo", "Use1"]], benchmarks], axis=1
+    )
 
     propertyno_benchmark_map.to_csv(product, index=False)
 
@@ -128,3 +130,16 @@ def save_propertyno_of_valid_buildings(upstream: Any, product: Any) -> None:
     property_no_valid_buildings = buildings[is_valid_building]["PropertyNo"]
 
     property_no_valid_buildings.to_csv(product, index=False)
+
+
+def save_unknown_benchmark_uses(upstream: Any, product: Any) -> None:
+    propertyno_benchmark_map = pd.read_csv(
+        upstream["link_valuation_office_to_benchmarks"]
+    )
+
+    benchmark_is_unknown = propertyno_benchmark_map["Benchmark"] == "Unknown"
+    unknown_benchmark_uses = pd.Series(
+        propertyno_benchmark_map.loc[benchmark_is_unknown, "Use1"].unique(),
+        name="Use1",
+    )
+    unknown_benchmark_uses.to_csv(product, index=False)

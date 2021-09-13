@@ -33,3 +33,5 @@ tasks:
     product: data/interim/propertyno_bounded_area_map.csv
   - source: ploomber_tasks.save_propertyno_of_valid_buildings
     product: data/interim/propertyno_of_valid_buildings.csv
+  - source: ploomber_tasks.save_unknown_benchmark_uses
+    product: data/interim/unknown_benchmark_uses.csv
