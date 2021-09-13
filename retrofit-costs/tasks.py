@@ -1,3 +1,4 @@
+from collections import defaultdict
 import json
 from pathlib import Path
 from typing import Any
@@ -161,3 +162,48 @@ def replace_uvalues_with_target_uvalues(upstream: Any, product: Any) -> None:
         post_retrofit[is_retrofitted_column] = where_uvalue_is_viable
 
     post_retrofit.to_csv(product)
+
+
+def estimate_individual_building_retrofit_costs(upstream: Any, product: Any) -> None:
+
+    with open(upstream["load_defaults"], "r") as f:
+        defaults = json.load(f)
+    pre_retrofit = pd.read_parquet(upstream["download_buildings"])
+
+    dict_of_costs = defaultdict(list)
+    for component, properties in defaults.items():
+
+        uvalue_column = component + "_uvalue"
+        is_retrofitted_column = component + "_is_retrofitted"
+
+        uvalues = pre_retrofit[uvalue_column]
+        where_uvalue_is_viable = (
+            (uvalues > properties["uvalue"]["threshold"])
+            & (pre_retrofit["heat_loss_parameter"] > 2)
+            & (pre_retrofit["period_built"] != "PRE19")
+        )
+
+        area_column_name = component + "_area"
+        areas = pre_retrofit[area_column_name].copy()
+        dict_of_costs[component + "_cost_lower"] = pd.Series(
+            [properties["cost"]["lower"]] * where_uvalue_is_viable * areas,
+            dtype="int64",
+        )
+        dict_of_costs[component + "_cost_upper"] = pd.Series(
+            [properties["cost"]["upper"]] * where_uvalue_is_viable * areas,
+            dtype="int64",
+        )
+
+    dict_of_costs["is_pre1919"] = pre_retrofit["period_built"] == "PRE19"
+
+    use_columns = [
+        "small_area",
+        "dwelling_type",
+        "year_of_construction",
+        "period_built",
+        "archetype",
+    ]
+    retrofit_costs = pd.concat(
+        [pre_retrofit[use_columns], pd.DataFrame(dict_of_costs)], axis=1
+    )
+    retrofit_costs.to_csv(product)

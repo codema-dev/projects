@@ -11,8 +11,5 @@ tasks:
     product: data/interim/defaults.json
   - source: tasks.replace_uvalues_with_target_uvalues
     product: data/processed/2021_05_retrofitted_uvalues.csv
-  - source: estimate_retrofit_costs.py
-    product:
-      nb: data/notebooks/estimate_retrofit_costs.ipynb
-      raw: data/processed/2021_05_individual_building_retrofit_costs.csv
-      small_area: data/processed/2021_05_small_area_retrofit_costs.csv
+  - source: tasks.estimate_individual_building_retrofit_costs
+    product: data/processed/2021_05_individual_building_retrofit_costs.csv
