@@ -24,3 +24,5 @@ tasks:
     params:
       rebound_effect: 0.66
     product: data/processed/2021_05_ber_energy_saving_after_targets_with_rebound.csv
+  - source: tasks.estimate_small_area_retrofit_energy_saving_with_rebound
+    product: data/processed/2021_05_ber_small_area_energy_saving_after_targets_with_rebound.csv

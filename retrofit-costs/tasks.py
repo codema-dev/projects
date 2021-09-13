@@ -295,3 +295,18 @@ def estimate_small_area_retrofit_energy_saving(upstream: Any, product: Any) -> N
         c for c in small_area_statistics.columns if "fabric_heat_loss" in c
     ] + ["energy_saving_kwh_per_y"]
     small_area_statistics[use_columns].to_csv(product)
+
+
+def estimate_small_area_retrofit_energy_saving_with_rebound(
+    upstream: Any, product: Any
+) -> None:
+    individual_building_statistics = pd.read_csv(
+        upstream["estimate_individual_building_retrofit_energy_saving_with_rebound"],
+        index_col=0,
+    )
+    small_area_statistics = individual_building_statistics.groupby("small_area").sum()
+
+    use_columns = [
+        c for c in small_area_statistics.columns if "fabric_heat_loss" in c
+    ] + ["energy_saving_kwh_per_y"]
+    small_area_statistics[use_columns].to_csv(product)
