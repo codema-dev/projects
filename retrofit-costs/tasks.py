@@ -182,6 +182,7 @@ def estimate_individual_building_retrofit_costs(upstream: Any, product: Any) -> 
             & (pre_retrofit["heat_loss_parameter"] > 2)
             & (pre_retrofit["period_built"] != "PRE19")
         )
+        dict_of_costs[is_retrofitted_column] = where_uvalue_is_viable
 
         area_column_name = component + "_area"
         areas = pre_retrofit[area_column_name].copy()
@@ -207,3 +208,25 @@ def estimate_individual_building_retrofit_costs(upstream: Any, product: Any) -> 
         [pre_retrofit[use_columns], pd.DataFrame(dict_of_costs)], axis=1
     )
     retrofit_costs.to_csv(product)
+
+
+def estimate_small_area_retrofit_costs(upstream: Any, product: Any) -> None:
+    retrofit_costs = pd.read_csv(
+        upstream["estimate_individual_building_retrofit_costs"], index_col=0
+    )
+
+    small_area_retrofit_costs = (
+        retrofit_costs.groupby("small_area").sum().drop(columns="year_of_construction")
+    )
+    small_area_buildings = (
+        retrofit_costs.groupby("small_area").size().rename("number_of_buildings")
+    )
+
+    small_area_statistics = pd.concat(
+        [
+            small_area_retrofit_costs,
+            small_area_buildings,
+        ],
+        axis=1,
+    )
+    small_area_statistics.to_csv(product)
