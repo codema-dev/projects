@@ -57,11 +57,14 @@ def weather_adjust_benchmarks(upstream: Any, product: Any) -> None:
     # ASSUMPTION: fossil fuel is only used for space heat & hot water
     fossil_fuel_heat = fossil_fuel * benchmarks["% suitable for DH or HP"]
 
-    industrial_heat = (
+    industrial_low_temperature_heat = (
         benchmarks["Industrial space heat [kWh/m²y]"] * degree_day_factor
         + benchmarks["Industrial process energy [kWh/m²y]"]
         * benchmarks["% suitable for DH or HP"]
     )
+    industrial_high_temperature_heat = benchmarks[
+        "Industrial process energy [kWh/m²y]"
+    ] * (1 - benchmarks["% suitable for DH or HP"])
 
     normalised_benchmarks = pd.DataFrame(
         {
@@ -78,7 +81,8 @@ def weather_adjust_benchmarks(upstream: Any, product: Any) -> None:
             ],
             "typical_electricity_heat_kwh_per_m2y": electricity_heat,
             "typical_fossil_fuel_heat_kwh_per_m2y": fossil_fuel_heat,
-            "typical_industrial_heat_kwh_per_m2y": industrial_heat,
+            "typical_industrial_low_temperature_heat_kwh_per_m2y": industrial_low_temperature_heat,
+            "typical_industrial_high_temperature_heat_kwh_per_m2y": industrial_high_temperature_heat,
         }
     )
 
@@ -211,9 +215,18 @@ def apply_energy_benchmarks_to_floor_areas(
         * kwh_to_mwh
         * boiler_efficiency
     ).fillna(0)
-    buildings_with_benchmarks["industrial_heat_demand_mwh_per_y"] = (
+    buildings_with_benchmarks["industrial_low_temperature_heat_demand_mwh_per_y"] = (
         bounded_area_m2.fillna(0)
-        * buildings_with_benchmarks["typical_industrial_heat_kwh_per_m2y"].fillna(0)
+        * buildings_with_benchmarks[
+            "typical_industrial_low_temperature_heat_kwh_per_m2y"
+        ].fillna(0)
+        * kwh_to_mwh
+    )
+    buildings_with_benchmarks["industrial_high_temperature_heat_demand_mwh_per_y"] = (
+        bounded_area_m2.fillna(0)
+        * buildings_with_benchmarks[
+            "typical_industrial_high_temperature_heat_kwh_per_m2y"
+        ].fillna(0)
         * kwh_to_mwh
     )
 
