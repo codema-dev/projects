@@ -35,3 +35,11 @@ tasks:
     params:
       boiler_efficiency: 0.85
     product: data/processed/2021_04_dublin_valuation_office.csv
+  
+  - source: tasks.save_building_columns
+    name: save_electricity_demands
+    params:
+      columns: 
+        - typical_electricity_kwh_per_m2y
+        - electricity_demand_mwh_per_y
+    product: data/processed/2021_04_dublin_valuation_office_electricity_demands.csv
