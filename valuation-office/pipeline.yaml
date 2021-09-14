@@ -23,15 +23,15 @@ tasks:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/dublin_small_area_boundaries_in_routing_keys.gpkg
     product: data/external/dublin_small_area_boundaries_in_routing_keys.gpkg
 
-  - source: ploomber_tasks.convert_benchmark_uses_to_json
+  - source: tasks.convert_benchmark_uses_to_json
     product: data/interim/benchmark_uses.json
-  - source: ploomber_tasks.weather_adjust_benchmarks
+  - source: tasks.weather_adjust_benchmarks
     product: data/interim/weather_adjusted_benchmarks.csv
 
-  - source: ploomber_tasks.save_unknown_benchmark_uses
+  - source: tasks.save_unknown_benchmark_uses
     product: data/interim/unknown_benchmark_uses.csv
 
-  - source: ploomber_tasks.apply_energy_benchmarks_to_floor_areas
+  - source: tasks.apply_energy_benchmarks_to_floor_areas
     params:
       boiler_efficiency: 0.85
     product: data/processed/2021_04_dublin_valuation_office.csv
