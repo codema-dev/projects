@@ -35,3 +35,75 @@ tasks:
     params:
       boiler_efficiency: 0.85
     product: data/processed/2021_04_dublin_valuation_office.csv
+  
+  - source: tasks.save_building_columns
+    name: save_electricity_demands
+    params:
+      columns: 
+        - typical_electricity_kwh_per_m2y
+        - electricity_demand_mwh_per_y
+      filter_on_column: electricity_demand_mwh_per_y
+    product: data/processed/2021_04_dublin_valuation_office_electricity_demands.csv
+
+  - source: tasks.save_building_columns
+    name: save_fossil_fuel_demands
+    params:
+      columns: 
+        - typical_fossil_fuel_kwh_per_m2y
+        - fossil_fuel_demand_mwh_per_y
+      filter_on_column: fossil_fuel_demand_mwh_per_y
+    product: data/processed/2021_04_dublin_valuation_office_fossil_fuel_demands.csv
+
+  - source: tasks.save_building_columns
+    name: save_building_energy_demands
+    params:
+      columns: 
+        - typical_building_energy_kwh_per_m2y
+        - building_energy_mwh_per_y
+      filter_on_column: building_energy_mwh_per_y
+    product: data/processed/2021_04_dublin_valuation_office_building_energy_demands.csv
+
+  - source: tasks.save_building_columns
+    name: save_process_energy_demands
+    params:
+      columns: 
+        - typical_process_energy_kwh_per_m2y
+        - process_energy_mwh_per_y
+      filter_on_column: process_energy_mwh_per_y
+    product: data/processed/2021_04_dublin_valuation_office_process_energy_demands.csv
+  
+  - source: tasks.save_building_columns
+    name: save_electricity_heat_demands
+    params:
+      columns: 
+        - typical_electricity_heat_kwh_per_m2y
+        - electricity_heat_demand_mwh_per_y
+      filter_on_column: electricity_heat_demand_mwh_per_y
+    product: data/processed/2021_04_dublin_valuation_office_electricity_heat_demands.csv
+
+  - source: tasks.save_building_columns
+    name: save_fossil_fuel_heat_demands
+    params:
+      columns: 
+        - typical_fossil_fuel_heat_kwh_per_m2y
+        - fossil_fuel_heat_demand_mwh_per_y
+      filter_on_column: fossil_fuel_heat_demand_mwh_per_y
+    product: data/processed/2021_04_dublin_valuation_office_fossil_fuel_heat_demands.csv
+
+  - source: tasks.save_building_columns
+    name: save_industrial_low_temperature_heat_demands
+    params:
+      columns: 
+        - typical_industrial_low_temperature_heat_kwh_per_m2y
+        - industrial_low_temperature_heat_demand_mwh_per_y
+      filter_on_column: industrial_low_temperature_heat_demand_mwh_per_y
+    product: data/processed/2021_04_dublin_valuation_office_industrial_low_temperature_heat_demands.csv
+  
+  - source: tasks.save_building_columns
+    name: save_industrial_high_temperature_heat_demands
+    params:
+      columns: 
+        - typical_industrial_high_temperature_heat_kwh_per_m2y
+        - industrial_high_temperature_heat_demand_mwh_per_y
+      filter_on_column: industrial_high_temperature_heat_demand_mwh_per_y
+    product: data/processed/2021_04_dublin_valuation_office_industrial_high_temperature_heat_demands.csv
