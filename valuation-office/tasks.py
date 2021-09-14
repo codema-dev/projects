@@ -29,11 +29,32 @@ def weather_adjust_benchmarks(upstream: Any, product: Any) -> None:
     tm46_degree_days = 2021
     degree_day_factor = dublin_degree_days / tm46_degree_days
 
-    fossil_fuel = benchmarks["Typical fossil fuel [kWh/m²y]"] * benchmarks[
-        "% fossil fuel pro-rated to degree days"
-    ] * degree_day_factor + benchmarks["Typical fossil fuel [kWh/m²y]"] * (
+    weather_dependent_electricity = (
+        benchmarks["Typical electricity [kWh/m²y]"]
+        * benchmarks["% electricity pro-rated to degree days"]
+        * degree_day_factor
+    )
+    weather_independent_electricity = benchmarks["Typical electricity [kWh/m²y]"] * (
+        1 - benchmarks["% electricity pro-rated to degree days"]
+    )
+    electricity = weather_dependent_electricity + weather_independent_electricity
+
+    # ASSUMPTION: space heat is the only electrical heat
+    electricity_heat = (
+        weather_dependent_electricity * benchmarks["% suitable for DH or HP"]
+    )
+
+    weather_dependent_fossil_fuel = (
+        benchmarks["Typical fossil fuel [kWh/m²y]"]
+        * benchmarks["% fossil fuel pro-rated to degree days"]
+        * degree_day_factor
+    )
+    weather_independent_fossil_fuel = benchmarks["Typical fossil fuel [kWh/m²y]"] * (
         1 - benchmarks["% fossil fuel pro-rated to degree days"]
     )
+    fossil_fuel = weather_dependent_fossil_fuel + weather_independent_fossil_fuel
+
+    # ASSUMPTION: fossil fuel is only used for space heat & hot water
     fossil_fuel_heat = fossil_fuel * benchmarks["% suitable for DH or HP"]
 
     industrial_heat = (
@@ -47,9 +68,7 @@ def weather_adjust_benchmarks(upstream: Any, product: Any) -> None:
             "Benchmark": benchmarks["Benchmark"],
             "typical_area_m2": benchmarks["Typical Area [m²]"],
             "area_upper_bound_m2": benchmarks["Area Upper Bound [m²]"],
-            "typical_electricity_kwh_per_m2y": benchmarks[
-                "Typical electricity [kWh/m²y]"
-            ],
+            "typical_electricity_kwh_per_m2y": electricity,
             "typical_fossil_fuel_kwh_per_m2y": fossil_fuel,
             "typical_building_energy_kwh_per_m2y": benchmarks[
                 "Industrial building total [kWh/m²y]"
@@ -57,6 +76,7 @@ def weather_adjust_benchmarks(upstream: Any, product: Any) -> None:
             "typical_process_energy_kwh_per_m2y": benchmarks[
                 "Industrial process energy [kWh/m²y]"
             ],
+            "typical_electricity_heat_kwh_per_m2y": electricity_heat,
             "typical_fossil_fuel_heat_kwh_per_m2y": fossil_fuel_heat,
             "typical_industrial_heat_kwh_per_m2y": industrial_heat,
         }
@@ -167,6 +187,7 @@ def apply_energy_benchmarks_to_floor_areas(
         * kwh_to_mwh
         * boiler_efficiency
     ).fillna(0)
+
     buildings_with_benchmarks["building_energy_mwh_per_y"] = (
         bounded_area_m2.fillna(0)
         * buildings_with_benchmarks["typical_building_energy_kwh_per_m2y"].fillna(0)
@@ -177,6 +198,7 @@ def apply_energy_benchmarks_to_floor_areas(
         * buildings_with_benchmarks["typical_process_energy_kwh_per_m2y"].fillna(0)
         * kwh_to_mwh
     )
+
     buildings_with_benchmarks["fossil_fuel_heat_demand_mwh_per_y"] = (
         bounded_area_m2.fillna(0)
         * buildings_with_benchmarks["typical_fossil_fuel_heat_kwh_per_m2y"].fillna(0)
