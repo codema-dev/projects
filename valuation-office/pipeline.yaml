@@ -1,0 +1,37 @@
+on_render:
+  dotted_path: codema_dev_tasks.hooks.load_environmental_variables
+  dotenv_path: ".env"
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_buildings
+    params:
+      url: s3://codema-dev/2021_04_dublin_valuation_office.csv
+    product: data/external/2021_04_dublin_valuation_office.csv
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_benchmarks
+    params:
+      url: s3://codema-dev/benchmarks.csv
+    product: data/external/benchmarks.csv
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_benchmark_uses
+    params:
+      url: s3://codema-dev/benchmarks.zip
+    product: data/external/benchmarks.zip
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_small_area_boundaries
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/dublin_small_area_boundaries_in_routing_keys.gpkg
+    product: data/external/dublin_small_area_boundaries_in_routing_keys.gpkg
+
+  - source: tasks.convert_benchmark_uses_to_json
+    product: data/interim/benchmark_uses.json
+  - source: tasks.weather_adjust_benchmarks
+    product: data/interim/weather_adjusted_benchmarks.csv
+
+  - source: tasks.save_unknown_benchmark_uses
+    product: data/interim/unknown_benchmark_uses.csv
+
+  - source: tasks.apply_energy_benchmarks_to_floor_areas
+    params:
+      boiler_efficiency: 0.85
+    product: data/processed/2021_04_dublin_valuation_office.csv
