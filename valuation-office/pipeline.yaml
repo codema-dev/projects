@@ -28,9 +28,10 @@ tasks:
   - source: ploomber_tasks.weather_adjust_benchmarks
     product: data/interim/weather_adjusted_benchmarks.csv
 
-  - source: ploomber_tasks.replace_unexpectedly_large_floor_areas_with_typical_values
-    product: data/interim/propertyno_bounded_area_map.csv
-  - source: ploomber_tasks.save_propertyno_of_valid_buildings
-    product: data/interim/propertyno_of_valid_buildings.csv
   - source: ploomber_tasks.save_unknown_benchmark_uses
     product: data/interim/unknown_benchmark_uses.csv
+
+  - source: ploomber_tasks.apply_energy_benchmarks_to_floor_areas
+    params:
+      boiler_efficiency: 0.85
+    product: data/processed/2021_04_dublin_valuation_office.csv

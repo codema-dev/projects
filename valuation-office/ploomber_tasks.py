@@ -58,7 +58,7 @@ def weather_adjust_benchmarks(upstream: Any, product: Any) -> None:
                 "Industrial process energy [kWh/m²y]"
             ],
             "typical_fossil_fuel_heat_kwh_per_m2y": fossil_fuel_heat,
-            "industrial_heat_kwh_per_m2y": industrial_heat,
+            "typical_industrial_heat_kwh_per_m2y": industrial_heat,
         }
     )
 
@@ -78,11 +78,19 @@ def replace_unexpectedly_large_floor_areas_with_typical_values(
     )
     buildings_with_benchmarks = buildings.merge(benchmarks)
 
-    bounded_area_m2 = buildings_with_benchmarks["Total_SQM"]
+    bounded_area_m2 = buildings_with_benchmarks["Total_SQM"].rename("bounded_area_m2")
     typical_area = buildings_with_benchmarks["typical_area_m2"]
-    area_is_greater_than_expected = (
+
+    greater_than_zero_floor_area = buildings_with_benchmarks["Total_SQM"] > 0
+    greater_than_typical_benchmark_upper_bound = (
         buildings_with_benchmarks["Total_SQM"]
         > buildings_with_benchmarks["area_upper_bound_m2"]
+    )
+    valid_benchmark = ~buildings_with_benchmarks["Benchmark"].isin(["Unknown", "None"])
+    area_is_greater_than_expected = (
+        greater_than_zero_floor_area
+        & greater_than_typical_benchmark_upper_bound
+        & valid_benchmark
     )
     bounded_area_m2.loc[area_is_greater_than_expected] = typical_area.loc[
         area_is_greater_than_expected
@@ -93,27 +101,6 @@ def replace_unexpectedly_large_floor_areas_with_typical_values(
     )
 
     propertyno_bounded_area_map.to_csv(product, index=False)
-
-
-def save_propertyno_of_valid_buildings(upstream: Any, product: Any) -> None:
-    buildings = pd.read_csv(upstream["download_buildings"])
-    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
-    with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
-        benchmark_uses = json.load(f)
-
-    buildings["Benchmark"] = (
-        buildings["Use1"].map(benchmark_uses).rename("Benchmark").fillna("Unknown")
-    )
-    buildings_with_benchmarks = buildings.merge(benchmarks)
-
-    floor_area_is_nonzero = buildings_with_benchmarks["Total_SQM"] > 0
-    benchmark_has_an_energy_demand = (
-        buildings_with_benchmarks["Benchmark"] != "None"
-    ) & (buildings_with_benchmarks["Benchmark"] != "Unknown")
-    is_valid_building = floor_area_is_nonzero & floor_area_is_nonzero
-    property_no_valid_buildings = buildings[is_valid_building]["PropertyNo"]
-
-    property_no_valid_buildings.to_csv(product, index=False)
 
 
 def save_unknown_benchmark_uses(upstream: Any, product: Any) -> None:
@@ -133,3 +120,73 @@ def save_unknown_benchmark_uses(upstream: Any, product: Any) -> None:
         name="Use1",
     )
     unknown_benchmark_uses.to_csv(product, index=False)
+
+
+def apply_energy_benchmarks_to_floor_areas(
+    upstream: Any, product: Any, boiler_efficiency: float
+) -> None:
+
+    buildings = pd.read_csv(upstream["download_buildings"])
+    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
+    with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
+        benchmark_uses = json.load(f)
+
+    buildings["Benchmark"] = (
+        buildings["Use1"].map(benchmark_uses).rename("Benchmark").fillna("Unknown")
+    )
+    buildings_with_benchmarks = buildings.merge(benchmarks)
+
+    # Replace invalid floor areas with typical values
+    bounded_area_m2 = buildings_with_benchmarks["Total_SQM"].rename("bounded_area_m2")
+    greater_than_zero_floor_area = buildings_with_benchmarks["Total_SQM"] > 0
+    greater_than_typical_benchmark_upper_bound = (
+        buildings_with_benchmarks["Total_SQM"]
+        > buildings_with_benchmarks["area_upper_bound_m2"]
+    )
+    valid_benchmark = ~buildings_with_benchmarks["Benchmark"].isin(["Unknown", "None"])
+    area_is_greater_than_expected = (
+        greater_than_zero_floor_area
+        & greater_than_typical_benchmark_upper_bound
+        & valid_benchmark
+    )
+    bounded_area_m2.loc[area_is_greater_than_expected] = buildings_with_benchmarks[
+        "typical_area_m2"
+    ].loc[area_is_greater_than_expected]
+    buildings_with_benchmarks["bounded_area_m2"] = bounded_area_m2
+
+    # Apply Benchmarks
+    kwh_to_mwh = 1e-3
+    buildings_with_benchmarks["electricity_demand_mwh_per_y"] = (
+        bounded_area_m2.fillna(0)
+        * buildings_with_benchmarks["typical_electricity_kwh_per_m2y"].fillna(0)
+        * kwh_to_mwh
+    ).fillna(0)
+    buildings_with_benchmarks["fossil_fuel_demand_mwh_per_y"] = (
+        bounded_area_m2.fillna(0)
+        * buildings_with_benchmarks["typical_fossil_fuel_kwh_per_m2y"].fillna(0)
+        * kwh_to_mwh
+        * boiler_efficiency
+    ).fillna(0)
+    buildings_with_benchmarks["building_energy_mwh_per_y"] = (
+        bounded_area_m2.fillna(0)
+        * buildings_with_benchmarks["typical_building_energy_kwh_per_m2y"].fillna(0)
+        * kwh_to_mwh
+    )
+    buildings_with_benchmarks["process_energy_mwh_per_y"] = (
+        bounded_area_m2.fillna(0)
+        * buildings_with_benchmarks["typical_process_energy_kwh_per_m2y"].fillna(0)
+        * kwh_to_mwh
+    )
+    buildings_with_benchmarks["fossil_fuel_heat_demand_mwh_per_y"] = (
+        bounded_area_m2.fillna(0)
+        * buildings_with_benchmarks["typical_fossil_fuel_heat_kwh_per_m2y"].fillna(0)
+        * kwh_to_mwh
+        * boiler_efficiency
+    ).fillna(0)
+    buildings_with_benchmarks["industrial_heat_demand_mwh_per_y"] = (
+        bounded_area_m2.fillna(0)
+        * buildings_with_benchmarks["typical_industrial_heat_kwh_per_m2y"].fillna(0)
+        * kwh_to_mwh
+    )
+
+    buildings_with_benchmarks.to_csv(product)
