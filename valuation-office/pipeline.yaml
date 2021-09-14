@@ -73,6 +73,15 @@ tasks:
     product: data/processed/2021_04_dublin_valuation_office_process_energy_demands.csv
   
   - source: tasks.save_building_columns
+    name: save_electricity_heat_demands
+    params:
+      columns: 
+        - typical_electricity_heat_kwh_per_m2y
+        - electricity_heat_demand_mwh_per_y
+      filter_on_column: electricity_heat_demand_mwh_per_y
+    product: data/processed/2021_04_dublin_valuation_office_electricity_heat_demands.csv
+
+  - source: tasks.save_building_columns
     name: save_fossil_fuel_heat_demands
     params:
       columns: 

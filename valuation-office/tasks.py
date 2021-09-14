@@ -199,6 +199,12 @@ def apply_energy_benchmarks_to_floor_areas(
         * kwh_to_mwh
     )
 
+    buildings_with_benchmarks["electricity_heat_demand_mwh_per_y"] = (
+        bounded_area_m2.fillna(0)
+        * buildings_with_benchmarks["typical_electricity_heat_kwh_per_m2y"].fillna(0)
+        * kwh_to_mwh
+        * boiler_efficiency
+    ).fillna(0)
     buildings_with_benchmarks["fossil_fuel_heat_demand_mwh_per_y"] = (
         bounded_area_m2.fillna(0)
         * buildings_with_benchmarks["typical_fossil_fuel_heat_kwh_per_m2y"].fillna(0)
