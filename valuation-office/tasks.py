@@ -192,7 +192,9 @@ def apply_energy_benchmarks_to_floor_areas(
     buildings_with_benchmarks.to_csv(product)
 
 
-def save_building_columns(upstream: Any, product: Any, columns: str) -> None:
+def save_building_columns(
+    upstream: Any, product: Any, columns: str, filter_on_column: str
+) -> None:
     keep_columns = [
         "PropertyNo",
         "PropertyNo",
@@ -210,4 +212,5 @@ def save_building_columns(upstream: Any, product: Any, columns: str) -> None:
     buildings = pd.read_csv(
         upstream["apply_energy_benchmarks_to_floor_areas"], index_col=0
     ).loc[:, use_columns]
-    buildings.to_csv(product)
+    non_zero_rows = buildings[filter_on_column] > 0
+    buildings[non_zero_rows].to_csv(product, index=False)

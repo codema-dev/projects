@@ -42,6 +42,7 @@ tasks:
       columns: 
         - typical_electricity_kwh_per_m2y
         - electricity_demand_mwh_per_y
+      filter_on_column: electricity_demand_mwh_per_y
     product: data/processed/2021_04_dublin_valuation_office_electricity_demands.csv
 
   - source: tasks.save_building_columns
@@ -50,6 +51,7 @@ tasks:
       columns: 
         - typical_fossil_fuel_kwh_per_m2y
         - fossil_fuel_demand_mwh_per_y
+      filter_on_column: fossil_fuel_demand_mwh_per_y
     product: data/processed/2021_04_dublin_valuation_office_fossil_fuel_demands.csv
 
   - source: tasks.save_building_columns
@@ -58,6 +60,7 @@ tasks:
       columns: 
         - typical_building_energy_kwh_per_m2y
         - building_energy_mwh_per_y
+      filter_on_column: building_energy_mwh_per_y
     product: data/processed/2021_04_dublin_valuation_office_building_energy_demands.csv
 
   - source: tasks.save_building_columns
@@ -66,6 +69,7 @@ tasks:
       columns: 
         - typical_process_energy_kwh_per_m2y
         - process_energy_mwh_per_y
+      filter_on_column: process_energy_mwh_per_y
     product: data/processed/2021_04_dublin_valuation_office_process_energy_demands.csv
   
   - source: tasks.save_building_columns
@@ -74,6 +78,7 @@ tasks:
       columns: 
         - typical_fossil_fuel_heat_kwh_per_m2y
         - fossil_fuel_heat_demand_mwh_per_y
+      filter_on_column: fossil_fuel_heat_demand_mwh_per_y
     product: data/processed/2021_04_dublin_valuation_office_fossil_fuel_heat_demands.csv
 
   - source: tasks.save_building_columns
@@ -82,4 +87,5 @@ tasks:
       columns: 
         - typical_industrial_heat_kwh_per_m2y
         - industrial_heat_demand_mwh_per_y
+      filter_on_column: industrial_heat_demand_mwh_per_y
     product: data/processed/2021_04_dublin_valuation_office_industrial_heat_demands.csv
