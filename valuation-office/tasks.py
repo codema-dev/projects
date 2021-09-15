@@ -3,6 +3,7 @@ import json
 from typing import Any
 from zipfile import ZipFile
 
+import geopandas as gpd
 import pandas as pd
 
 
@@ -233,25 +234,51 @@ def apply_energy_benchmarks_to_floor_areas(
     buildings_with_benchmarks.to_csv(product)
 
 
+def link_valuation_office_to_boundaries(upstream: Any, product: Any) -> None:
+    valuation_office = pd.read_csv(upstream["apply_energy_benchmarks_to_floor_areas"])
+    small_area_boundaries = gpd.read_file(
+        str(upstream["download_small_area_boundaries"])
+    )
+
+    valuation_office_geo = gpd.GeoDataFrame(
+        valuation_office,
+        geometry=gpd.points_from_xy(
+            x=valuation_office["X_ITM"], y=valuation_office["Y_ITM"], crs="EPSG:2157"
+        ),
+    )
+    valuation_office_in_small_areas = gpd.sjoin(
+        valuation_office_geo,
+        small_area_boundaries,
+        op="within",
+    ).drop(columns="geometry")
+    valuation_office_in_small_areas.to_csv(product)
+
+
 def save_building_columns(
     upstream: Any, product: Any, columns: str, filter_on_column: str
 ) -> None:
-    keep_columns = [
-        "PropertyNo",
+    attribute_columns = [
         "PropertyNo",
         "Category",
         "Use1",
         "Use2",
         "List_Status",
-        "X_ITM",
-        "Y_ITM",
         "Benchmark",
         "Total_SQM",
         "bounded_area_m2",
     ]
-    use_columns = keep_columns + columns
+    boundary_columns = [
+        "X_ITM",
+        "Y_ITM",
+        "small_area",
+        "cso_ed_id",
+        "countyname",
+        "local_authority",
+        "RoutingKey",
+    ]
+    use_columns = attribute_columns + columns + boundary_columns
     buildings = pd.read_csv(
-        upstream["apply_energy_benchmarks_to_floor_areas"], index_col=0
+        upstream["link_valuation_office_to_boundaries"], index_col=0
     ).loc[:, use_columns]
     non_zero_rows = buildings[filter_on_column] > 0
     buildings[non_zero_rows].to_csv(product, index=False)
