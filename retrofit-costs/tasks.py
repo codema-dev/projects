@@ -165,7 +165,7 @@ def replace_uvalues_with_target_uvalues(upstream: Any, product: Any) -> None:
     post_retrofit.to_csv(product)
 
 
-def estimate_individual_building_retrofit_costs(upstream: Any, product: Any) -> None:
+def estimate_retrofit_costs(upstream: Any, product: Any) -> None:
 
     with open(upstream["load_defaults"], "r") as f:
         defaults = json.load(f)
@@ -211,29 +211,7 @@ def estimate_individual_building_retrofit_costs(upstream: Any, product: Any) -> 
     retrofit_costs.to_csv(product)
 
 
-def estimate_small_area_retrofit_costs(upstream: Any, product: Any) -> None:
-    retrofit_costs = pd.read_csv(
-        upstream["estimate_individual_building_retrofit_costs"], index_col=0
-    )
-
-    small_area_retrofit_costs = (
-        retrofit_costs.groupby("small_area").sum().drop(columns="year_of_construction")
-    )
-    small_area_buildings = (
-        retrofit_costs.groupby("small_area").size().rename("number_of_buildings")
-    )
-
-    small_area_statistics = pd.concat(
-        [
-            small_area_retrofit_costs,
-            small_area_buildings,
-        ],
-        axis=1,
-    )
-    small_area_statistics.to_csv(product)
-
-
-def estimate_individual_building_retrofit_energy_saving(
+def estimate_retrofit_energy_saving(
     upstream: Any, product: Any, rebound_effect: float = 1
 ) -> None:
 
@@ -285,34 +263,7 @@ def estimate_individual_building_retrofit_energy_saving(
     statistics.to_csv(product)
 
 
-def estimate_small_area_retrofit_energy_saving(upstream: Any, product: Any) -> None:
-    individual_building_statistics = pd.read_csv(
-        upstream["estimate_individual_building_retrofit_energy_saving"], index_col=0
-    )
-    small_area_statistics = individual_building_statistics.groupby("small_area").sum()
-
-    use_columns = [
-        c for c in small_area_statistics.columns if "fabric_heat_loss" in c
-    ] + ["energy_saving_kwh_per_y"]
-    small_area_statistics[use_columns].to_csv(product)
-
-
-def estimate_small_area_retrofit_energy_saving_with_rebound(
-    upstream: Any, product: Any
-) -> None:
-    individual_building_statistics = pd.read_csv(
-        upstream["estimate_individual_building_retrofit_energy_saving_with_rebound"],
-        index_col=0,
-    )
-    small_area_statistics = individual_building_statistics.groupby("small_area").sum()
-
-    use_columns = [
-        c for c in small_area_statistics.columns if "fabric_heat_loss" in c
-    ] + ["energy_saving_kwh_per_y"]
-    small_area_statistics[use_columns].to_csv(product)
-
-
-def estimate_individual_building_retrofit_hlp_improvement(
+def estimate_retrofit_hlp_improvement(
     upstream: Any, product: Any, rebound_effect: float = 1
 ) -> None:
 
@@ -364,65 +315,3 @@ def estimate_individual_building_retrofit_hlp_improvement(
         axis=1,
     )
     statistics.to_csv(product)
-
-
-def calculate_pre_retrofit_small_area_heat_pump_viability(
-    upstream: Any, product: Any
-) -> None:
-    use_columns = ["small_area", "heat_loss_parameter"]
-
-    buildings = pd.read_parquet(upstream["download_buildings"]).loc[:, use_columns]
-
-    is_heat_pump_ready = buildings["heat_loss_parameter"] < 2
-
-    number_of_heat_pump_ready_dwellings_per_small_area = (
-        pd.concat([buildings["small_area"], is_heat_pump_ready], axis=1)
-        .groupby("small_area", sort=False)["heat_loss_parameter"]
-        .sum()
-    )
-
-    total_dwellings_per_small_area = buildings["small_area"].value_counts(sort=False)
-
-    small_area_heat_pump_viability = (
-        number_of_heat_pump_ready_dwellings_per_small_area.divide(
-            total_dwellings_per_small_area
-        )
-        .multiply(100)
-        .round(2)
-        .rename("percentage_of_heat_pump_ready_dwellings")
-        .to_frame()
-    )
-
-    small_area_heat_pump_viability.to_csv(product)
-
-
-def calculate_post_retrofit_small_area_heat_pump_viability(
-    upstream: Any, product: Any
-) -> None:
-    use_columns = ["small_area", "post_retrofit_heat_loss_parameter"]
-
-    buildings = pd.read_csv(
-        upstream["estimate_individual_building_retrofit_hlp_improvement"], index_col=0
-    ).loc[:, use_columns]
-
-    is_heat_pump_ready = buildings["post_retrofit_heat_loss_parameter"] < 2
-
-    number_of_heat_pump_ready_dwellings_per_small_area = (
-        pd.concat([buildings["small_area"], is_heat_pump_ready], axis=1)
-        .groupby("small_area", sort=False)["post_retrofit_heat_loss_parameter"]
-        .sum()
-    )
-
-    total_dwellings_per_small_area = buildings["small_area"].value_counts(sort=False)
-
-    small_area_heat_pump_viability = (
-        number_of_heat_pump_ready_dwellings_per_small_area.divide(
-            total_dwellings_per_small_area
-        )
-        .multiply(100)
-        .round(2)
-        .rename("percentage_of_heat_pump_ready_dwellings")
-        .to_frame()
-    )
-
-    small_area_heat_pump_viability.to_csv(product)
