@@ -20,19 +20,19 @@ tasks:
     product: data/interim/defaults.json
 
   - source: tasks.replace_uvalues_with_target_uvalues
-    product: data/processed/2021_05_retrofitted_uvalues.csv
+    product: data/processed/uvalues_retrofitted.csv
 
   - source: tasks.estimate_retrofit_costs
-    product: data/processed/2021_05_individual_building_retrofit_costs.csv
+    product: data/processed/retrofit_costs.csv
 
   - source: tasks.estimate_retrofit_energy_saving
-    product: data/processed/2021_05_ber_energy_saving_after_targets_no_rebound.csv
+    product: data/processed/energy_saving_no_rebound.csv
 
   - source: tasks.estimate_retrofit_energy_saving
     name: estimate_retrofit_energy_saving_with_rebound
     params:
       rebound_effect: 0.66
-    product: data/processed/2021_05_ber_energy_saving_after_targets_with_rebound.csv
+    product: data/processed/energy_saving_with_rebound.csv
 
   - source: tasks.estimate_retrofit_hlp_improvement
-    product: data/processed/2021_05_ber_heat_loss_parameter_after_targets_no_rebound.csv
+    product: data/processed/heat_loss_parameter_retrofitted.csv
