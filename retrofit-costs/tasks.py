@@ -154,11 +154,9 @@ def replace_uvalues_with_target_uvalues(upstream: Any, product: Any) -> None:
         uvalue_column = component + "_uvalue"
         is_retrofitted_column = component + "_is_retrofitted"
         uvalues = pre_retrofit[uvalue_column].copy()
-        where_uvalue_is_viable = (
-            (uvalues > properties["uvalue"]["threshold"])
-            & (pre_retrofit["heat_loss_parameter"] > 2)
-            & (pre_retrofit["period_built"] != "PRE19")
-        )
+        where_uvalue_is_viable = pre_retrofit["heat_loss_parameter"] > 2 & (
+            uvalues > properties["uvalue"]["threshold"]
+        ) & (pre_retrofit["period_built"] != "PRE19")
         uvalues.loc[where_uvalue_is_viable] = properties["uvalue"]["target"]
         post_retrofit[uvalue_column] = uvalues
         post_retrofit[is_retrofitted_column] = where_uvalue_is_viable
@@ -179,11 +177,9 @@ def estimate_retrofit_costs(upstream: Any, product: Any) -> None:
         is_retrofitted_column = component + "_is_retrofitted"
 
         uvalues = pre_retrofit[uvalue_column]
-        where_uvalue_is_viable = (
-            (uvalues > properties["uvalue"]["threshold"])
-            & (pre_retrofit["heat_loss_parameter"] > 2)
-            & (pre_retrofit["period_built"] != "PRE19")
-        )
+        where_uvalue_is_viable = pre_retrofit["heat_loss_parameter"] > 2 & (
+            uvalues > properties["uvalue"]["threshold"]
+        ) & (pre_retrofit["period_built"] != "PRE19")
         dict_of_costs[is_retrofitted_column] = where_uvalue_is_viable
 
         area_column_name = component + "_area"
@@ -247,6 +243,7 @@ def estimate_retrofit_energy_saving(
         "year_of_construction",
         "period_built",
         "archetype",
+        "main_sh_boiler_fuel",
     ] + [c for c in pre_retrofit.columns if "uvalue" in c]
     statistics = pd.concat(
         [
