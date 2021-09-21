@@ -1,44 +1,55 @@
 on_render:
   dotted_path: codema_dev_tasks.hooks.load_environmental_variables
   dotenv_path: ".env"
+
 tasks:
+
   - source: codema_dev_tasks.requests.fetch_file
     name: download_small_area_boundaries
     params:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/dublin_small_area_boundaries_in_routing_keys.gpkg
     product: data/external/dublin_small_area_boundaries_in_routing_keys.gpkg
+
   - source: codema_dev_tasks.requests.fetch_file
     name: download_buildings
     params:
       url: s3://codema-dev/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
     product: data/external/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
+
   - source: tasks.load_defaults
     product: data/interim/defaults.json
+
   - source: tasks.replace_uvalues_with_target_uvalues
-    product: data/processed/2021_05_retrofitted_uvalues.csv
-  - source: tasks.estimate_individual_building_retrofit_costs
-    product: data/processed/2021_05_individual_building_retrofit_costs.csv
-  - source: tasks.estimate_small_area_retrofit_costs
-    product: data/processed/2021_05_small_area_retrofit_costs.csv
-  - source: tasks.estimate_individual_building_retrofit_energy_saving
-    product: data/processed/2021_05_ber_energy_saving_after_targets_no_rebound.csv
-  - source: tasks.estimate_small_area_retrofit_energy_saving
-    product: data/processed/2021_05_ber_small_area_energy_saving_after_targets_no_rebound.csv
-  - source: tasks.estimate_individual_building_retrofit_energy_saving
-    name: estimate_individual_building_retrofit_energy_saving_with_rebound
+    product: data/processed/uvalues_retrofitted.csv
+
+  - source: tasks.estimate_retrofit_costs
+    product: data/processed/retrofit_costs.csv
+
+  - source: tasks.estimate_retrofit_energy_saving
+    product: data/processed/energy_saving_no_rebound.csv
+
+  - source: tasks.estimate_retrofit_energy_saving
+    name: estimate_retrofit_energy_saving_with_rebound
     params:
       rebound_effect: 0.66
-    product: data/processed/2021_05_ber_energy_saving_after_targets_with_rebound.csv
-  - source: tasks.estimate_small_area_retrofit_energy_saving_with_rebound
-    product: data/processed/2021_05_ber_small_area_energy_saving_after_targets_with_rebound.csv
-  - source: tasks.estimate_individual_building_retrofit_hlp_improvement
-    product: data/processed/2021_05_ber_heat_loss_parameter_after_targets_no_rebound.csv
-  - source: tasks.calculate_pre_retrofit_small_area_heat_pump_viability
-    product: data/processed/2021_05_ber_small_area_heat_pump_viability_pre_retrofit.csv
-  - source: tasks.calculate_post_retrofit_small_area_heat_pump_viability
-    product: data/processed/2021_05_ber_small_area_heat_pump_viability_post_retrofit.csv
-  - source: map_heat_pump_viability.py
+    product: data/processed/energy_saving_with_rebound.csv
+
+  - source: tasks.estimate_retrofit_hlp_improvement
+    product: data/processed/heat_loss_parameter_retrofitted.csv
+
+  - source: tasks.estimate_retrofit_ber_rating_improvement
+    product: data/processed/ber_rating_retrofitted.csv
+
+  - source: estimate_stock_statistics.py
     product:
-      nb: data/notebooks/map_heat_pump_viability.ipynb
-      html: data/processed/2021_05_heat_pump_viability.html
-      gpkg: data/processed/2021_05_heat_pump_viability.gpkg
+      nb: data/notebooks/amalgamate_buildings_to_small_areas.ipynb
+      heat_pump_viability: data/roughwork/percentage_viable_for_heat_pumps_no_threshold.csv
+      total_buildings: data/roughwork/total_small_area_buildings.csv
+  
+  - source: estimate_uvalue_thresholds.py
+    product:
+      nb: data/notebooks/estimate_uvalue_thresholds.ipynb
+      wall: data/roughwork/uvalue_wall.csv
+      roof: data/roughwork/uvalue_roof.csv
+      window: data/roughwork/uvalue_window.csv
+  
