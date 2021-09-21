@@ -36,3 +36,11 @@ tasks:
 
   - source: tasks.estimate_retrofit_hlp_improvement
     product: data/processed/heat_loss_parameter_retrofitted.csv
+
+  - source: tasks.estimate_retrofit_ber_rating_improvement
+    product: data/processed/ber_rating_retrofitted.csv
+
+  - source: amalgamate_buildings_to_small_areas.py
+    product:
+      nb: data/notebooks/amalgamate_buildings_to_small_areas.ipynb
+      heat_pump_viability: data/roughwork/percentage_viable_for_heat_pumps_no_threshold.csv
