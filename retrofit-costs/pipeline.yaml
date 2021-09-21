@@ -44,3 +44,11 @@ tasks:
     product:
       nb: data/notebooks/amalgamate_buildings_to_small_areas.ipynb
       heat_pump_viability: data/roughwork/percentage_viable_for_heat_pumps_no_threshold.csv
+  
+  - source: estimate_uvalue_thresholds.py
+    product:
+      nb: data/notebooks/estimate_uvalue_thresholds.ipynb
+      wall: data/roughwork/uvalue_wall.csv
+      roof: data/roughwork/uvalue_roof.csv
+      window: data/roughwork/uvalue_window.csv
+  
