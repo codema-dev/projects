@@ -33,6 +33,11 @@ ber_improvement = pd.read_csv(upstream["estimate_retrofit_ber_rating_improvement
 
 small_area_boundaries = gpd.read_file(upstream["download_small_area_boundaries"])
 
+## Plot Post-Retrofit BERs
+
+ber_improvement["energy_rating"].value_counts().sort_index().plot.bar()
+
+
 ## Map Heat Pump Viability
 
 hlp_improvement["is_viable_for_a_heat_pump"] = (
