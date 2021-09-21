@@ -66,8 +66,6 @@ small_area_boundaries.merge(percentage_viable_for_heat_pumps).plot(
     linewidth=0.5,
 )
 
-percentage_viable_for_heat_pumps.to_csv(product["heat_pump_viability"])
-
 ## Estimate Total Retrofits by Measure
 
 is_retrofitted_columns = [c for c in retrofit_costs.columns if "_is_retrofitted" in c]
@@ -116,3 +114,9 @@ energy_saving["energy_saving_kwh_per_y"].multiply(emission_factors).sum()
 energy_saving_with_rebound["energy_saving_kwh_per_y"].sum() / 1e9
 
 energy_saving_with_rebound["energy_saving_kwh_per_y"].multiply(emission_factors).sum()
+
+## Save Data
+
+small_area_total_buildings.to_csv(product["total_buildings"])
+
+percentage_viable_for_heat_pumps.to_csv(product["heat_pump_viability"])
