@@ -1,4 +1,4 @@
-name: convert-cso-postcode-gas-from-html-to-csv
+name: convert-cso-gas-from-html-to-csv
 channels:
   - conda-forge
 dependencies:
