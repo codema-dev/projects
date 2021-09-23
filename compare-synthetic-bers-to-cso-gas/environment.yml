@@ -6,7 +6,10 @@ dependencies:
   - fsspec
   - requests
   - aiohttp
-  - ploomber
+  - ploomber >=0.12.8
+  - pyarrow
+  - s3fs
+  - python-dotenv
   - pip
   - pip:
     - codema-dev-tasks==0.1.0
