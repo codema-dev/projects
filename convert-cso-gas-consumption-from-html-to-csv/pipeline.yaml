@@ -1,0 +1,8 @@
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_cso_networkedgasconsumption2020_html
+    params:
+      url: https://www.cso.ie/en/releasesandpublications/er/ngc/networkedgasconsumption2020/
+    product: data/external/networkedgasconsumption2020.html
+  - source: tasks.convert_html_to_tables
+    product: data/processed/networkedgasconsumption2020
