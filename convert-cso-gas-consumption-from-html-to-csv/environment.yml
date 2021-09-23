@@ -9,4 +9,4 @@ dependencies:
   - aiohttp
   - pip
   - pip:
-    - git+https://github.com/codema-dev/tasks
+    - codema-dev-tasks==0.1.0
