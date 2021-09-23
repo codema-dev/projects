@@ -9,4 +9,4 @@ dependencies:
   - aiohttp
   - pip
   - pip:
-    - git+git@github.com:codema-dev/tasks.git
+    - git+https://github.com/codema-dev/tasks
