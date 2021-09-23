@@ -7,6 +7,7 @@ dependencies:
   - fsspec
   - requests
   - aiohttp
+  - ploomber
   - pip
   - pip:
     - codema-dev-tasks==0.1.0
