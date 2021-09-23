@@ -23,6 +23,7 @@ tasks:
     product: data/external/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
 
   - source: tasks.concatenate_dublin_postal_districts_and_county_dublin
-    product: data/interim/dublin_residential_networked_gas_consumption.csv
+    product: data/interim/dublin_postcode_residential_networked_gas_consumption.csv
 
-  
+  - source: tasks.amalgamate_synthetic_bers_to_postcode_heat
+    product: data/interim/dublin_postcode_synthetic_ber_gas_consumption.csv
