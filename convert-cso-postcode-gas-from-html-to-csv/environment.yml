@@ -1,0 +1,12 @@
+name: convert-cso-postcode-gas-from-html-to-csv
+channels:
+  - conda-forge
+dependencies:
+  - pandas
+  - lxml
+  - fsspec
+  - requests
+  - aiohttp
+  - pip
+  - pip:
+    - git+git@github.com:codema-dev/tasks.git
