@@ -4,7 +4,142 @@ from typing import Any
 from zipfile import ZipFile
 
 import geopandas as gpd
+import pandera
+from pandera import DataFrameSchema, Column, Check, Index
 import pandas as pd
+
+
+def concatenate_local_authority_floor_areas(upstream: Any, product: Any) -> None:
+    dcc = pd.read_excel(upstream["download_valuation_office_floor_areas_dcc"])
+    dlrcc = pd.read_excel(upstream["download_valuation_office_floor_areas_dlrcc"])
+    sdcc = pd.read_excel(upstream["download_valuation_office_floor_areas_sdcc"])
+    fcc = pd.read_excel(upstream["download_valuation_office_floor_areas_fcc"])
+    dublin = pd.concat([dcc, dlrcc, sdcc, fcc])
+    dublin.to_csv(product, index=False)
+
+
+def validate_dublin_floor_areas(product: Any) -> None:
+    dublin_floor_areas = pd.read_csv(product)
+    schema = DataFrameSchema(
+        columns={
+            "PropertyNo": Column(
+                dtype=pandera.engines.numpy_engine.Int64,
+                checks=[
+                    Check.greater_than_or_equal_to(min_value=272845.0),
+                    Check.less_than_or_equal_to(max_value=5023334.0),
+                ],
+                nullable=False,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "County": Column(
+                dtype=pandera.engines.numpy_engine.Object,
+                checks=None,
+                nullable=False,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "LA": Column(
+                dtype=pandera.engines.numpy_engine.Object,
+                checks=None,
+                nullable=False,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "Category": Column(
+                dtype=pandera.engines.numpy_engine.Object,
+                checks=None,
+                nullable=False,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "Use1": Column(
+                dtype=pandera.engines.numpy_engine.Object,
+                checks=None,
+                nullable=True,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "Use2": Column(
+                dtype=pandera.engines.numpy_engine.Object,
+                checks=None,
+                nullable=True,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "List_Status": Column(
+                dtype=pandera.engines.numpy_engine.Object,
+                checks=None,
+                nullable=False,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "Total_SQM": Column(
+                dtype=pandera.engines.numpy_engine.Float64,
+                checks=[
+                    Check.greater_than_or_equal_to(min_value=0.0),
+                    Check.less_than_or_equal_to(max_value=5373112.83),
+                ],
+                nullable=False,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "X_ITM": Column(
+                dtype=pandera.engines.numpy_engine.Float64,
+                checks=[
+                    Check.greater_than_or_equal_to(min_value=599999.999),
+                    Check.less_than_or_equal_to(max_value=729666.339),
+                ],
+                nullable=True,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "Y_ITM": Column(
+                dtype=pandera.engines.numpy_engine.Float64,
+                checks=[
+                    Check.greater_than_or_equal_to(min_value=716789.52),
+                    Check.less_than_or_equal_to(max_value=4820966.962),
+                ],
+                nullable=True,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+        },
+        index=Index(
+            dtype=pandera.engines.numpy_engine.Int64,
+            checks=[
+                Check.greater_than_or_equal_to(min_value=0.0),
+                Check.less_than_or_equal_to(max_value=53285.0),
+            ],
+            nullable=False,
+            coerce=False,
+            name=None,
+        ),
+        coerce=True,
+        strict=False,
+        name=None,
+    )
+    schema(dublin_floor_areas)
 
 
 def convert_benchmark_uses_to_json(upstream: Any, product: Any) -> None:
@@ -87,14 +222,14 @@ def weather_adjust_benchmarks(upstream: Any, product: Any) -> None:
         }
     )
 
-    normalised_benchmarks.to_csv(product)
+    normalised_benchmarks.to_csv(product, index=False)
 
 
 def replace_unexpectedly_large_floor_areas_with_typical_values(
     upstream: Any, product: Any
 ) -> None:
-    buildings = pd.read_csv(upstream["download_buildings"])
-    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
+    buildings = pd.read_csv(upstream["concatenate_local_authority_floor_areas"])
+    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"])
     with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
         benchmark_uses = json.load(f)
 
@@ -129,8 +264,8 @@ def replace_unexpectedly_large_floor_areas_with_typical_values(
 
 
 def save_unknown_benchmark_uses(upstream: Any, product: Any) -> None:
-    buildings = pd.read_csv(upstream["download_buildings"])
-    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
+    buildings = pd.read_csv(upstream["concatenate_local_authority_floor_areas"])
+    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"])
     with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
         benchmark_uses = json.load(f)
 
@@ -151,8 +286,8 @@ def apply_energy_benchmarks_to_floor_areas(
     upstream: Any, product: Any, boiler_efficiency: float
 ) -> None:
 
-    buildings = pd.read_csv(upstream["download_buildings"])
-    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
+    buildings = pd.read_csv(upstream["concatenate_local_authority_floor_areas"])
+    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"])
     with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
         benchmark_uses = json.load(f)
 
@@ -231,10 +366,10 @@ def apply_energy_benchmarks_to_floor_areas(
         * kwh_to_mwh
     )
 
-    buildings_with_benchmarks.to_csv(product)
+    buildings_with_benchmarks.to_csv(product, index=False)
 
 
-def link_valuation_office_to_boundaries(upstream: Any, product: Any) -> None:
+def link_valuation_office_to_small_areas(upstream: Any, product: Any) -> None:
     valuation_office = pd.read_csv(upstream["apply_energy_benchmarks_to_floor_areas"])
     small_area_boundaries = gpd.read_file(
         str(upstream["download_small_area_boundaries"])
@@ -248,37 +383,15 @@ def link_valuation_office_to_boundaries(upstream: Any, product: Any) -> None:
     )
     valuation_office_in_small_areas = gpd.sjoin(
         valuation_office_geo,
-        small_area_boundaries,
+        small_area_boundaries[["small_area", "geometry"]],
         op="within",
-    ).drop(columns="geometry")
-    valuation_office_in_small_areas.to_csv(product)
+    ).drop(columns=["geometry", "index_right"])
+    valuation_office_in_small_areas.to_csv(product, index=False)
 
 
-def save_building_columns(
-    upstream: Any, product: Any, columns: str, filter_on_column: str
-) -> None:
-    attribute_columns = [
-        "PropertyNo",
-        "Category",
-        "Use1",
-        "Use2",
-        "List_Status",
-        "Benchmark",
-        "Total_SQM",
-        "bounded_area_m2",
-    ]
-    boundary_columns = [
-        "X_ITM",
-        "Y_ITM",
-        "small_area",
-        "cso_ed_id",
-        "countyname",
-        "local_authority",
-        "RoutingKey",
-    ]
-    use_columns = attribute_columns + columns + boundary_columns
-    buildings = pd.read_csv(
-        upstream["link_valuation_office_to_boundaries"], index_col=0
-    ).loc[:, use_columns]
-    non_zero_rows = buildings[filter_on_column] > 0
-    buildings[non_zero_rows].to_csv(product, index=False)
+def remove_none_and_unknown_benchmark_buildings(upstream: Any, product: Any) -> None:
+    buildings = pd.read_csv(upstream["link_valuation_office_to_small_areas"])
+    without_none_or_unknown_benchmarks = buildings.query(
+        "Benchmark != ['Unknown', 'None']"
+    )
+    without_none_or_unknown_benchmarks.to_csv(product)

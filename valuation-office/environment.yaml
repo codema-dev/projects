@@ -1,18 +1,14 @@
 name: valuation-office
 channels:
   - conda-forge
-  - patrikhlobil
 dependencies:
-  - fs-s3fs
+  - odfpy
   - ipykernel
   - ploomber >= 0.12.8
-  - pandas-bokeh
-  - geopandas
-  - seaborn
   - python-dotenv
   - pyarrow
+  - s3fs
 
   - pip
   - pip:
-    - rcbm
-    - git+https://github.com/codema-dev/tasks
+    - codema-dev-tasks==0.1.0

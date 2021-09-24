@@ -3,111 +3,67 @@ on_render:
   dotenv_path: ".env"
 tasks:
   - source: codema_dev_tasks.requests.fetch_file
-    name: download_buildings
+    name: download_valuation_office_floor_areas_dcc
     params:
-      url: s3://codema-dev/2021_04_dublin_valuation_office.csv
-    product: data/external/2021_04_dublin_valuation_office.csv
+      url: s3://codema-dev/raw/2021_06_15_valuation_office_floor_areas_dcc.ods
+    product: data/external/2021_06_15_valuation_office_floor_areas_dcc.ods
+    
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_valuation_office_floor_areas_dlrcc
+    params:
+      url: s3://codema-dev/raw/2021_06_15_valuation_office_floor_areas_dlrcc.ods
+    product: data/external/2021_06_15_valuation_office_floor_areas_dlrcc.ods
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_valuation_office_floor_areas_fcc
+    params:
+      url: s3://codema-dev/raw/2021_06_15_valuation_office_floor_areas_fcc.ods
+    product: data/external/2021_06_15_valuation_office_floor_areas_fcc.ods
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_valuation_office_floor_areas_sdcc
+    params:
+      url: s3://codema-dev/raw/2021_06_15_valuation_office_floor_areas_sdcc.ods
+    product: data/external/2021_06_15_valuation_office_floor_areas_sdcc.ods
+
   - source: codema_dev_tasks.requests.fetch_file
     name: download_benchmarks
     params:
-      url: s3://codema-dev/benchmarks.csv
-    product: data/external/benchmarks.csv
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_09_24_commercial_floor_area_energy_benchmarks.csv
+    product: data/external/2021_09_24_commercial_floor_area_energy_benchmarks.csv
+    
   - source: codema_dev_tasks.requests.fetch_file
     name: download_benchmark_uses
     params:
-      url: s3://codema-dev/benchmarks.zip
-    product: data/external/benchmarks.zip
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_09_24_commercial_floor_area_energy_benchmarks_linked_to_valuation_office_uses.zip
+    product: data/external/2021_09_24_commercial_floor_area_energy_benchmarks_linked_to_valuation_office_uses.zip
+    
   - source: codema_dev_tasks.requests.fetch_file
     name: download_small_area_boundaries
     params:
-      url: https://codema-dev.s3.eu-west-1.amazonaws.com/dublin_small_area_boundaries_in_routing_keys.gpkg
-    product: data/external/dublin_small_area_boundaries_in_routing_keys.gpkg
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_12_dublin_small_area_boundaries.gpkg
+    product: data/external/2021_08_12_dublin_small_area_boundaries.gpkg
+
+  - source: tasks.concatenate_local_authority_floor_areas
+    product: data/interim/raw_dublin_valuation_office_floor_areas.csv
+    on_finish: tasks.validate_dublin_floor_areas
 
   - source: tasks.convert_benchmark_uses_to_json
     product: data/interim/benchmark_uses.json
+
   - source: tasks.weather_adjust_benchmarks
     product: data/interim/weather_adjusted_benchmarks.csv
 
   - source: tasks.save_unknown_benchmark_uses
-    product: data/interim/unknown_benchmark_uses.csv
+    product: data/processed/unknown_benchmark_uses.csv
 
   - source: tasks.apply_energy_benchmarks_to_floor_areas
     params:
       boiler_efficiency: 0.85
-    product: data/processed/2021_04_dublin_valuation_office.csv
+    product: data/interim/dublin_valuation_office_with_benchmarks.csv
 
-  - source: tasks.link_valuation_office_to_boundaries
-    product: data/processed/2021_04_dublin_valuation_office_with_boundaries.csv
-  
-  # SAVE
-  - source: tasks.save_building_columns
-    name: save_electricity_demands
-    params:
-      columns: 
-        - typical_electricity_kwh_per_m2y
-        - electricity_demand_mwh_per_y
-      filter_on_column: electricity_demand_mwh_per_y
-    product: data/processed/2021_04_dublin_valuation_office_electricity_demands.csv
+  - source: tasks.link_valuation_office_to_small_areas
+    product: data/interim/dublin_valuation_office_with_small_areas.csv
 
-  - source: tasks.save_building_columns
-    name: save_fossil_fuel_demands
-    params:
-      columns: 
-        - typical_fossil_fuel_kwh_per_m2y
-        - fossil_fuel_demand_mwh_per_y
-      filter_on_column: fossil_fuel_demand_mwh_per_y
-    product: data/processed/2021_04_dublin_valuation_office_fossil_fuel_demands.csv
-
-  - source: tasks.save_building_columns
-    name: save_building_energy_demands
-    params:
-      columns: 
-        - typical_building_energy_kwh_per_m2y
-        - building_energy_mwh_per_y
-      filter_on_column: building_energy_mwh_per_y
-    product: data/processed/2021_04_dublin_valuation_office_building_energy_demands.csv
-
-  - source: tasks.save_building_columns
-    name: save_process_energy_demands
-    params:
-      columns: 
-        - typical_process_energy_kwh_per_m2y
-        - process_energy_mwh_per_y
-      filter_on_column: process_energy_mwh_per_y
-    product: data/processed/2021_04_dublin_valuation_office_process_energy_demands.csv
-  
-  - source: tasks.save_building_columns
-    name: save_electricity_heat_demands
-    params:
-      columns: 
-        - typical_electricity_heat_kwh_per_m2y
-        - electricity_heat_demand_mwh_per_y
-      filter_on_column: electricity_heat_demand_mwh_per_y
-    product: data/processed/2021_04_dublin_valuation_office_electricity_heat_demands.csv
-
-  - source: tasks.save_building_columns
-    name: save_fossil_fuel_heat_demands
-    params:
-      columns: 
-        - typical_fossil_fuel_heat_kwh_per_m2y
-        - fossil_fuel_heat_demand_mwh_per_y
-      filter_on_column: fossil_fuel_heat_demand_mwh_per_y
-    product: data/processed/2021_04_dublin_valuation_office_fossil_fuel_heat_demands.csv
-
-  - source: tasks.save_building_columns
-    name: save_industrial_low_temperature_heat_demands
-    params:
-      columns: 
-        - typical_industrial_low_temperature_heat_kwh_per_m2y
-        - industrial_low_temperature_heat_demand_mwh_per_y
-      filter_on_column: industrial_low_temperature_heat_demand_mwh_per_y
-    product: data/processed/2021_04_dublin_valuation_office_industrial_low_temperature_heat_demands.csv
-  
-  - source: tasks.save_building_columns
-    name: save_industrial_high_temperature_heat_demands
-    params:
-      columns: 
-        - typical_industrial_high_temperature_heat_kwh_per_m2y
-        - industrial_high_temperature_heat_demand_mwh_per_y
-      filter_on_column: industrial_high_temperature_heat_demand_mwh_per_y
-    product: data/processed/2021_04_dublin_valuation_office_industrial_high_temperature_heat_demands.csv
+  - source: tasks.remove_none_and_unknown_benchmark_buildings
+    product: data/processed/dublin_valuation_office.csv
