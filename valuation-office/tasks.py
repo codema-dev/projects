@@ -4,6 +4,8 @@ from typing import Any
 from zipfile import ZipFile
 
 import geopandas as gpd
+import pandera
+from pandera import DataFrameSchema, Column, Check, Index
 import pandas as pd
 
 
@@ -13,7 +15,131 @@ def concatenate_local_authority_floor_areas(upstream: Any, product: Any) -> None
     sdcc = pd.read_excel(upstream["download_valuation_office_floor_areas_sdcc"])
     fcc = pd.read_excel(upstream["download_valuation_office_floor_areas_fcc"])
     dublin = pd.concat([dcc, dlrcc, sdcc, fcc])
-    dublin.to_csv(product)
+    dublin.to_csv(product, index=False)
+
+
+def validate_dublin_floor_areas(product: Any) -> None:
+    dublin_floor_areas = pd.read_csv(product)
+    schema = DataFrameSchema(
+        columns={
+            "PropertyNo": Column(
+                dtype=pandera.engines.numpy_engine.Int64,
+                checks=[
+                    Check.greater_than_or_equal_to(min_value=272845.0),
+                    Check.less_than_or_equal_to(max_value=5023334.0),
+                ],
+                nullable=False,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "County": Column(
+                dtype=pandera.engines.numpy_engine.Object,
+                checks=None,
+                nullable=False,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "LA": Column(
+                dtype=pandera.engines.numpy_engine.Object,
+                checks=None,
+                nullable=False,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "Category": Column(
+                dtype=pandera.engines.numpy_engine.Object,
+                checks=None,
+                nullable=False,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "Use1": Column(
+                dtype=pandera.engines.numpy_engine.Object,
+                checks=None,
+                nullable=True,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "Use2": Column(
+                dtype=pandera.engines.numpy_engine.Object,
+                checks=None,
+                nullable=True,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "List_Status": Column(
+                dtype=pandera.engines.numpy_engine.Object,
+                checks=None,
+                nullable=False,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "Total_SQM": Column(
+                dtype=pandera.engines.numpy_engine.Float64,
+                checks=[
+                    Check.greater_than_or_equal_to(min_value=0.0),
+                    Check.less_than_or_equal_to(max_value=5373112.83),
+                ],
+                nullable=False,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "X_ITM": Column(
+                dtype=pandera.engines.numpy_engine.Float64,
+                checks=[
+                    Check.greater_than_or_equal_to(min_value=599999.999),
+                    Check.less_than_or_equal_to(max_value=729666.339),
+                ],
+                nullable=True,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+            "Y_ITM": Column(
+                dtype=pandera.engines.numpy_engine.Float64,
+                checks=[
+                    Check.greater_than_or_equal_to(min_value=716789.52),
+                    Check.less_than_or_equal_to(max_value=4820966.962),
+                ],
+                nullable=True,
+                unique=False,
+                coerce=False,
+                required=True,
+                regex=False,
+            ),
+        },
+        index=Index(
+            dtype=pandera.engines.numpy_engine.Int64,
+            checks=[
+                Check.greater_than_or_equal_to(min_value=0.0),
+                Check.less_than_or_equal_to(max_value=53285.0),
+            ],
+            nullable=False,
+            coerce=False,
+            name=None,
+        ),
+        coerce=True,
+        strict=False,
+        name=None,
+    )
+    schema(dublin_floor_areas)
 
 
 def convert_benchmark_uses_to_json(upstream: Any, product: Any) -> None:
@@ -160,7 +286,7 @@ def apply_energy_benchmarks_to_floor_areas(
     upstream: Any, product: Any, boiler_efficiency: float
 ) -> None:
 
-    buildings = pd.read_csv(upstream["download_buildings"])
+    buildings = pd.read_csv(upstream["concatenate_local_authority_floor_areas"])
     benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
     with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
         benchmark_uses = json.load(f)

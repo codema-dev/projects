@@ -28,3 +28,4 @@ tasks:
 
   - source: tasks.concatenate_local_authority_floor_areas
     product: data/interim/raw_dublin_valuation_office_floor_areas.csv
+    on_finish: tasks.validate_dublin_floor_areas
