@@ -8,14 +8,6 @@ import pandas as pd
 from pandas.core.reshape.merge import merge
 
 
-def save_sheets_as_csvs(upstream: Any, product: Any) -> None:
-    sheets = pd.read_excel(
-        upstream["download_seai_monitoring_and_reporting"], sheet_name=None
-    )
-    sheets["MPRN_data"].to_csv(product["mprn"], index=False)
-    sheets["GPRN_data"].to_csv(product["gprn"], index=False)
-
-
 def _clean_string(s: pd.Series):
     return (
         s.astype(str)
@@ -26,43 +18,28 @@ def _clean_string(s: pd.Series):
     )
 
 
-def clean(dfs: pd.DataFrame, sheet_name: str, demand_type: str):
-    demand_column_name = f"{demand_type}_kwh_per_year"
-    clean_df = dfs[sheet_name].copy()
-    clean_df["pb_name"] = _clean_string(clean_df["PB Name"])
-    clean_df["postcode"] = _clean_string(
-        clean_df["County"].replace({"Dublin (County)": "Co. Dublin"})
+def clean(upstream: Any, product: Any, sheet_name: str, fuel_type: str):
+    sheets = pd.read_excel(
+        upstream["download_seai_monitoring_and_reporting"], sheet_name=None
     )
-    clean_df["location"] = _clean_string(
-        clean_df["Location"].str.replace("(,? ?Dublin \d+)", "", regex=True)
-    )  # remove postcodes as accounted for by 'postcode' column
-    clean_df["address"] = (
-        clean_df["pb_name"]
-        + " "
-        + clean_df["location"]
-        + " "
-        + clean_df["postcode"]
-        + " "
-        + "ireland"
-    )
-    clean_df = clean_df.rename(
-        columns={
-            "Attributable Total Final Consumption (kWh)": demand_column_name,
-            "Consumption Category": "category",
-            "Year": "year",
+    raw_sheet = sheets[sheet_name]
+    clean_sheet = pd.DataFrame(
+        {
+            "pb_name": _clean_string(raw_sheet["PB Name"]),
+            "postcode": _clean_string(
+                raw_sheet["County"].replace({"Dublin (County)": "Co. Dublin"})
+            ),
+            "location": _clean_string(
+                raw_sheet["Location"].str.replace("(,? ?Dublin \d+)", "", regex=True)
+            ),  # remove postcodes as they are accounted for by the 'postcode' column
+            "category": raw_sheet["Consumption Category"].str.lower(),
+            "year": raw_sheet["Year"],
+            f"{fuel_type}_kwh_per_year": raw_sheet[
+                "Attributable Total Final Consumption (kWh)"
+            ],
         }
     )
-    return clean_df.loc[
-        :,
-        [
-            "pb_name",
-            "address",
-            "postcode",
-            "category",
-            "year",
-            demand_column_name,
-        ],
-    ]
+    clean_sheet.to_csv(product, index=False)
 
 
 def merge_sheets(mprn: pd.DataFrame, gprn: pd.DataFrame) -> pd.DataFrame:

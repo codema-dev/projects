@@ -6,9 +6,18 @@ tasks:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/raw/2020_01_24_seai_monitoring_and_reporting.xlsx
     product: data/external/2020_01_24_seai_monitoring_and_reporting.xlsx
   
-  - source: tasks.save_sheets_as_csvs
-    product:
-      mprn: data/interim/raw_mprn.csv
-      gprn: data/interim/raw_gprn.csv
+  - source: tasks.clean
+    name: clean_mprns
+    params:
+      sheet_name: MPRN_data
+      fuel_type: electricity
+    product: data/interim/mprn.csv
+
+  - source: tasks.clean
+    name: clean_gprns
+    params:
+      sheet_name: GPRN_data
+      fuel_type: gas
+    product: data/interim/gprn.csv
     
       
