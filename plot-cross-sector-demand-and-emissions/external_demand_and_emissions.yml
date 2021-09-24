@@ -1,0 +1,21 @@
+rail:
+  DART:
+    TWh: 0.024 
+    tCO2: 7911
+  LUAS:
+    TWh: 0.0235
+    tCO2: 7620
+  Commuter:
+    TWh: 0.067
+    tCO2: 17785
+  Intercity:
+    TWh: 0.015
+    tCO2: 4048
+
+road:
+  TWh: 7.31
+  tCO2: 1727902
+
+data_centres:
+  TWh: 4.31
+  tCO2: 959075

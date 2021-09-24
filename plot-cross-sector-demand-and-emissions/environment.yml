@@ -1,0 +1,15 @@
+name: plot-cross-sector-demand-and-emissions
+channels:
+  - conda-forge
+dependencies:
+  - ipykernel
+  - ploomber >= 0.12.8
+  - python-dotenv
+  - pyarrow
+  - s3fs
+  - pyyaml
+  - seaborn
+  
+  - pip
+  - pip:
+    - codema-dev-tasks==0.1.0
