@@ -42,12 +42,32 @@ def clean(upstream: Any, product: Any, sheet_name: str, fuel_type: str):
     clean_sheet.to_csv(product, index=False)
 
 
-def merge_sheets(mprn: pd.DataFrame, gprn: pd.DataFrame) -> pd.DataFrame:
-    merged = pd.merge(left=mprn, right=gprn, how="outer", indicator=True)
-    merged["dataset"] = merged["_merge"].replace(
+def merge_mprns_and_gprns(upstream: Any, product: Any) -> None:
+    mprn = pd.read_csv(upstream["clean_mprns"]).rename(
+        columns={"location": "mprn_location"}
+    )
+    gprn = pd.read_csv(upstream["clean_gprns"]).rename(
+        columns={"location": "gprn_location"}
+    )
+    m_and_r = mprn.merge(
+        gprn,
+        left_on=[
+            "mprn_location",
+            "pb_name",
+            "postcode",
+            "year",
+            "category",
+        ],
+        right_on=["gprn_location", "pb_name", "postcode", "year", "category"],
+        how="outer",
+        indicator=True,
+    )
+    m_and_r["location"] = m_and_r["mprn_location"].fillna("gprn_location")
+    m_and_r["dataset"] = m_and_r["_merge"].replace(
         {"left_only": "mprn_only", "right_only": "gprn_only"}
     )
-    return merged.drop(columns="_merge")
+    m_and_r = m_and_r.drop(columns="_merge")
+    m_and_r.to_csv(product, index=False)
 
 
 def _flatten_column_names(df):

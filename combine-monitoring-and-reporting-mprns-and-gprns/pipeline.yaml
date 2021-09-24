@@ -3,8 +3,8 @@ tasks:
   - source: codema_dev_tasks.requests.fetch_file
     name: download_seai_monitoring_and_reporting
     params:
-      url: https://codema-dev.s3.eu-west-1.amazonaws.com/raw/2020_01_24_seai_monitoring_and_reporting.xlsx
-    product: data/external/2020_01_24_seai_monitoring_and_reporting.xlsx
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/raw/2020_01_24_seai_monitoring_and_reporting_buildings_dublin.xlsx
+    product: data/external/2020_01_24_seai_monitoring_and_reporting_buildings_dublin.xlsx
   
   - source: tasks.clean
     name: clean_mprns
@@ -20,4 +20,5 @@ tasks:
       fuel_type: gas
     product: data/interim/gprn.csv
     
-      
+  - source: tasks.merge_mprns_and_gprns
+    product: data/interim/mprns_and_gprns.csv
