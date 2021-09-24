@@ -10,6 +10,7 @@ dependencies:
   - pyarrow
   - s3fs
   - python-dotenv
+  - seaborn
   - pip
   - pip:
     - codema-dev-tasks==0.1.0

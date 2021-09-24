@@ -30,3 +30,8 @@ tasks:
     
   - source: tasks.adapt_ber_postcode_names_to_same_format_as_cso_gas
     product: data/interim/standardised_dublin_postcode_synthetic_ber_gas_consumption.csv
+    
+  - source: plot_synthetic_bers_vs_cso_gas.py
+    product:
+      nb: data/notebooks/plot_synthetic_bers_vs_cso_gas.ipynb
+      csv: data/processed/synthetic_bers_vs_cso_gas.csv

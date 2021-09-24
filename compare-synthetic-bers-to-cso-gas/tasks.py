@@ -43,7 +43,7 @@ def amalgamate_synthetic_bers_to_postcode_gas(upstream: Any, product: Any) -> No
         .squeeze()
         .divide(1e6)
         .round()
-        .rename("synthetic_ber_heat_demand")
+        .rename("ber_gas_consumption")
     )
     postcode_gas_consumption.to_csv(product)
 
