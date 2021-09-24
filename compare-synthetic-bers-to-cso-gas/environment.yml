@@ -1,0 +1,16 @@
+name: compare-bers-to-cso-gas
+channels:
+  - conda-forge
+dependencies:
+  - pandas
+  - fsspec
+  - requests
+  - aiohttp
+  - ploomber >=0.12.8
+  - pyarrow
+  - s3fs
+  - python-dotenv
+  - seaborn
+  - pip
+  - pip:
+    - codema-dev-tasks==0.1.0
