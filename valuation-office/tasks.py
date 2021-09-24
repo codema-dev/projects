@@ -7,6 +7,15 @@ import geopandas as gpd
 import pandas as pd
 
 
+def concatenate_local_authority_floor_areas(upstream: Any, product: Any) -> None:
+    dcc = pd.read_excel(upstream["download_valuation_office_floor_areas_dcc"])
+    dlrcc = pd.read_excel(upstream["download_valuation_office_floor_areas_dlrcc"])
+    sdcc = pd.read_excel(upstream["download_valuation_office_floor_areas_sdcc"])
+    fcc = pd.read_excel(upstream["download_valuation_office_floor_areas_fcc"])
+    dublin = pd.concat([dcc, dlrcc, sdcc, fcc])
+    dublin.to_csv(product)
+
+
 def convert_benchmark_uses_to_json(upstream: Any, product: Any) -> None:
     uses_grouped_by_category = defaultdict()
     with ZipFile(upstream["download_benchmark_uses"]) as zf:

@@ -25,4 +25,6 @@ tasks:
     params:
       url: s3://codema-dev/raw/2021_06_15_valuation_office_floor_areas_sdcc.ods
     product: data/external/2021_06_15_valuation_office_floor_areas_sdcc.ods
-    
+
+  - source: tasks.concatenate_local_authority_floor_areas
+    product: data/interim/raw_dublin_valuation_office_floor_areas.csv
