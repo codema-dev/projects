@@ -25,5 +25,8 @@ tasks:
   - source: tasks.concatenate_dublin_postal_districts_and_county_dublin
     product: data/interim/dublin_postcode_residential_networked_gas_consumption.csv
 
-  - source: tasks.amalgamate_synthetic_bers_to_postcode_heat
+  - source: tasks.amalgamate_synthetic_bers_to_postcode_gas
     product: data/interim/dublin_postcode_synthetic_ber_gas_consumption.csv
+    
+  - source: tasks.adapt_ber_postcode_names_to_same_format_as_cso_gas
+    product: data/interim/standardised_dublin_postcode_synthetic_ber_gas_consumption.csv
