@@ -222,14 +222,14 @@ def weather_adjust_benchmarks(upstream: Any, product: Any) -> None:
         }
     )
 
-    normalised_benchmarks.to_csv(product)
+    normalised_benchmarks.to_csv(product, index=False)
 
 
 def replace_unexpectedly_large_floor_areas_with_typical_values(
     upstream: Any, product: Any
 ) -> None:
-    buildings = pd.read_csv(upstream["download_buildings"])
-    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
+    buildings = pd.read_csv(upstream["concatenate_local_authority_floor_areas"])
+    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"])
     with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
         benchmark_uses = json.load(f)
 
@@ -264,8 +264,8 @@ def replace_unexpectedly_large_floor_areas_with_typical_values(
 
 
 def save_unknown_benchmark_uses(upstream: Any, product: Any) -> None:
-    buildings = pd.read_csv(upstream["download_buildings"])
-    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
+    buildings = pd.read_csv(upstream["concatenate_local_authority_floor_areas"])
+    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"])
     with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
         benchmark_uses = json.load(f)
 
@@ -287,7 +287,7 @@ def apply_energy_benchmarks_to_floor_areas(
 ) -> None:
 
     buildings = pd.read_csv(upstream["concatenate_local_authority_floor_areas"])
-    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"], index_col=0)
+    benchmarks = pd.read_csv(upstream["weather_adjust_benchmarks"])
     with open(upstream["convert_benchmark_uses_to_json"], "r") as f:
         benchmark_uses = json.load(f)
 
@@ -366,7 +366,7 @@ def apply_energy_benchmarks_to_floor_areas(
         * kwh_to_mwh
     )
 
-    buildings_with_benchmarks.to_csv(product)
+    buildings_with_benchmarks.to_csv(product, index=False)
 
 
 def link_valuation_office_to_boundaries(upstream: Any, product: Any) -> None:
@@ -386,7 +386,7 @@ def link_valuation_office_to_boundaries(upstream: Any, product: Any) -> None:
         small_area_boundaries,
         op="within",
     ).drop(columns="geometry")
-    valuation_office_in_small_areas.to_csv(product)
+    valuation_office_in_small_areas.to_csv(product, index=False)
 
 
 def save_building_columns(
@@ -412,8 +412,8 @@ def save_building_columns(
         "RoutingKey",
     ]
     use_columns = attribute_columns + columns + boundary_columns
-    buildings = pd.read_csv(
-        upstream["link_valuation_office_to_boundaries"], index_col=0
-    ).loc[:, use_columns]
+    buildings = pd.read_csv(upstream["link_valuation_office_to_boundaries"]).loc[
+        :, use_columns
+    ]
     non_zero_rows = buildings[filter_on_column] > 0
     buildings[non_zero_rows].to_csv(product, index=False)
