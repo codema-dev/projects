@@ -63,4 +63,7 @@ tasks:
     product: data/interim/dublin_valuation_office_with_benchmarks.csv
 
   - source: tasks.link_valuation_office_to_small_areas
+    product: data/interim/dublin_valuation_office_with_small_areas.csv
+
+  - source: tasks.remove_none_and_unknown_benchmark_buildings
     product: data/processed/dublin_valuation_office.csv

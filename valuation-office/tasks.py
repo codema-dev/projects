@@ -387,3 +387,11 @@ def link_valuation_office_to_small_areas(upstream: Any, product: Any) -> None:
         op="within",
     ).drop(columns=["geometry", "index_right"])
     valuation_office_in_small_areas.to_csv(product, index=False)
+
+
+def remove_none_and_unknown_benchmark_buildings(upstream: Any, product: Any) -> None:
+    buildings = pd.read_csv(upstream["link_valuation_office_to_small_areas"])
+    without_none_or_unknown_benchmarks = buildings.query(
+        "Benchmark != ['Unknown', 'None']"
+    )
+    without_none_or_unknown_benchmarks.to_csv(product)
