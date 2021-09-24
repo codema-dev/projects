@@ -26,6 +26,41 @@ tasks:
       url: s3://codema-dev/raw/2021_06_15_valuation_office_floor_areas_sdcc.ods
     product: data/external/2021_06_15_valuation_office_floor_areas_sdcc.ods
 
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_benchmarks
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_09_24_commercial_floor_area_energy_benchmarks.csv
+    product: data/external/2021_09_24_commercial_floor_area_energy_benchmarks.csv
+    
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_benchmark_uses
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_09_24_commercial_floor_area_energy_benchmarks_linked_to_valuation_office_uses.zip
+    product: data/external/2021_09_24_commercial_floor_area_energy_benchmarks_linked_to_valuation_office_uses.zip
+    
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_small_area_boundaries
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_12_dublin_small_area_boundaries.gpkg
+    product: data/external/2021_08_12_dublin_small_area_boundaries.gpkg
+
   - source: tasks.concatenate_local_authority_floor_areas
     product: data/interim/raw_dublin_valuation_office_floor_areas.csv
     on_finish: tasks.validate_dublin_floor_areas
+
+  - source: tasks.convert_benchmark_uses_to_json
+    product: data/interim/benchmark_uses.json
+
+  - source: tasks.weather_adjust_benchmarks
+    product: data/interim/weather_adjusted_benchmarks.csv
+
+  - source: tasks.save_unknown_benchmark_uses
+    product: data/processed/unknown_benchmark_uses.csv
+
+  - source: tasks.apply_energy_benchmarks_to_floor_areas
+    params:
+      boiler_efficiency: 0.85
+    product: data/interim/dublin_valuation_office_with_benchmarks.csv
+
+  - source: tasks.link_valuation_office_to_boundaries
+    product: data/processed/dublin_valuation_office.csv
