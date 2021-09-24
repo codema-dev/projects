@@ -394,4 +394,4 @@ def remove_none_and_unknown_benchmark_buildings(upstream: Any, product: Any) -> 
     without_none_or_unknown_benchmarks = buildings.query(
         "Benchmark != ['Unknown', 'None']"
     )
-    without_none_or_unknown_benchmarks.to_csv(product)
+    without_none_or_unknown_benchmarks.to_csv(product, index=None)
