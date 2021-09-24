@@ -22,3 +22,6 @@ tasks:
     
   - source: tasks.merge_mprns_and_gprns
     product: data/interim/mprns_and_gprns.csv
+
+  - source: tasks.pivot_to_one_column_per_year
+    product: data/processed/seai_monitoring_and_reporting_buildings_dublin.csv

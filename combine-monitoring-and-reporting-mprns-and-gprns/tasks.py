@@ -76,19 +76,20 @@ def _flatten_column_names(df):
     return df
 
 
-def pivot_to_one_column_per_year(m_and_r: pd.DataFrame) -> pd.DataFrame:
-    m_and_r_by_year = (
+def pivot_to_one_column_per_year(upstream: Any, product: Any) -> None:
+    m_and_r = pd.read_csv(upstream["merge_mprns_and_gprns"])
+    flattened_demand_columns = (
         m_and_r.pivot_table(
-            index="address",
+            index="location",
             columns="year",
             values=["electricity_kwh_per_year", "gas_kwh_per_year"],
         )
         .pipe(_flatten_column_names)
         .reset_index()
     )
-    return (
+    flattened_m_and_r = (
         m_and_r.drop(columns=["year", "electricity_kwh_per_year", "gas_kwh_per_year"])
-        .merge(m_and_r_by_year)
-        .drop_duplicates(subset=m_and_r_by_year.columns)
-        .reset_index(drop=True)
+        .merge(flattened_demand_columns)
+        .drop_duplicates(subset=flattened_demand_columns.columns)
     )
+    flattened_m_and_r.to_csv(product, index=False)
