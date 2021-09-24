@@ -387,33 +387,3 @@ def link_valuation_office_to_boundaries(upstream: Any, product: Any) -> None:
         op="within",
     ).drop(columns="geometry")
     valuation_office_in_small_areas.to_csv(product, index=False)
-
-
-def save_building_columns(
-    upstream: Any, product: Any, columns: str, filter_on_column: str
-) -> None:
-    attribute_columns = [
-        "PropertyNo",
-        "Category",
-        "Use1",
-        "Use2",
-        "List_Status",
-        "Benchmark",
-        "Total_SQM",
-        "bounded_area_m2",
-    ]
-    boundary_columns = [
-        "X_ITM",
-        "Y_ITM",
-        "small_area",
-        "cso_ed_id",
-        "countyname",
-        "local_authority",
-        "RoutingKey",
-    ]
-    use_columns = attribute_columns + columns + boundary_columns
-    buildings = pd.read_csv(upstream["link_valuation_office_to_boundaries"]).loc[
-        :, use_columns
-    ]
-    non_zero_rows = buildings[filter_on_column] > 0
-    buildings[non_zero_rows].to_csv(product, index=False)
