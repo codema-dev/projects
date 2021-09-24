@@ -1,0 +1,11 @@
+name: combine-monitoring-and-reporting-mprns-and-gprns
+channels:
+  - conda-forge
+dependencies:
+  - ploomber
+  - openpyxl
+  - pandas
+  
+  - pip
+  - pip:
+    - codema-dev-tasks==0.1.0 

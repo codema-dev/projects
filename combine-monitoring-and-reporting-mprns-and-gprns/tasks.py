@@ -1,3 +1,5 @@
+import logging
+from typing import Any
 from typing import List
 from typing import Tuple
 
@@ -6,9 +8,12 @@ import pandas as pd
 from pandas.core.reshape.merge import merge
 
 
-def read_excel_sheets(url: str) -> Tuple[List[str], List[pd.DataFrame]]:
-    with fsspec.open(url) as f:
-        return pd.read_excel(f, sheet_name=None)
+def save_sheets_as_csvs(upstream: Any, product: Any) -> None:
+    sheets = pd.read_excel(
+        upstream["download_seai_monitoring_and_reporting"], sheet_name=None
+    )
+    sheets["MPRN_data"].to_csv(product["mprn"], index=False)
+    sheets["GPRN_data"].to_csv(product["gprn"], index=False)
 
 
 def _clean_string(s: pd.Series):
