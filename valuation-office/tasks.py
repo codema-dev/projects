@@ -369,7 +369,7 @@ def apply_energy_benchmarks_to_floor_areas(
     buildings_with_benchmarks.to_csv(product, index=False)
 
 
-def link_valuation_office_to_boundaries(upstream: Any, product: Any) -> None:
+def link_valuation_office_to_small_areas(upstream: Any, product: Any) -> None:
     valuation_office = pd.read_csv(upstream["apply_energy_benchmarks_to_floor_areas"])
     small_area_boundaries = gpd.read_file(
         str(upstream["download_small_area_boundaries"])
@@ -383,7 +383,7 @@ def link_valuation_office_to_boundaries(upstream: Any, product: Any) -> None:
     )
     valuation_office_in_small_areas = gpd.sjoin(
         valuation_office_geo,
-        small_area_boundaries,
+        small_area_boundaries[["small_area", "geometry"]],
         op="within",
-    ).drop(columns="geometry")
+    ).drop(columns=["geometry", "index_right"])
     valuation_office_in_small_areas.to_csv(product, index=False)
