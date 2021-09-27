@@ -5,7 +5,9 @@ dependencies:
   - ploomber
   - openpyxl
   - pandas
-  
+  - python-dotenv
+  - s3fs
+
   - pip
   - pip:
     - codema-dev-tasks==0.1.0 
