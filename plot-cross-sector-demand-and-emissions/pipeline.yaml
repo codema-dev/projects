@@ -13,6 +13,12 @@ tasks:
     params:
       url: s3://codema-dev/views/2021_09_24_dublin_valuation_office_energy_estimates.csv
     product: data/external/2021_09_24_dublin_valuation_office_energy_estimates.csv
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_public_sector_demands
+    params:
+      url: s3://codema-dev/views/2021_09_27_seai_monitoring_and_reporting_buildings_dublin.csv
+    product: data/external/2021_09_27_seai_monitoring_and_reporting_buildings_dublin.csv
   
   - source: codema_dev_tasks.requests.fetch_file
     name: download_epa_industrial_site_demands

@@ -10,6 +10,7 @@ upstream = [
     "download_synthetic_bers",
     "download_valuation_office_energy_estimates",
     "download_epa_industrial_site_demands",
+    "download_public_sector_demands",
 ]
 external_demand_and_emissions_yml = None
 product = None
@@ -22,6 +23,8 @@ commercial_and_industrial = pd.read_csv(
 )
 
 partial_industrial = pd.read_csv(upstream["download_epa_industrial_site_demands"])
+
+public_sector = pd.read_csv(upstream["download_public_sector_demands"])
 
 with open(external_demand_and_emissions_yml, "r") as f:
     external_demand_and_emissions = yaml.safe_load(f)
@@ -128,6 +131,14 @@ industrial_energy_cibse = (
     / mwh_to_twh
 )
 
+## Public Sector
+
+public_sector_gas = public_sector["gas_kwh_per_year_2018"].sum() / kwh_to_twh
+
+public_sector_electricity = (
+    public_sector["electricity_kwh_per_year_2018"].sum() / kwh_to_twh
+)
+
 ## Rest
 
 data_centre_electricity = external_demand_and_emissions["data_centres"]["TWh"]
@@ -148,6 +159,7 @@ energy = pd.Series(
         "Residential": residential_electricity + residential_heat,
         "Commercial": commercial_electricity + commercial_fossil_fuel,
         "Industrial": industrial_energy_epa + industrial_energy_cibse,
+        "Public Sector": public_sector_electricity + public_sector_gas,
         "Data Centres": data_centre_electricity,
         "Road Transport": road_transport_energy,
         "Rail Transport": rail_transport_energy,
