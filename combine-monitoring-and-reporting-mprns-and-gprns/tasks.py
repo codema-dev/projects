@@ -63,6 +63,13 @@ def merge_mprns_and_gprns(upstream: Any, product: Any) -> None:
         indicator=True,
     )
     m_and_r["location"] = m_and_r["mprn_location"].fillna("gprn_location")
+    m_and_r["address"] = (
+        m_and_r["pb_name"]
+        + " "
+        + m_and_r["location"].str.replace(",", "")
+        + " "
+        + m_and_r["postcode"]
+    )
     m_and_r["dataset"] = m_and_r["_merge"].replace(
         {"left_only": "mprn_only", "right_only": "gprn_only"}
     )
@@ -80,7 +87,7 @@ def pivot_to_one_column_per_year(upstream: Any, product: Any) -> None:
     m_and_r = pd.read_csv(upstream["merge_mprns_and_gprns"])
     flattened_demand_columns = (
         m_and_r.pivot_table(
-            index="location",
+            index="address",
             columns="year",
             values=["electricity_kwh_per_year", "gas_kwh_per_year"],
         )
