@@ -1,0 +1,43 @@
+channels:
+- conda-forge
+- patrikhlobil
+dependencies:
+- aiohttp
+- black
+- dataframe-image
+- fs-s3fs
+- fsspec
+- geckodriver
+- geopandas
+- graphviz
+- invoke
+- ipykernel
+- ipython
+- jupyter
+- jupytext
+- lxml
+- mypy
+- numpy
+- openpyxl
+- osmnx
+- pandas
+- pandas-bokeh
+- papermill
+- pip
+- ploomber
+- ploomber >=0.12.8
+- prefect
+- pyarrow
+- pygeos
+- python
+- python-dotenv
+- requests
+- s3fs
+- seaborn
+- selenium
+- pip:
+  - codema-dev-tasks==0.1.0
+  - git+https://github.com/codema-dev/tasks
+  - graphviz
+  - prefect-geopandas-serializer
+name: codema-dev-projects
