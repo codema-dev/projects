@@ -166,4 +166,4 @@ energy = pd.Series(
     }
 )
 
-energy.plot.pie(figsize=(10, 10))
+energy.plot.pie(figsize=(10, 10), ylabel="", autopct="%1.1f%%")
