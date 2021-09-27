@@ -33,6 +33,32 @@ with open(external_demand_and_emissions_yml, "r") as f:
 
 kwh_to_twh = 1e9
 mwh_to_twh = 1e6
+tco2_per_kwh_to_tco2_per_twh = 1e9
+
+# source: https://www.seai.ie/data-and-insights/seai-statistics/conversion-factors/
+twh_to_tco2 = {
+    "Mains Gas": 204.7e3,
+    "Electricity": 295.1e3,
+}
+mwh_to_tco2 = {
+    "Mains Gas": 204.7e-3,
+    "Electricity": 295.1e-3,
+}
+kwh_to_tco2 = {
+    "Mains Gas": 204.7e-6,
+    "Heating Oil": 263e-6,
+    "Electricity": 295.1e-6,
+    "Bulk LPG": 229e-6,
+    "Wood Pellets (bags)": 390e-6,
+    "Wood Pellets (bulk)": 160e-6,
+    "Solid Multi-Fuel": 390e-6,
+    "Manuf.Smokeless Fuel": 390e-6,
+    "Bottled LPG": 229e-6,
+    "House Coal": 340e-6,
+    "Wood Logs": 390e-6,
+    "Peat Briquettes": 355e-6,
+    "Anthracite": 340e-6,
+}
 
 ## Residential
 
@@ -48,6 +74,12 @@ electrical_demand_columns = [
 ]
 residential_electricity = (
     5 * residential[electrical_demand_columns].sum().sum() / kwh_to_twh
+)
+
+emission_factors = residential["main_sh_boiler_fuel"].map(kwh_to_tco2)
+residential_emissions = (
+    residential[boiler_demand_columns].sum(axis=1).multiply(emission_factors).sum()
+    + residential_electricity * twh_to_tco2["Electricity"]
 )
 
 ## Commercial
@@ -68,6 +100,12 @@ commercial_fossil_fuel = (
 
 commercial_electricity = (
     commercial_and_industrial["electricity_demand_mwh_per_y"].sum() / mwh_to_twh
+)
+
+# ASSUMPTION: Commercial fossil fuel usage entirely consists of gas
+commercial_emissions = (
+    commercial_fossil_fuel * twh_to_tco2["Mains Gas"]
+    + commercial_electricity * twh_to_tco2["Electricity"]
 )
 
 ## Industrial
@@ -100,19 +138,31 @@ industrial_fossil_fuel_epa = (
 
 industrial_energy_epa = industrial_electricity_epa + industrial_fossil_fuel_epa
 
+industrial_emissions_epa = (
+    industrial_fossil_fuel_epa * twh_to_tco2["Mains Gas"]
+    + industrial_electricity_epa * twh_to_tco2["Electricity"]
+)
+
 ### Remaining sites are benchmark-derived
 
 benchmark_derived_industrial_sites = commercial_and_industrial.query(
     "PropertyNo != @industrial_site_ids"
 )
 
-industrial_low_temperature_heat = benchmark_derived_industrial_sites[
-    "industrial_low_temperature_heat_demand_mwh_per_y"
-].sum()
+# ASSUMPTION: Process energy wholly consists of high and low temperature heat
+industrial_low_temperature_heat = (
+    benchmark_derived_industrial_sites[
+        "industrial_low_temperature_heat_demand_mwh_per_y"
+    ].sum()
+    / mwh_to_twh
+)
 
-industrial_high_temperature_heat = benchmark_derived_industrial_sites[
-    "industrial_high_temperature_heat_demand_mwh_per_y"
-].sum()
+industrial_high_temperature_heat = (
+    benchmark_derived_industrial_sites[
+        "industrial_high_temperature_heat_demand_mwh_per_y"
+    ].sum()
+    / mwh_to_twh
+)
 
 # ASSUMPTION: Industrial building electricity usage corresponds to the national split
 # ... Energy in Ireland, SEAI 2021
@@ -124,11 +174,26 @@ industrial_electricity_cibse = (
     / mwh_to_twh
 )
 
-industrial_energy_cibse = (
+industrial_fossil_fuel_cibse = (
     benchmark_derived_industrial_sites["building_energy_mwh_per_y"]
-    .add(benchmark_derived_industrial_sites["process_energy_mwh_per_y"])
+    .multiply(1 - assumed_electricity_usage)
     .sum()
     / mwh_to_twh
+)
+
+industrial_energy_cibse = (
+    industrial_electricity_cibse
+    + industrial_fossil_fuel_cibse
+    + industrial_low_temperature_heat
+    + industrial_high_temperature_heat
+)
+
+# ASSUMPTION: Industrial fossil fuel usage entirely consists of gas
+industrial_emissions_cibse = (
+    industrial_fossil_fuel_epa * twh_to_tco2["Mains Gas"]
+    + industrial_electricity_cibse * twh_to_tco2["Electricity"]
+    + industrial_low_temperature_heat * twh_to_tco2["Mains Gas"]
+    + industrial_high_temperature_heat * twh_to_tco2["Mains Gas"]
 )
 
 ## Public Sector
@@ -139,17 +204,33 @@ public_sector_electricity = (
     public_sector["electricity_kwh_per_year_2018"].sum() / kwh_to_twh
 )
 
+public_sector_emissions = (
+    public_sector_gas * twh_to_tco2["Mains Gas"]
+    + public_sector_electricity * twh_to_tco2["Electricity"]
+)
+
 ## Rest
 
 data_centre_electricity = external_demand_and_emissions["data_centres"]["TWh"]
 
+data_centre_emissions = external_demand_and_emissions["data_centres"]["tCO2"]
+
 road_transport_energy = external_demand_and_emissions["road"]["TWh"]
+
+road_transport_emissions = external_demand_and_emissions["road"]["tCO2"]
 
 rail_transport_energy = (
     external_demand_and_emissions["rail"]["DART"]["TWh"]
     + external_demand_and_emissions["rail"]["LUAS"]["TWh"]
     + external_demand_and_emissions["rail"]["Commuter"]["TWh"]
     + external_demand_and_emissions["rail"]["Intercity"]["TWh"]
+)
+
+rail_transport_emissions = (
+    external_demand_and_emissions["rail"]["DART"]["tCO2"]
+    + external_demand_and_emissions["rail"]["LUAS"]["tCO2"]
+    + external_demand_and_emissions["rail"]["Commuter"]["tCO2"]
+    + external_demand_and_emissions["rail"]["Intercity"]["tCO2"]
 )
 
 ## Plot
@@ -167,3 +248,17 @@ energy = pd.Series(
 )
 
 energy.plot.pie(figsize=(10, 10), ylabel="", autopct="%1.1f%%")
+
+emissions = pd.Series(
+    {
+        "Residential": residential_emissions,
+        "Commercial": commercial_emissions,
+        "Industrial": industrial_emissions_cibse + industrial_emissions_epa,
+        "Public Sector": public_sector_emissions,
+        "Data Centres": data_centre_emissions,
+        "Road Transport": road_transport_emissions,
+        "Rail Transport": rail_transport_emissions,
+    }
+)
+
+emissions.plot.pie(figsize=(10, 10), ylabel="", autopct="%1.1f%%")
