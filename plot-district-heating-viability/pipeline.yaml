@@ -1,0 +1,28 @@
+on_render:
+  dotted_path: codema_dev_tasks.hooks.load_environmental_variables
+  dotenv_path: ".env"
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_synthetic_bers
+    params:
+      url: s3://codema-dev/views/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
+    product: data/external/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
+  
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_valuation_office_energy_estimates
+    params:
+      url: s3://codema-dev/views/2021_09_24_dublin_valuation_office_energy_estimates.csv
+    product: data/external/2021_09_24_dublin_valuation_office_energy_estimates.csv
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_public_sector_demands
+    params:
+      url: s3://codema-dev/views/2021_09_27_seai_monitoring_and_reporting_buildings_dublin.csv
+    product: data/external/2021_09_27_seai_monitoring_and_reporting_buildings_dublin.csv
+  
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_epa_industrial_site_demands
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2019_10_14_epa_industrial_site_demands.csv
+    product: data/external/2019_10_14_epa_industrial_site_demands.csv
+  
