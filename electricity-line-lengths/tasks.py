@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Any
+from typing import Dict
 from typing import List
 
 import geopandas as gpd
@@ -30,6 +31,17 @@ def extract_hv_stations(product: Any, upstream: Any, levels: List[int]) -> None:
     hv_network = gpd.read_parquet(upstream["convert_hv_data_to_parquet"])
     level_is_a_station = hv_network["Level"].isin(levels)
     stations = hv_network[level_is_a_station]
+    stations.to_file(str(product), driver="GPKG")
+
+
+def extract_mv_lv_stations(
+    product: Any, upstream: Any, text_mappings: Dict[str, str]
+) -> None:
+    mv_lv_network = gpd.read_parquet(upstream["convert_mv_lv_network_to_parquet"])
+    mv_lv_network["Text"] = mv_lv_network["Text"].str.decode("utf-8", errors="ignore")
+    text_is_a_station = mv_lv_network["Text"].isin(text_mappings.keys())
+    stations = mv_lv_network[text_is_a_station].copy()
+    stations["Type"] = stations["Text"].map(text_mappings)
     stations.to_file(str(product), driver="GPKG")
 
 

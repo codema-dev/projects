@@ -28,7 +28,16 @@ tasks:
         - 30
         - 40
     product: data/processed/ireland_hv_stations.gpkg
-    
+
+  - source: tasks.extract_mv_lv_stations
+    params:
+      text_mappings:
+        T: Pole Mounted Three Phase Substation
+        t: Pole Mounted Single Phase Substation
+        U: Ground Mounted MV URD Substation
+        K: Ground Mounted MV Kiosk
+    product: data/processed/dublin_mv_lv_stations.gpkg
+      
   - source: tasks.extract_hv_line_lengths
     params:
       levels:
