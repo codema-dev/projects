@@ -136,6 +136,12 @@ industrial_fossil_fuel_epa = (
     industrial_sites[fossil_fuel_use_columns].sum().sum() / kwh_to_twh
 )
 
+# ASSUMPTION: A high proportion of these industrial boilers will be producing steam
+# which means they will have a lower efficiency than a standard hot water boiler (~75%).
+# Assume 80% for to account for hot water boilers.
+assumed_boiler_efficiency = 0.8
+industrial_heat_epa = industrial_fossil_fuel_epa * assumed_boiler_efficiency
+
 industrial_energy_epa = industrial_electricity_epa + industrial_fossil_fuel_epa
 
 industrial_emissions_epa = (
@@ -209,6 +215,11 @@ public_sector_emissions = (
     + public_sector_electricity * twh_to_tco2["Electricity"]
 )
 
+# ASSUMPTION: Average commercial boiler efficiency is the same as average residential
+# ... Building Energy Ratings dataset, SEAI 2021
+assumed_boiler_efficiency = 0.85
+public_sector_heat = public_sector_gas * assumed_boiler_efficiency
+
 ## Rest
 
 data_centre_electricity = external_demand_and_emissions["data_centres"]["TWh"]
@@ -235,6 +246,8 @@ rail_transport_emissions = (
 
 ## Plot
 
+### Energy
+
 energy = pd.Series(
     {
         "Residential": residential_electricity + residential_heat,
@@ -249,6 +262,8 @@ energy = pd.Series(
 
 energy.plot.pie(figsize=(10, 10), ylabel="", autopct="%1.1f%%")
 
+### Emissions
+
 emissions = pd.Series(
     {
         "Residential": residential_emissions,
@@ -262,3 +277,28 @@ emissions = pd.Series(
 )
 
 emissions.plot.pie(figsize=(10, 10), ylabel="", autopct="%1.1f%%")
+
+### Heat : Electricity : Transport
+
+# Ignoring electricity used for heat!
+heat_vs_electricity_vs_transport = pd.Series(
+    {
+        "Heat": residential_heat
+        + commercial_heat
+        + industrial_low_temperature_heat
+        + industrial_high_temperature_heat
+        + industrial_heat_epa
+        + public_sector_heat,
+        "Electricity": residential_electricity
+        + commercial_electricity
+        + industrial_electricity_epa
+        + industrial_electricity_cibse
+        + public_sector_electricity,
+        "Road Transport": road_transport_energy,
+        "Rail Transport": rail_transport_energy,
+    }
+)
+
+heat_vs_electricity_vs_transport.plot.pie(
+    figsize=(10, 10), ylabel="", autopct="%1.1f%%"
+)
