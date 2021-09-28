@@ -4,6 +4,7 @@ tasks:
     params:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_12_dublin_small_area_boundaries.gpkg
     product: data/external/2021_08_12_dublin_small_area_boundaries.gpkg
+
   - source: codema_dev_tasks.requests.fetch_file
     name: download_dublin_mv_index
     params:
@@ -20,3 +21,16 @@ tasks:
       dirpath: data/raw/ESBdata_20210107/Dig Request Style/MV-LV Data
     product: data/interim/dublin_mv_lv_network.parquet
   
+  - source: tasks.extract_hv_line_lengths
+    params:
+      levels:
+        - 21
+        - 24
+        - 31
+        - 34
+        - 41
+        - 44
+      columns:
+        - Level
+        - geometry
+    product: data/interim/ireland_hv_line_lengths.parquet
