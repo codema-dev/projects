@@ -4,3 +4,12 @@ tasks:
     params:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_12_dublin_small_area_boundaries.gpkg
     product: data/external/2021_08_12_dublin_small_area_boundaries.gpkg
+
+  - source: tasks.save_gni_data_to_gpkg
+    params:
+      filepaths:
+        - data/raw/Tx and Dx/SHP ITM/2020Q4_LP_SHP_ITM_Centreline.shp
+        - data/raw/Tx and Dx/SHP ITM/2020Q4_MP_SHP_ITM_Centreline.shp
+        - data/raw/Tx and Dx/SHP ITM/2020Q4_HP_SHP_ITM_Centreline.shp
+    product: data/interim/centrelines.gpkg
+    

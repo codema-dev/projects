@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 from typing import Dict
 from typing import List
@@ -6,13 +7,12 @@ import geopandas as gpd
 import pandas as pd
 
 
-def extract_hv_line_lengths(
-    product: Any,
-    upstream: Any,
-    columns: List[str],
-) -> None:
-    lines = gpd.read_file(upstream["download_dublin_small_area_boundaries"])
-    line_lengths = pd.concat(
-        [lines, lines.geometry.length.rename("line_length_m")], axis=1
-    )
-    line_lengths.to_parquet(product)
+def _check_gni_data_is_uploaded(filepath: str) -> None:
+    message = "Please upload GNI CAD Network data (Tx and Dx) to data/raw/"
+    assert Path(filepath).exists(), message
+
+
+def save_gni_data_to_gpkg(product: Any, filepaths: List[str]) -> None:
+    _check_gni_data_is_uploaded(filepaths[0])
+    lines = pd.concat([gpd.read_file(f) for f in filepaths])
+    lines.to_file(str(product), driver="GPKG")
