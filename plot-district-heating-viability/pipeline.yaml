@@ -31,3 +31,9 @@ tasks:
     params:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_12_dublin_small_area_boundaries.gpkg
     product: data/external/2021_08_12_dublin_small_area_boundaries.gpkg
+
+  - source: estimate_heat_demand_density.py
+    product:
+      nb: data/notebooks/estimate_heat_demand_density.ipynb
+      density: data/processed/small_area_heat_demand_density.csv
+      demand: data/processed/small_area_heat_demand.csv
