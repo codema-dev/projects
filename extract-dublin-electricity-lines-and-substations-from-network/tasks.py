@@ -45,84 +45,66 @@ def extract_mv_lv_stations(
     stations.to_file(str(product), driver="GPKG")
 
 
-def _extract_line_lengths(
-    gdf: gpd.GeoDataFrame,
-    level_mappings: Dict[int, str],
-    columns: List[str],
-) -> None:
-    level_is_a_line = gdf["Level"].isin(level_mappings.keys())
-    lines = gdf[level_is_a_line]
-    line_lengths = pd.concat(
-        [lines[columns], lines.geometry.length.rename("line_length_m")], axis=1
-    )
-    line_lengths["Type"] = line_lengths["Level"].map(level_mappings)
-    return line_lengths
-
-
-def extract_hv_line_lengths(
+def extract_hv_lines_in_small_area_boundaries(
     product: Any,
     upstream: Any,
     level_mappings: Dict[int, str],
     columns: List[str],
 ) -> None:
-    hv_network = gpd.read_parquet(upstream["convert_hv_data_to_parquet"])
-    line_lengths = _extract_line_lengths(
-        hv_network, level_mappings=level_mappings, columns=columns
+    network = gpd.read_parquet(upstream["convert_hv_data_to_parquet"])
+    dublin_small_area_boundaries = gpd.read_file(
+        str(upstream["download_dublin_small_area_boundaries"])
     )
-    line_lengths.to_parquet(product)
+
+    level_is_a_line = network["Level"].isin(level_mappings.keys())
+    lines = network.loc[level_is_a_line, columns].copy()
+    lines["Type"] = lines["Level"].map(level_mappings)
+    lines_in_boundaries = gpd.overlay(
+        lines,
+        dublin_small_area_boundaries[["small_area", "geometry"]],
+        "intersection",
+    )
+
+    lines_in_boundaries.to_parquet(product)
 
 
-def extract_mv_lv_line_lengths(
+def extract_mv_lv_lines_in_small_area_boundaries(
     product: Any,
     upstream: Any,
-    level_mappings: Dict[str, str],
+    level_mappings: Dict[int, str],
     columns: List[str],
 ) -> None:
-    hv_network = gpd.read_parquet(upstream["convert_mv_lv_data_to_parquet"])
-    line_lengths = _extract_line_lengths(
-        hv_network, level_mappings=level_mappings, columns=columns
-    )
-    line_lengths.to_parquet(product)
-
-
-def extract_hv_line_length_in_small_area_boundaries(
-    product: Any, upstream: Any
-) -> None:
-    hv_line_lengths = gpd.read_parquet(upstream["extract_hv_line_lengths"])
+    network = gpd.read_parquet(upstream["convert_mv_lv_data_to_parquet"])
     dublin_small_area_boundaries = gpd.read_file(
         str(upstream["download_dublin_small_area_boundaries"])
     )
 
+    level_is_a_line = network["Level"].isin(level_mappings.keys())
+    lines = network.loc[level_is_a_line, columns].copy()
+    lines["Type"] = lines["Level"].map(level_mappings)
     lines_in_boundaries = gpd.overlay(
-        hv_line_lengths,
+        lines,
         dublin_small_area_boundaries[["small_area", "geometry"]],
         "intersection",
     )
 
-    lines_in_boundaries.to_file(str(product), driver="GPKG")
+    lines_in_boundaries.to_parquet(product)
 
 
-def extract_mv_lv_line_length_in_small_area_boundaries(
-    product: Any, upstream: Any
-) -> None:
-    mv_lv_line_lengths = gpd.read_parquet(upstream["extract_mv_lv_line_lengths"])
-    dublin_small_area_boundaries = gpd.read_file(
-        str(upstream["download_dublin_small_area_boundaries"])
-    )
+def calculate_hv_line_lengths(product: Any, upstream: Any) -> None:
+    lines = gpd.read_parquet(upstream["extract_hv_lines_in_small_area_boundaries"])
+    lines["line_length_m"] = lines.geometry.length
+    lines.to_file(str(product), driver="GPKG")
 
-    lines_in_boundaries = gpd.overlay(
-        mv_lv_line_lengths,
-        dublin_small_area_boundaries[["small_area", "geometry"]],
-        "intersection",
-    )
 
-    lines_in_boundaries.to_file(str(product), driver="GPKG")
+def calculate_mv_lv_line_lengths(product: Any, upstream: Any) -> None:
+    lines = gpd.read_parquet(upstream["extract_mv_lv_lines_in_small_area_boundaries"])
+    lines["line_length_m"] = lines.geometry.length
+    lines.to_file(str(product), driver="GPKG")
 
 
 def sum_small_area_mv_lv_line_lengths(product: Any, upstream: Any) -> None:
-    line_lengths = gpd.read_file(
-        str(upstream["extract_mv_lv_line_length_in_small_area_boundaries"])
-    )
+    line_lengths = gpd.read_file(str(upstream["calculate_mv_lv_line_lengths"]))
 
     line_length_totals = (
         line_lengths.groupby(["small_area", "Type"])["line_length_m"]
@@ -135,9 +117,7 @@ def sum_small_area_mv_lv_line_lengths(product: Any, upstream: Any) -> None:
 
 
 def sum_small_area_hv_line_lengths(product: Any, upstream: Any) -> None:
-    line_lengths = gpd.read_file(
-        str(upstream["extract_hv_line_length_in_small_area_boundaries"])
-    )
+    line_lengths = gpd.read_file(str(upstream["calculate_hv_line_lengths"]))
 
     line_length_totals = (
         line_lengths.groupby(["small_area", "Type"])["line_length_m"]

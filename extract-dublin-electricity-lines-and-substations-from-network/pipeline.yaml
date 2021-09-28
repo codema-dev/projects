@@ -37,8 +37,8 @@ tasks:
         U: Ground Mounted MV URD Substation
         K: Ground Mounted MV Kiosk
     product: data/processed/dublin_mv_lv_stations.gpkg
-      
-  - source: tasks.extract_hv_line_lengths
+
+  - source: tasks.extract_hv_lines_in_small_area_boundaries
     params:
       level_mappings:
         21: 38kV Overhead Electricity Lines
@@ -50,9 +50,9 @@ tasks:
       columns:
         - Level
         - geometry
-    product: data/interim/ireland_hv_line_lengths.parquet
+    product: data/interim/dublin_small_area_hv_line_lengths.parquet
 
-  - source: tasks.extract_mv_lv_line_lengths
+  - source: tasks.extract_mv_lv_lines_in_small_area_boundaries
     params:
       level_mappings:
         1: LV Three Phase Overhead Electricity Lines
@@ -62,14 +62,14 @@ tasks:
       columns:
         - Level
         - geometry
-    product: data/interim/ireland_mv_lv_line_lengths.parquet
-
-  - source: tasks.extract_hv_line_length_in_small_area_boundaries
-    product: data/processed/dublin_small_area_hv_line_lengths.gpkg
-
-  - source: tasks.extract_mv_lv_line_length_in_small_area_boundaries
-    product: data/processed/dublin_small_area_mv_lv_line_lengths.gpkg
+    product: data/interim/dublin_small_area_mv_lv_line_lengths.parquet
   
+  - source: tasks.calculate_hv_line_lengths
+    product: data/processed/ireland_hv_line_lengths.gpkg
+
+  - source: tasks.calculate_mv_lv_line_lengths
+    product: data/processed/ireland_mv_lv_line_lengths.gpkg
+
   - source: tasks.sum_small_area_mv_lv_line_lengths
     product: data/processed/dublin_small_area_mv_lv_line_length_in_metres.csv
   
