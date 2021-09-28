@@ -1,27 +1,28 @@
-# Gas Line Lengths
+# Extract Dublin Gas Lines
+
+| :exclamation:  Requires GNI Network files |
+|-------------------------------------------|
 
 ## What `pipeline.py` is doing:
 
-![flow.png](flow.png)
-
-## Caveats
-
-To fully reproduce the pipeline the user must:
-- Have access to `Gas Networks Ireland` gas grid infrastructure files
-- Be comfortable enough with the command line to create a conda environment from an `environment.yml` and run the pipeline with `python pipeline.py`
+![pipeline.png](pipeline.png)
 
 ## Setup
 
+| :exclamation:  Skip unless running this locally |
+|-------------------------------------------------|
+
 Via [conda](https://github.com/conda-forge/miniforge):
 
-- Minimal
 ```bash
-conda env create --file environment.yml
-conda activate hdd
+conda env create --file environment.yml --name extract-dublin-gas-lines-from-network
+conda activate extract-dublin-gas-lines-from-network
 ```
+
+## Run 
 
 Now run the pipeline:
 
 ```bash
-python pipeline.py
+ploomber build
 ```
