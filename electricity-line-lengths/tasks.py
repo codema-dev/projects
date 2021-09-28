@@ -19,7 +19,7 @@ def convert_hv_data_to_parquet(product: Any, dirpath: str) -> None:
     hv_network.to_crs(epsg=2157).to_parquet(product)
 
 
-def convert_mv_lv_network_to_parquet(product: Any, upstream: Any, dirpath: str) -> None:
+def convert_mv_lv_data_to_parquet(product: Any, upstream: Any, dirpath: str) -> None:
     _check_esb_data_is_uploaded(dirpath)
     dublin_mv_index = pd.read_csv(upstream["download_dublin_mv_index"], squeeze=True)
     network = [gpd.read_file(Path(dirpath) / f"{id}.dgn") for id in dublin_mv_index]
@@ -37,7 +37,7 @@ def extract_hv_stations(product: Any, upstream: Any, levels: List[int]) -> None:
 def extract_mv_lv_stations(
     product: Any, upstream: Any, text_mappings: Dict[str, str]
 ) -> None:
-    mv_lv_network = gpd.read_parquet(upstream["convert_mv_lv_network_to_parquet"])
+    mv_lv_network = gpd.read_parquet(upstream["convert_mv_lv_data_to_parquet"])
     mv_lv_network["Text"] = mv_lv_network["Text"].str.decode("utf-8", errors="ignore")
     text_is_a_station = mv_lv_network["Text"].isin(text_mappings.keys())
     stations = mv_lv_network[text_is_a_station].copy()
@@ -74,7 +74,7 @@ def extract_mv_lv_line_lengths(
     levels: List[str],
     columns: List[str],
 ) -> None:
-    hv_network = gpd.read_parquet(upstream["convert_mv_lv_network_to_parquet"])
+    hv_network = gpd.read_parquet(upstream["convert_mv_lv_data_to_parquet"])
     line_lengths = _extract_line_lengths(hv_network, levels=levels, columns=columns)
     line_lengths.to_parquet(product)
 
