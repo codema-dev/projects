@@ -40,13 +40,13 @@ tasks:
       
   - source: tasks.extract_hv_line_lengths
     params:
-      levels:
-        - 21
-        - 24
-        - 31
-        - 34
-        - 41
-        - 44
+      level_mappings:
+        21: 38kV Overhead Electricity Lines
+        24: 38kV Underground Electricity Cables
+        31: 110kV Overhead Electricity Lines
+        34: 110kV Underground Electricity Cables
+        41: 220kV Overhead Electricity Lines
+        44: 220kV Underground Electricity Cables
       columns:
         - Level
         - geometry
@@ -54,11 +54,11 @@ tasks:
 
   - source: tasks.extract_mv_lv_line_lengths
     params:
-      levels:
-        - 1
-        - 2
-        - 10
-        - 11
+      level_mappings:
+        1: LV Three Phase Overhead Electricity Lines
+        2: LV Single Phase Overhead Electricity Lines
+        10: MV Three Phase Overhead Electricity Lines
+        11: MV Single Phase Overhead Electricity Lines
       columns:
         - Level
         - geometry
