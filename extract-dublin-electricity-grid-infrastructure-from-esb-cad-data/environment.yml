@@ -1,0 +1,10 @@
+name: extract-dublin-electricity-infrastructure
+channels:
+  - conda-forge
+dependencies:
+  - geopandas
+  - pyarrow
+  - ploomber
+  - pip
+  - pip:
+    - codema-dev-tasks==0.1.0

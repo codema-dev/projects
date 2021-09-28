@@ -1,0 +1,77 @@
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_small_area_boundaries
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_12_dublin_small_area_boundaries.gpkg
+    product: data/external/2021_08_12_dublin_small_area_boundaries.gpkg
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_mv_index
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_13_esb_20210107_dublin_mv_index.csv
+    product: data/external/2021_08_13_esb_20210107_dublin_mv_index.csv
+  
+  - source: tasks.convert_hv_data_to_parquet
+    params:
+      dirpath: data/raw/ESBdata_20210107/Dig Request Style/HV Data
+    product: data/interim/ireland_hv_network.parquet
+
+  - source: tasks.convert_mv_lv_data_to_parquet
+    params:
+      dirpath: data/raw/ESBdata_20210107/Dig Request Style/MV-LV Data
+    product: data/interim/dublin_mv_lv_network.parquet
+  
+  - source: tasks.extract_hv_stations
+    params:
+      levels:
+        - 20
+        - 30
+        - 40
+    product: data/processed/ireland_hv_stations.gpkg
+
+  - source: tasks.extract_mv_lv_stations
+    params:
+      text_mappings:
+        T: Pole Mounted Three Phase Substation
+        t: Pole Mounted Single Phase Substation
+        U: Ground Mounted MV URD Substation
+        K: Ground Mounted MV Kiosk
+    product: data/processed/dublin_mv_lv_stations.gpkg
+      
+  - source: tasks.extract_hv_line_lengths
+    params:
+      level_mappings:
+        21: 38kV Overhead Electricity Lines
+        24: 38kV Underground Electricity Cables
+        31: 110kV Overhead Electricity Lines
+        34: 110kV Underground Electricity Cables
+        41: 220kV Overhead Electricity Lines
+        44: 220kV Underground Electricity Cables
+      columns:
+        - Level
+        - geometry
+    product: data/interim/ireland_hv_line_lengths.parquet
+
+  - source: tasks.extract_mv_lv_line_lengths
+    params:
+      level_mappings:
+        1: LV Three Phase Overhead Electricity Lines
+        2: LV Single Phase Overhead Electricity Lines
+        10: MV Three Phase Overhead Electricity Lines
+        11: MV Single Phase Overhead Electricity Lines
+      columns:
+        - Level
+        - geometry
+    product: data/interim/ireland_mv_lv_line_lengths.parquet
+
+  - source: tasks.extract_hv_line_length_in_small_area_boundaries
+    product: data/processed/dublin_small_area_hv_line_lengths.gpkg
+
+  - source: tasks.extract_mv_lv_line_length_in_small_area_boundaries
+    product: data/processed/dublin_small_area_mv_lv_line_lengths.gpkg
+  
+  - source: tasks.sum_small_area_mv_lv_line_lengths
+    product: data/processed/dublin_small_area_mv_lv_line_length_in_metres.csv
+  
+  - source: tasks.sum_small_area_hv_line_lengths
+    product: data/processed/dublin_small_area_hv_line_length_in_metres.csv
