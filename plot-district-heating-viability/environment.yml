@@ -8,6 +8,7 @@ dependencies:
   - ploomber
   - s3fs
   - python-dotenv
+  - pyarrow
   - pip
   - pip:
     - codema-dev-tasks==0.1.0
