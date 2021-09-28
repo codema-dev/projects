@@ -1,32 +1,29 @@
-# Heat Demand Density
+# Extract Dublin Electricity Grid Infrastructure From ESB CAD Network Files 
 
+| :exclamation:  Requires ESB Networks CAD Network files |
+|--------------------------------------------------------|
+    
 ## What `pipeline.py` is doing:
 
-![flow.png](flow.png)
+![pipeline.png](pipeline.png)
 
-## Caveats
+## Install
 
-To fully reproduce the pipeline the user must:
-- Have access to:
-    - `Gas Network Ireland` gas grid infrastructure files
-    - `ESB Networks` electricity grid infrastructure files
-    
-- Be comfortable enough with the command line to create a conda environment from an `environment.yml` and run the pipeline with `python pipeline.py`
-
-
-## Setup
-(**Note**: Skip if running in binder or deepnote)
+| :exclamation:  Skip unless running this locally |
+|-------------------------------------------------|
 
 Via [conda](https://github.com/conda-forge/miniforge):
 
 - Minimal
 ```bash
-conda env create --file environment.yml
-conda activate hdd
+conda env create --file environment.yml --name extract-dublin-electricity-infrastructure
+conda activate extract-dublin-electricity-infrastructure
 ```
+
+## Run
 
 Now run the pipeline:
 
 ```bash
-python pipeline.py
+ploomber build
 ```
