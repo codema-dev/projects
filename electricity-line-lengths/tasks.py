@@ -117,3 +117,33 @@ def extract_mv_lv_line_length_in_small_area_boundaries(
     )
 
     lines_in_boundaries.to_file(str(product), driver="GPKG")
+
+
+def sum_small_area_mv_lv_line_lengths(product: Any, upstream: Any) -> None:
+    line_lengths = gpd.read_file(
+        str(upstream["extract_mv_lv_line_length_in_small_area_boundaries"])
+    )
+
+    line_length_totals = (
+        line_lengths.groupby(["small_area", "Type"])["line_length_m"]
+        .sum()
+        .unstack()
+        .fillna(0)
+    )
+
+    line_length_totals.to_csv(product)
+
+
+def sum_small_area_hv_line_lengths(product: Any, upstream: Any) -> None:
+    line_lengths = gpd.read_file(
+        str(upstream["extract_hv_line_length_in_small_area_boundaries"])
+    )
+
+    line_length_totals = (
+        line_lengths.groupby(["small_area", "Type"])["line_length_m"]
+        .sum()
+        .unstack()
+        .fillna(0)
+    )
+
+    line_length_totals.to_csv(product)
