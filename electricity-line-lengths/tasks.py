@@ -28,18 +28,37 @@ def convert_mv_lv_network_to_parquet(
     mv_lv_network.to_crs(epsg=2157).to_parquet(product)
 
 
-def extract_line_lengths(
+def _extract_line_lengths(
+    gdf: gpd.GeoDataFrame,
+    levels: List[str],
+    columns: List[str],
+) -> None:
+    level_is_a_line = gdf["Level"].isin(levels)
+    lines = gdf[level_is_a_line]
+    return pd.concat(
+        [lines[columns], lines.geometry.length.rename("line_length_m")], axis=1
+    )
+
+
+def extract_hv_line_lengths(
     product: Any,
     upstream: Any,
     levels: List[str],
     columns: List[str],
 ) -> None:
     hv_network = gpd.read_parquet(upstream["convert_hv_data_to_parquet"])
-    level_is_a_line = hv_network["Level"].isin(levels)
-    lines = hv_network[level_is_a_line]
-    line_lengths = pd.concat(
-        [lines[columns], lines.geometry.length.rename("line_length_m")], axis=1
-    )
+    line_lengths = _extract_line_lengths(hv_network, levels=levels, columns=columns)
+    line_lengths.to_parquet(product)
+
+
+def extract_mv_lv_line_lengths(
+    product: Any,
+    upstream: Any,
+    levels: List[str],
+    columns: List[str],
+) -> None:
+    hv_network = gpd.read_parquet(upstream["convert_mv_lv_network_to_parquet"])
+    line_lengths = _extract_line_lengths(hv_network, levels=levels, columns=columns)
     line_lengths.to_parquet(product)
 
 
