@@ -21,6 +21,14 @@ tasks:
       dirpath: data/raw/ESBdata_20210107/Dig Request Style/MV-LV Data
     product: data/interim/dublin_mv_lv_network.parquet
   
+  - source: tasks.extract_hv_stations
+    params:
+      levels:
+        - 20
+        - 30
+        - 40
+    product: data/processed/ireland_hv_stations.gpkg
+    
   - source: tasks.extract_hv_line_lengths
     params:
       levels:

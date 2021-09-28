@@ -11,16 +11,14 @@ def _check_esb_data_is_uploaded(dirpath: str) -> None:
     assert Path(dirpath).exists(), message
 
 
-def convert_hv_data_to_parquet(product: Any, dirpath: str) -> gpd.GeoDataFrame:
+def convert_hv_data_to_parquet(product: Any, dirpath: str) -> None:
     _check_esb_data_is_uploaded(dirpath)
     network = [gpd.read_file(filepath) for filepath in Path(dirpath).iterdir()]
     hv_network = gpd.GeoDataFrame(pd.concat(network), crs="EPSG:29903")
     hv_network.to_crs(epsg=2157).to_parquet(product)
 
 
-def convert_mv_lv_network_to_parquet(
-    product: Any, upstream: Any, dirpath: str
-) -> gpd.GeoDataFrame:
+def convert_mv_lv_network_to_parquet(product: Any, upstream: Any, dirpath: str) -> None:
     _check_esb_data_is_uploaded(dirpath)
     dublin_mv_index = pd.read_csv(upstream["download_dublin_mv_index"], squeeze=True)
     network = [gpd.read_file(Path(dirpath) / f"{id}.dgn") for id in dublin_mv_index]
@@ -28,9 +26,16 @@ def convert_mv_lv_network_to_parquet(
     mv_lv_network.to_crs(epsg=2157).to_parquet(product)
 
 
+def extract_hv_stations(product: Any, upstream: Any, levels: List[int]) -> None:
+    hv_network = gpd.read_parquet(upstream["convert_hv_data_to_parquet"])
+    level_is_a_station = hv_network["Level"].isin(levels)
+    stations = hv_network[level_is_a_station]
+    stations.to_file(str(product), driver="GPKG")
+
+
 def _extract_line_lengths(
     gdf: gpd.GeoDataFrame,
-    levels: List[str],
+    levels: List[int],
     columns: List[str],
 ) -> None:
     level_is_a_line = gdf["Level"].isin(levels)
