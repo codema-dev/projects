@@ -1,0 +1,6 @@
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_small_area_boundaries
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_12_dublin_small_area_boundaries.gpkg
+    product: data/external/2021_08_12_dublin_small_area_boundaries.gpkg

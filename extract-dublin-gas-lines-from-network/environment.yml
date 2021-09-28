@@ -1,13 +1,10 @@
-name: line-lengths
+name: extract-dublin-gas-lines-from-network
 channels:
   - conda-forge
 dependencies:
-  - prefect
+  - ploomber
   - geopandas
   - pyarrow
-  - python-dotenv
-  - graphviz
   - pip
   - pip:
-    - prefect-geopandas-serializer
-    - graphviz # python engine for graphviz
+    - codema-dev-tasks==0.1.0
