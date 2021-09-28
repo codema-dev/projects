@@ -9,3 +9,8 @@ tasks:
     params:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_13_esb_20210107_dublin_mv_index.csv
     product: data/external/2021_08_13_esb_20210107_dublin_mv_index.csv
+  
+  - source: tasks.convert_hv_data_to_parquet
+    params:
+      dirpath: data/raw/ESBdata_20210107/Dig Request Style/HV Data
+    product: data/interim/ireland_hv_network.parquet
