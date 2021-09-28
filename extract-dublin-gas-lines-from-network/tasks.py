@@ -14,5 +14,5 @@ def _check_gni_data_is_uploaded(filepath: str) -> None:
 
 def save_gni_data_to_gpkg(product: Any, filepaths: List[str]) -> None:
     _check_gni_data_is_uploaded(filepaths[0])
-    lines = pd.concat([gpd.read_file(f) for f in filepaths])
+    lines = pd.concat([gpd.read_file(f, crs="EPSG:2157") for f in filepaths])
     lines.to_file(str(product), driver="GPKG")
