@@ -37,3 +37,9 @@ tasks:
       nb: data/notebooks/estimate_heat_demand_density.ipynb
       density: data/processed/small_area_heat_demand_density.csv
       demand: data/processed/small_area_heat_demand.csv
+  
+  - source: plot_heat_demand_density_maps.py
+    product:
+      nb: data/notebooks/plot_heat_demand_density_maps.ipynb
+      map_dir: data/maps
+      gpkg: data/processed/small_area_heat_demand_density.gpkg
