@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import geopandas as gpd
 import pandas as pd
 
@@ -9,6 +11,8 @@ upstream = [
 ]
 product = None
 # -
+
+Path(product["density"]).parent.mkdir(exist_ok=True)
 
 ## Load
 
