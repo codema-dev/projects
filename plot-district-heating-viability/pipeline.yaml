@@ -43,3 +43,8 @@ tasks:
       nb: data/notebooks/plot_heat_demand_density_maps.ipynb
       map_dir: data/maps
       gpkg: data/processed/small_area_heat_demand_density.gpkg
+
+  - source: plot_heat_demand_density_tables.py
+    product:
+      nb: data/notebooks/plot_heat_demand_density_tables.ipynb
+      table_dir: data/tables
