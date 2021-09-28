@@ -49,3 +49,6 @@ tasks:
 
   - source: tasks.extract_hv_line_length_in_small_area_boundaries
     product: data/processed/dublin_small_area_hv_line_lengths.gpkg
+
+  - source: tasks.extract_mv_lv_line_length_in_small_area_boundaries
+    product: data/processed/dublin_small_area_mv_lv_line_lengths.gpkg

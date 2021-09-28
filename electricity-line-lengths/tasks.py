@@ -77,3 +77,20 @@ def extract_hv_line_length_in_small_area_boundaries(
     )
 
     lines_in_boundaries.to_file(str(product), driver="GPKG")
+
+
+def extract_mv_lv_line_length_in_small_area_boundaries(
+    product: Any, upstream: Any
+) -> None:
+    mv_lv_line_lengths = gpd.read_parquet(upstream["extract_mv_lv_line_lengths"])
+    dublin_small_area_boundaries = gpd.read_file(
+        str(upstream["download_dublin_small_area_boundaries"])
+    )
+
+    lines_in_boundaries = gpd.overlay(
+        mv_lv_line_lengths,
+        dublin_small_area_boundaries[["small_area", "geometry"]],
+        "intersection",
+    )
+
+    lines_in_boundaries.to_file(str(product), driver="GPKG")
