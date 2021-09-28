@@ -1,13 +1,10 @@
-name: line-lengths
+name: extract-small-area-electricity-line-lengths
 channels:
   - conda-forge
 dependencies:
-  - prefect
   - geopandas
   - pyarrow
-  - python-dotenv
-  - graphviz
+  - ploomber
   - pip
   - pip:
-    - prefect-geopandas-serializer
-    - graphviz # python engine for graphviz
+    - codema-dev-tasks==0.1.0
