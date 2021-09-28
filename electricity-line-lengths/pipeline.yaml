@@ -14,3 +14,9 @@ tasks:
     params:
       dirpath: data/raw/ESBdata_20210107/Dig Request Style/HV Data
     product: data/interim/ireland_hv_network.parquet
+
+  - source: tasks.convert_mv_lv_network_to_parquet
+    params:
+      dirpath: data/raw/ESBdata_20210107/Dig Request Style/MV-LV Data
+    product: data/interim/dublin_mv_lv_network.parquet
+  
