@@ -86,12 +86,9 @@ residential_emissions = (
 
 # ASSUMPTION: Average commercial boiler efficiency is the same as average residential
 # ... Building Energy Ratings dataset, SEAI 2021
-assumed_boiler_efficiency = 0.85
+# assumed_boiler_efficiency is 0.85
 commercial_heat = (
-    commercial_and_industrial["fossil_fuel_demand_mwh_per_y"]
-    .multiply(assumed_boiler_efficiency)
-    .sum()
-    / mwh_to_twh
+    commercial_and_industrial["fossil_fuel_heat_demand_mwh_per_y"].sum() / mwh_to_twh
 )
 
 commercial_fossil_fuel = (
