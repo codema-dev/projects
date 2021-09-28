@@ -1,50 +1,48 @@
 from pathlib import Path
 
-from bokeh.io import export_png
 from bokeh.io import save
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 
 import pandas_bokeh
-from globals import DATA_DIR
 
+pandas_bokeh.output_notebook()
 pd.set_option("display.precision", 1)
 
 ## Parametrize
 # overwrite parameters with arguemnts generated in prefect pipeline
 
 # + tags=["parameters"]
-SAVE_AS_HTML: bool = False
-SAVE_AS_IMAGE: bool = False
-DATA_DIR: Path = Path(DATA_DIR)
-hdd_map_filepath: Path = (
-    DATA_DIR / "processed" / "dublin_small_area_demand_tj_per_km2.gpkg"
-)
+upstream = ["estimate_heat_demand_density", "download_dublin_small_area_boundaries"]
+product = None
 # -
 
-if not SAVE_AS_HTML:
-    pandas_bokeh.output_notebook()
+Path(product["map_dir"]).mkdir(exist_ok=True)
 
 ## Load
 
-hdd_map = gpd.read_file(hdd_map_filepath)
+density = pd.read_csv(upstream["estimate_heat_demand_density"]["density"])
+
+boundaries = gpd.read_file(upstream["download_dublin_small_area_boundaries"])
 
 ## Set Globals
 
-local_authorities = hdd_map["local_authority"].unique()
+local_authorities = boundaries["local_authority"].unique()
+
+## Create Map
+
+density_map = boundaries.merge(density)
 
 ## Calculate Totals
 
-hdd_map["total_heat_demand_tj_per_km2y"] = (
-    hdd_map["residential_heat_demand_tj_per_km2y"]
-    + hdd_map["non_residential_heat_demand_tj_per_km2y"]
-)
+columns = [c for c in density.columns if "heat" in c]
+density_map["total_heat_tj_per_km2"] = density_map[columns].sum(axis=1)
 
 ## Categorise demands
 
-hdd_map["feasibility"] = pd.cut(
-    hdd_map["total_heat_demand_tj_per_km2y"],
+density_map["feasibility"] = pd.cut(
+    density_map["total_heat_tj_per_km2"],
     bins=[-np.inf, 20, 50, 120, 300, np.inf],
     labels=[
         "Not Feasible",
@@ -54,14 +52,15 @@ hdd_map["feasibility"] = pd.cut(
         "Very Feasible",
     ],
 )
-hdd_map["category"] = hdd_map["feasibility"].cat.codes
+
+density_map["category"] = density_map["feasibility"].cat.codes
 
 
 ## Plot Demand Map & Glossary
 
 for la in local_authorities:
 
-    la_map = hdd_map.query("local_authority == @la").reset_index(drop=True)
+    la_map = density_map.query("local_authority == @la").reset_index(drop=True)
 
     hovertool_string = """
     <h4>@feasibility</h4>
@@ -74,15 +73,19 @@ for la in local_authorities:
         </tr>
         <tr>
             <td>Total</td>
-            <td>@total_heat_demand_tj_per_km2y</td>
+            <td>@total_heat_tj_per_km2</td>
         <tr>
         <tr>
             <td>Residential</td>
-            <td>@residential_heat_demand_tj_per_km2y</td>
+            <td>@residential_heat_tj_per_km2</td>
         <tr>
         <tr>
-            <td>Non-Residential</td>
-            <td>@non_residential_heat_demand_tj_per_km2y</td>
+            <td>Commercial</td>
+            <td>@commercial_heat_tj_per_km2</td>
+        <tr>
+        <tr>
+            <td>Industrial</td>
+            <td>@industrial_heat_tj_per_km2</td>
         <tr>
     </table>
     """
@@ -104,13 +107,11 @@ for la in local_authorities:
         show_figure=False,
     )
 
-    if SAVE_AS_HTML:
-        filename = la.replace(" ", "-").replace("ú", "u")
-        save(
-            obj=figure,
-            filename=Path(DATA_DIR) / "maps" / f"Map-{filename}.html",
-            title="Heat Demand Density",
-        )
+    filename = la.replace(" ", "-").replace("ú", "u")
+    save(
+        obj=figure,
+        filename=Path(product["map_dir"]) / f"Map-{filename}.html",
+        title="Heat Demand Density",
+    )
 
-    if SAVE_AS_IMAGE:
-        export_png(figure, filename=Path(DATA_DIR) / "maps" / f"Map-{filename}.png")
+density_map.astype({"feasibility": "string"}).to_file(product["gpkg"], driver="GPKG")

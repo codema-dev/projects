@@ -1,0 +1,15 @@
+name: plot-district-heating-viability
+channels:
+  - conda-forge
+  - patrikhlobil
+dependencies:
+  - pandas-bokeh
+  - geopandas
+  - ploomber
+  - s3fs
+  - python-dotenv
+  - pyarrow
+  - pip
+  - pip:
+    - codema-dev-tasks==0.1.0
+    - dataframe-image
