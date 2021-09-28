@@ -1,0 +1,23 @@
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_small_area_boundaries
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_12_dublin_small_area_boundaries.gpkg
+    product: data/external/2021_08_12_dublin_small_area_boundaries.gpkg
+
+  - source: tasks.save_gni_data_to_parquet
+    params:
+      filepaths:
+        - data/raw/Tx and Dx/SHP ITM/2020Q4_LP_SHP_ITM_Centreline.shp
+        - data/raw/Tx and Dx/SHP ITM/2020Q4_MP_SHP_ITM_Centreline.shp
+        - data/raw/Tx and Dx/SHP ITM/2020Q4_HP_SHP_ITM_Centreline.shp
+    product: data/interim/centrelines.parquet
+    
+  - source: tasks.extract_lines_in_small_area_boundaries
+    product: data/interim/centrelines_cut_on_small_area_boundaries.parquet
+  
+  - source: tasks.calculate_line_lengths
+    product: data/processed/gas_lines_cut_on_small_area_boundaries.gpkg
+
+  - source: tasks.sum_small_area_line_lengths
+    product: data/processed/gas_small_area_line_lengths.csv

@@ -1,0 +1,10 @@
+name: extract-dublin-gas-lines-from-network
+channels:
+  - conda-forge
+dependencies:
+  - ploomber
+  - geopandas
+  - pyarrow
+  - pip
+  - pip:
+    - codema-dev-tasks==0.1.0
