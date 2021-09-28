@@ -1,4 +1,4 @@
-name: extract-small-area-electricity-line-lengths
+name: extract-dublin-electricity-infrastructure
 channels:
   - conda-forge
 dependencies:
