@@ -34,3 +34,6 @@ tasks:
         - Level
         - geometry
     product: data/interim/ireland_hv_line_lengths.parquet
+
+  - source: tasks.extract_hv_line_length_in_small_area_boundaries
+    product: data/processed/dublin_small_area_hv_line_lengths.gpkg

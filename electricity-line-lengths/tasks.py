@@ -28,12 +28,12 @@ def convert_mv_lv_network_to_parquet(
     mv_lv_network.to_crs(epsg=2157).to_parquet(product)
 
 
-def extract_hv_line_lengths(
+def extract_line_lengths(
     product: Any,
     upstream: Any,
     levels: List[str],
     columns: List[str],
-) -> gpd.GeoDataFrame:
+) -> None:
     hv_network = gpd.read_parquet(upstream["convert_hv_data_to_parquet"])
     level_is_a_line = hv_network["Level"].isin(levels)
     lines = hv_network[level_is_a_line]
@@ -41,3 +41,20 @@ def extract_hv_line_lengths(
         [lines[columns], lines.geometry.length.rename("line_length_m")], axis=1
     )
     line_lengths.to_parquet(product)
+
+
+def extract_hv_line_length_in_small_area_boundaries(
+    product: Any, upstream: Any
+) -> None:
+    hv_line_lengths = gpd.read_parquet(upstream["extract_hv_line_lengths"])
+    dublin_small_area_boundaries = gpd.read_file(
+        str(upstream["download_dublin_small_area_boundaries"])
+    )
+
+    lines_in_boundaries = gpd.overlay(
+        hv_line_lengths,
+        dublin_small_area_boundaries[["small_area", "geometry"]],
+        "intersection",
+    )
+
+    lines_in_boundaries.to_file(str(product), driver="GPKG")
