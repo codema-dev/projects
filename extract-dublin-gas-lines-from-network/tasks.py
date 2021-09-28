@@ -33,4 +33,23 @@ def extract_lines_in_small_area_boundaries(
         "intersection",
     )
 
-    lines_in_boundaries.to_file(str(product), driver="GPKG")
+    lines_in_boundaries.to_parquet(product)
+
+
+def calculate_line_lengths(product: Any, upstream: Any) -> None:
+    lines = gpd.read_parquet(upstream["extract_lines_in_small_area_boundaries"])
+    lines["line_length_m"] = lines.geometry.length
+    lines.to_file(str(product), driver="GPKG")
+
+
+def sum_small_area_line_lengths(product: Any, upstream: Any) -> None:
+    line_lengths = gpd.read_file(str(upstream["calculate_line_lengths"]), driver="GPKG")
+
+    line_length_totals = (
+        line_lengths.groupby(["small_area", "diameter"])["line_length_m"]
+        .sum()
+        .unstack()
+        .fillna(0)
+    )
+
+    line_length_totals.to_csv(product)
