@@ -1,4 +1,4 @@
-# Extract Dublin Electricity Grid Infrastructure From ESB CAD Network Files 
+# Extract Dublin Electricity Lines & Substations
 
 | :exclamation:  Requires ESB Networks CAD Network files |
 |--------------------------------------------------------|
