@@ -19,13 +19,13 @@ import pandas_bokeh
 
 # %% tags=["parameters"]
 product = None
-upstream = None
+upstream = ["download_small_area_boundaries", "download_synthetic_bers"]
 
 # %%
 small_area_boundaries = gpd.read_file(upstream["download_small_area_boundaries"])
 
 # %%
-buildings = pd.read_parquet(upstream["download_buildings"])
+buildings = pd.read_parquet(upstream["download_synthetic_bers"])
 
 # %%
 local_authority_map = small_area_boundaries.set_index("small_area")[
@@ -47,7 +47,7 @@ main_sh_boiler_fuel = buildings["main_sh_boiler_fuel"].mask(
 boiler_fuels = pd.concat([buildings["local_authority"], main_sh_boiler_fuel], axis=1)
 
 # %%
-pandas_bokeh.output_file(product["sh_barchart"])
+pandas_bokeh.output_file(product["barchart"])
 
 # %%
 local_authority_statistics = (
@@ -66,4 +66,4 @@ local_authority_statistics.plot_bokeh(
 )
 
 # %%
-local_authority_statistics.to_csv(product["sh_stats"])
+local_authority_statistics.to_csv(product["stats"])

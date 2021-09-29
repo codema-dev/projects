@@ -1,14 +1,10 @@
 from pathlib import Path
-from typing import Any
 
 from dotenv import load_dotenv
 
 
-def load_environmental_variables(product: Any):
+def load_environmental_variables_and_create_folder_structure() -> None:
     load_dotenv()
-
-
-def create_folder_structure(product: Any) -> None:
     dirpath = Path("data")
     dirpath.mkdir(exist_ok=True)
     (dirpath / "external").mkdir(exist_ok=True)
