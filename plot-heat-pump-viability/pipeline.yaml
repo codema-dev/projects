@@ -57,7 +57,7 @@ tasks:
     product:
       nb: data/notebooks/estimate_retrofit_costs.ipynb
   
-  - source: estimate_uvalue_thresholds.py
+  - source: plot_uvalue_distribution.py
     product:
       nb: data/notebooks/estimate_uvalue_thresholds.ipynb
       wall: data/roughwork/uvalue_wall.csv
