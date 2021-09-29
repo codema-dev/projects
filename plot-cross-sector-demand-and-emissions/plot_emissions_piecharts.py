@@ -14,7 +14,7 @@ upstream = [
     "download_epa_industrial_site_demands",
     "download_public_sector_demands",
 ]
-external_demand_and_emissions_yml = None
+external_emissions_yml = None
 product = None
 # -
 
@@ -30,8 +30,8 @@ partial_industrial = pd.read_csv(upstream["download_epa_industrial_site_demands"
 
 public_sector = pd.read_csv(upstream["download_public_sector_demands"])
 
-with open(external_demand_and_emissions_yml, "r") as f:
-    external_demand_and_emissions = yaml.safe_load(f)
+with open(external_emissions_yml, "r") as f:
+    external_emissions = yaml.safe_load(f)
 
 ## Globals
 
@@ -220,15 +220,15 @@ public_sector_electricity_emissions = (
 
 ## Rest
 
-data_centre_emissions = external_demand_and_emissions["data_centres"]["tCO2"]
+data_centre_emissions = external_emissions["data_centres"]
 
-road_transport_emissions = external_demand_and_emissions["road"]["tCO2"]
+road_transport_emissions = external_emissions["road"]
 
 rail_transport_emissions = (
-    external_demand_and_emissions["rail"]["DART"]["tCO2"]
-    + external_demand_and_emissions["rail"]["LUAS"]["tCO2"]
-    + external_demand_and_emissions["rail"]["Commuter"]["tCO2"]
-    + external_demand_and_emissions["rail"]["Intercity"]["tCO2"]
+    external_emissions["rail"]["DART"]
+    + external_emissions["rail"]["LUAS"]
+    + external_emissions["rail"]["Commuter"]
+    + external_emissions["rail"]["Intercity"]
 )
 
 ## Plot

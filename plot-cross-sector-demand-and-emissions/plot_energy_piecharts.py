@@ -14,7 +14,7 @@ upstream = [
     "download_epa_industrial_site_demands",
     "download_public_sector_demands",
 ]
-external_demand_and_emissions_yml = None
+external_demand_yml = None
 product = None
 # -
 
@@ -30,8 +30,8 @@ partial_industrial = pd.read_csv(upstream["download_epa_industrial_site_demands"
 
 public_sector = pd.read_csv(upstream["download_public_sector_demands"])
 
-with open(external_demand_and_emissions_yml, "r") as f:
-    external_demand_and_emissions = yaml.safe_load(f)
+with open(external_demand_yml, "r") as f:
+    external_demand = yaml.safe_load(f)
 
 ## Globals
 
@@ -168,20 +168,19 @@ public_sector_electricity = (
 
 ## Rest
 
-data_centre_electricity = external_demand_and_emissions["data_centres"]["TWh"]
+data_centre_electricity = external_demand["data_centres"]
 
-road_transport_energy = external_demand_and_emissions["road"]["TWh"]
+road_transport_energy = external_demand["road"]
 
 rail_transport_energy = (
-    external_demand_and_emissions["rail"]["DART"]["TWh"]
-    + external_demand_and_emissions["rail"]["LUAS"]["TWh"]
-    + external_demand_and_emissions["rail"]["Commuter"]["TWh"]
-    + external_demand_and_emissions["rail"]["Intercity"]["TWh"]
+    external_demand["rail"]["DART"]
+    + external_demand["rail"]["LUAS"]
+    + external_demand["rail"]["Commuter"]
+    + external_demand["rail"]["Intercity"]
 )
 
 rail_transport_electricity = (
-    external_demand_and_emissions["rail"]["DART"]["TWh"]
-    + external_demand_and_emissions["rail"]["LUAS"]["TWh"]
+    external_demand["rail"]["DART"] + external_demand["rail"]["LUAS"]
 )
 
 
