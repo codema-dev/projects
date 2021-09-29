@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import matplotlib as plt
 import pandas as pd
 import seaborn as sns
@@ -15,6 +17,8 @@ upstream = [
 external_demand_and_emissions_yml = None
 product = None
 # -
+
+Path(product["energy"]).parent.mkdir(exist_ok=True)  # create processed/ directroy
 
 residential = pd.read_parquet(upstream["download_synthetic_bers"])
 
@@ -234,6 +238,11 @@ rail_transport_energy = (
     + external_demand_and_emissions["rail"]["Intercity"]["TWh"]
 )
 
+rail_transport_electricity = (
+    external_demand_and_emissions["rail"]["DART"]["TWh"]
+    + external_demand_and_emissions["rail"]["LUAS"]["TWh"]
+)
+
 rail_transport_emissions = (
     external_demand_and_emissions["rail"]["DART"]["tCO2"]
     + external_demand_and_emissions["rail"]["LUAS"]["tCO2"]
@@ -259,6 +268,8 @@ energy = pd.Series(
 
 energy.plot.pie(figsize=(10, 10), ylabel="", autopct="%1.1f%%")
 
+energy.to_csv(product["energy"])
+
 ### Emissions
 
 emissions = pd.Series(
@@ -274,6 +285,8 @@ emissions = pd.Series(
 )
 
 emissions.plot.pie(figsize=(10, 10), ylabel="", autopct="%1.1f%%")
+
+emissions.to_csv(product["emissions"])
 
 ### Heat : Electricity : Transport
 
@@ -299,3 +312,42 @@ heat_vs_electricity_vs_transport = pd.Series(
 heat_vs_electricity_vs_transport.plot.pie(
     figsize=(10, 10), ylabel="", autopct="%1.1f%%"
 )
+
+heat_vs_electricity_vs_transport.to_csv(product["heat_vs_electricity_vs_transport"])
+
+
+## Electricity
+
+# Ignoring road transport as don't have EV vs Fossil Fuel Breakdown
+electricity = pd.Series(
+    {
+        "Residential": residential_electricity,
+        "Commercial": commercial_electricity,
+        "Industrial": industrial_electricity_epa + industrial_electricity_cibse,
+        "Public Sector": public_sector_electricity,
+        "Rail Transport": rail_transport_electricity,
+        "Data Centres": data_centre_electricity,
+    }
+)
+
+electricity.plot.pie(figsize=(10, 10), ylabel="", autopct="%1.1f%%")
+
+electricity.to_csv(product["electricity"])
+
+## Heat
+
+# Ignoring road transport as don't have EV vs Fossil Fuel Breakdown
+heat = pd.Series(
+    {
+        "Residential": residential_heat,
+        "Commercial": commercial_heat,
+        "Industrial": industrial_heat_epa
+        + industrial_low_temperature_heat
+        + industrial_high_temperature_heat,
+        "Public Sector": public_sector_heat,
+    }
+)
+
+heat.plot.pie(figsize=(10, 10), ylabel="", autopct="%1.1f%%")
+
+heat.to_csv(product["heat"])

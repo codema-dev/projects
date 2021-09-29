@@ -31,3 +31,9 @@ tasks:
       external_demand_and_emissions_yml: "{{here}}/external_demand_and_emissions.yml"
     product:
       nb: data/notebooks/plot_demand_and_emissions.ipynb
+      energy: data/processed/Cross Sector Energy Piechart.xlsx
+      emissions: data/processed/Cross Sector Emissions Piechart.xlsx
+      electricity: data/processed/Cross Sector Electricity Piechart.xlsx
+      heat: data/processed/Cross Sector Heat Piechart.xlsx
+      heat_vs_electricity_vs_transport: data/processed/Cross Sector Heat vs Electricity vs Transport Piechart.xlsx
+
