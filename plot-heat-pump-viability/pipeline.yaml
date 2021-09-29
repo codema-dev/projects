@@ -52,6 +52,10 @@ tasks:
   - source: plot_pre_vs_post_retrofit_bers.py
     product:
       nb: data/notebooks/plot_pre_vs_post_retrofit_bers.ipynb
+
+  - source: plot_retrofit_costs.py
+    product:
+      nb: data/notebooks/estimate_retrofit_costs.ipynb
   
   - source: estimate_uvalue_thresholds.py
     product:
