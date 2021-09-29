@@ -11,7 +11,6 @@ upstream = [
     "estimate_retrofit_costs",
     "estimate_retrofit_energy_saving",
     "estimate_retrofit_energy_saving_with_rebound",
-    "estimate_retrofit_ber_rating_improvement",
 ]
 product = None
 # -
@@ -27,12 +26,6 @@ energy_saving = pd.read_csv(upstream["estimate_retrofit_energy_saving"])
 energy_saving_with_rebound = pd.read_csv(
     upstream["estimate_retrofit_energy_saving_with_rebound"]
 )
-
-ber_improvement = pd.read_csv(upstream["estimate_retrofit_ber_rating_improvement"])
-
-## Plot Post-Retrofit BERs
-
-ber_improvement["energy_rating"].value_counts().sort_index().plot.bar()
 
 ## Estimate Total Retrofits by Measure
 
