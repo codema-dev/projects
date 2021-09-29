@@ -19,7 +19,7 @@ import pandas_bokeh
 
 # %% tags=["parameters"]
 product = None
-upstream = None
+upstream = ["extract_dublin_boiler_statistics"]
 
 # %%
 dublin_small_area_boiler_statistics = gpd.read_file(

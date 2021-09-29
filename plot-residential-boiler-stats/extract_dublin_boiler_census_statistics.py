@@ -12,14 +12,12 @@
 # ---
 
 # %%
-from pathlib import Path
-
 import geopandas as gpd
 import pandas as pd
 
 # %% tags=["parameters"]
 product = None
-upstream = None
+upstream = ["download_small_area_boundaries", "download_small_area_statistics"]
 
 # %%
 dublin_small_area_boundaries_2016 = gpd.read_file(

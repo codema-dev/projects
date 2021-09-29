@@ -19,7 +19,7 @@ import pandas_bokeh
 
 # %% tags=["parameters"]
 product = None
-upstream = None
+upstream = ["download_small_area_boundaries", "download_synthetic_bers"]
 
 
 # %%
@@ -28,7 +28,7 @@ small_area_boundaries = gpd.read_file(upstream["download_small_area_boundaries"]
 ]
 
 # %%
-buildings = pd.read_parquet(upstream["download_buildings"])
+buildings = pd.read_parquet(upstream["download_synthetic_bers"])
 
 # %%
 where_building_uses_a_heat_pump = buildings["main_sh_boiler_efficiency"] > 100

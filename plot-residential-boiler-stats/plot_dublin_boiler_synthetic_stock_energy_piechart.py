@@ -12,17 +12,16 @@
 # ---
 
 # %%
-import geopandas as gpd
 import pandas as pd
 
 import pandas_bokeh
 
 # %% tags=["parameters"]
 product = None
-upstream = None
+upstream = ["download_synthetic_bers"]
 
 # %%
-buildings = pd.read_parquet(upstream["download_buildings"])
+buildings = pd.read_parquet(upstream["download_synthetic_bers"])
 
 # %%
 where_building_uses_a_heat_pump = buildings["main_sh_boiler_efficiency"] > 100
