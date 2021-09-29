@@ -42,7 +42,7 @@ tasks:
 
   - source: estimate_stock_statistics.py
     product:
-      nb: data/notebooks/amalgamate_buildings_to_small_areas.ipynb
+      nb: data/notebooks/estimate_stock_statistics.ipynb
       heat_pump_viability: data/roughwork/percentage_viable_for_heat_pumps_no_threshold.csv
       total_buildings: data/roughwork/total_small_area_buildings.csv
   

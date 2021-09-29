@@ -7,17 +7,22 @@ sns.set()
 
 # + tags=["parameters"]
 upstream = [
+    "download_buildings",
+    "download_small_area_boundaries",
     "estimate_retrofit_costs",
     "estimate_retrofit_energy_saving",
     "estimate_retrofit_energy_saving_with_rebound",
     "estimate_retrofit_hlp_improvement",
     "estimate_retrofit_ber_rating_improvement",
-    "download_small_area_boundaries",
 ]
 product = None
 # -
 
-## Load Results
+## Load
+
+small_area_boundaries = gpd.read_file(upstream["download_small_area_boundaries"])
+
+pre_retrofit = pd.read_parquet(upstream["download_buildings"])
 
 retrofit_costs = pd.read_csv(upstream["estimate_retrofit_costs"])
 
@@ -30,8 +35,6 @@ energy_saving_with_rebound = pd.read_csv(
 hlp_improvement = pd.read_csv(upstream["estimate_retrofit_hlp_improvement"])
 
 ber_improvement = pd.read_csv(upstream["estimate_retrofit_ber_rating_improvement"])
-
-small_area_boundaries = gpd.read_file(upstream["download_small_area_boundaries"])
 
 ## Plot Post-Retrofit BERs
 
@@ -107,13 +110,55 @@ emission_factors = energy_saving["main_sh_boiler_fuel"].map(
     }
 )
 
-energy_saving["energy_saving_kwh_per_y"].sum() / 1e9
+energy_saving_twh = energy_saving["energy_saving_kwh_per_y"].sum() / 1e9
+energy_saving_twh
 
 energy_saving["energy_saving_kwh_per_y"].multiply(emission_factors).sum()
 
-energy_saving_with_rebound["energy_saving_kwh_per_y"].sum() / 1e9
+energy_saving_with_rebound_twh = (
+    energy_saving_with_rebound["energy_saving_kwh_per_y"].sum() / 1e9
+)
+energy_saving_with_rebound_twh
 
 energy_saving_with_rebound["energy_saving_kwh_per_y"].multiply(emission_factors).sum()
+
+## Estimate Retrofitting Impact on Space Heat : Hot Water
+
+### Pre Retrofit
+
+pre_retrofit_sh = pre_retrofit[["main_sh_demand", "suppl_sh_demand"]].sum().sum() / 1e9
+
+pre_retrofit_hw = pre_retrofit[["main_hw_demand", "suppl_hw_demand"]].sum().sum() / 1e9
+
+pre_retrofit_sh_vs_hw = pd.Series(
+    {"Space Heating": pre_retrofit_sh, "Hot Water": pre_retrofit_hw}
+)
+
+pre_retrofit_sh_vs_hw.plot.pie(figsize=(10, 10), ylabel="", autopct="%1.1f%%")
+
+### Post Retrofit
+
+pre_retrofit_sh_vs_hw = pd.Series(
+    {"Space Heating": pre_retrofit_sh - energy_saving_twh, "Hot Water": pre_retrofit_hw}
+)
+
+pre_retrofit_sh_vs_hw.plot.pie(
+    figsize=(10, 10), ylabel="", autopct="%1.1f%%", title="Theoretical Savings"
+)
+
+pre_retrofit_sh_vs_hw_with_rebound = pd.Series(
+    {
+        "Space Heating": pre_retrofit_sh - energy_saving_with_rebound_twh,
+        "Hot Water": pre_retrofit_hw,
+    }
+)
+
+pre_retrofit_sh_vs_hw_with_rebound.plot.pie(
+    figsize=(10, 10),
+    ylabel="",
+    autopct="%1.1f%%",
+    title="With Rebound Effect Considered",
+)
 
 ## Save Data
 
