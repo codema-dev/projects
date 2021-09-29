@@ -273,8 +273,7 @@ heat_vs_electricity_vs_transport = pd.Series(
         + industrial_electricity_emissions_epa
         + industrial_electricity_emissions_cibse
         + public_sector_electricity_emissions,
-        "Road Transport": road_transport_emissions,
-        "Rail Transport": rail_transport_emissions,
+        "Transport": road_transport_emissions + rail_transport_emissions,
     }
 )
 

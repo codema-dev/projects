@@ -220,8 +220,7 @@ heat_vs_electricity_vs_transport = pd.Series(
         + industrial_electricity_epa
         + industrial_electricity_cibse
         + public_sector_electricity,
-        "Road Transport": road_transport_energy,
-        "Rail Transport": rail_transport_energy,
+        "Road Transport": road_transport_energy + rail_transport_energy,
     }
 )
 
