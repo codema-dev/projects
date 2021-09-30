@@ -12,7 +12,7 @@ Run the projects in your browser by clicking on the following buttons:
 | Button | ⚠️ Caveats |
 | --- | --- |
 | [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/codema-dev/projects/main) | Setting up this workspace can take a few minutes! |
-| [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-908a85?logo=gitpod)](https://gitpod.io/#https://github.com/codema-dev/projects) |  |
+| [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-908a85?logo=gitpod)](https://gitpod.io/#https://github.com/codema-dev/projects) | Requires manual installation of `conda` and of project-by-project dependencies |
 
 ## Why?
 
