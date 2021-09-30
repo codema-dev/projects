@@ -1,3 +1,18 @@
+---
+jupytext:
+  cell_metadata_filter: -all
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.12.0
+kernelspec:
+  display_name: Python 3 (ipykernel)
+  language: python
+  name: python3
+---
+
+
 # Road & Rail Emissions
 
 Explore the `National Transport Authority of Ireland` Emission Model outputs in `Jupyter Notebooks`
@@ -11,16 +26,18 @@ To fully reproduce the pipeline the user must:
 
 ## Setup
 
+| ❗  Skip if running on Binder  |
+|-------------------------------|
+
 Via [conda](https://github.com/conda-forge/miniforge):
 
-- Minimal
-```bash
+```{code-cell}
 conda env create --file environment.yml
 conda activate road-and-rail-emissions
 ```
 
-Now run the notebooks:
+## Run
 
-```bash
+```{code-cell}
 jupyter noteook
 ```

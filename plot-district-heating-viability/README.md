@@ -1,3 +1,18 @@
+---
+jupytext:
+  cell_metadata_filter: -all
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.12.0
+kernelspec:
+  display_name: Python 3 (ipykernel)
+  language: python
+  name: python3
+---
+
+
 # Heat Demand Density
 
 ## What `pipeline.py` is doing:
@@ -26,26 +41,23 @@ To fully reproduce the pipeline the user must:
 
 To open up this methodology to the public the pipeline could be adapted to default to public data if it can't connect to s3, however, this would only be worthwhile if a UI entrypoint to the ETL was created to mitigate the need for command line usage
 
++++
 
 ## Setup
-(**Note**: Skip if running in binder or deepnote)
+
+| ❗  Skip if running on Binder  |
+|-------------------------------|
 
 Via [conda](https://github.com/conda-forge/miniforge):
 
-- Minimal
-```bash
+
+```{code-cell}
 conda env create --file environment.yml
 conda activate hdd
 ```
 
-- Or development - *i.e. contains some helper libraries for linting, formatting & testing not required to run the code*
-```bash
-conda env create --file environment.dev.yml
-conda activate hdd
-```
+## Run
 
-Now run the pipeline:
-
-```bash
-python pipeline.py
+```{code-cell}
+!ploomber build
 ```

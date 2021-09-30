@@ -1,3 +1,18 @@
+---
+jupytext:
+  cell_metadata_filter: -all
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.12.0
+kernelspec:
+  display_name: Python 3 (ipykernel)
+  language: python
+  name: python3
+---
+
+
 # Monitoring & Reporting
 
 ## What `pipeline.py` is doing:
@@ -12,15 +27,18 @@ The M&R data is publicly available, however, the user still needs to [create the
 
 ## Setup
 
+| ❗  Skip if running on Binder  |
+|-------------------------------|
+
 Via [conda](https://github.com/conda-forge/miniforge):
 
-```bash
+```{code-cell}
 conda env create --file environment.yml
 conda activate hdd
 ```
 
-Now run the pipeline:
+## Run
 
-```bash
+```{code-cell}
 python pipeline.py
 ```

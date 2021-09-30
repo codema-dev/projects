@@ -4,25 +4,23 @@ channels:
 dependencies:
 - aiohttp
 - black
-- dataframe-image
-- fs-s3fs
+- conda-merge
 - fsspec
-- geckodriver
 - geopandas
 - graphviz
 - invoke
 - ipykernel
 - ipython
-- jupyter
+- jupyterlab
 - jupytext
 - lxml
 - mypy
+- nodejs
 - numpy
 - openpyxl
 - osmnx
 - pandas
 - pandas-bokeh
-- papermill
 - pip
 - ploomber
 - ploomber >=0.12.8
@@ -34,9 +32,9 @@ dependencies:
 - requests
 - s3fs
 - seaborn
-- selenium
 - pip:
   - codema-dev-tasks==0.1.0
+  - dataframe-image
   - git+https://github.com/codema-dev/tasks
   - graphviz
   - prefect-geopandas-serializer
