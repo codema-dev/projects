@@ -1,0 +1,6 @@
+name: codema-dev-projects
+channels:
+  - conda-forge
+dependencies:
+  - invoke
+  - conda-merge
