@@ -7,7 +7,6 @@ dependencies:
 - conda-merge
 - fsspec
 - geopandas
-- graphviz
 - invoke
 - ipykernel
 - ipython
@@ -27,6 +26,7 @@ dependencies:
 - prefect
 - pyarrow
 - pygeos
+- pygraphviz
 - python
 - python-dotenv
 - requests
@@ -34,6 +34,5 @@ dependencies:
 - seaborn
 - pip:
   - codema-dev-tasks==0.1.0
-  - graphviz
   - prefect-geopandas-serializer
 name: codema-dev-projects
