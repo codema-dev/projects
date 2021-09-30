@@ -4,8 +4,4 @@ channels:
 dependencies:
   - invoke
   - conda-merge
-
-  # markdown in jupyter lab
-  - jupytext
-  - jupyterlab
-  - nodejs
+  

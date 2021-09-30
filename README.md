@@ -9,10 +9,10 @@ Download, wrangle & explore all Irish energy datasets used by the `codema-dev` t
 
 Run the projects in your browser by clicking on the following buttons:
 
-| Button | ⚠️ Caveats | Tips |
-| --- | --- | --- |
-| [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/codema-dev/projects/main) | Setting up this workspace can take a few minutes! | ![open-with-notebook](open-with-notebook.png) |
-| [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-908a85?logo=gitpod)](https://gitpod.io/#https://github.com/codema-dev/projects) | Requires manual installation of `conda` and of project-by-project dependencies | |
+| Button | ⚠️ Caveats |
+| --- | --- |
+| [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/codema-dev/projects/main) | Setting up this workspace can take a few minutes! |
+| [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-908a85?logo=gitpod)](https://gitpod.io/#https://github.com/codema-dev/projects) | Requires manual installation of of project-by-project dependencies |
 
 ## Why?
 
