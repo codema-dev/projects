@@ -5,4 +5,4 @@ tasks:
         &&  ./bin/micromamba shell init -s bash -p ~/micromamba \
         && source ~/.bashrc \
         && alias conda=micromamba \
-        && conda activate
+        && micromamba activate
