@@ -34,7 +34,6 @@ dependencies:
 - seaborn
 - pip:
   - codema-dev-tasks==0.1.0
-  - git+https://github.com/codema-dev/tasks
   - graphviz
   - prefect-geopandas-serializer
 name: codema-dev-projects

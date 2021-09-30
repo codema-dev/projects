@@ -6,7 +6,7 @@ dependencies:
   - pandas
   - prefect
   - python-dotenv
-  - graphviz
+  - pygraphviz
 
   # dev
   - black
@@ -15,5 +15,4 @@ dependencies:
   
   - pip
   - pip:
-    - graphviz
     - prefect-geopandas-serializer

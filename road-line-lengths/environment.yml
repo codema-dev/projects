@@ -6,16 +6,7 @@ dependencies:
   - geopandas
   - pyarrow
   - python-dotenv
-  - graphviz
+  - pygraphviz
   - osmnx
   - requests
   - aiohttp
-
-  # dev
-  - black
-  - mypy
-  - ipython
-
-  - pip
-  - pip:
-    - graphviz
