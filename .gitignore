@@ -137,3 +137,5 @@ dmypy.json
 *.ipynb
 cache/
 *metadata*
+
+ bin/
