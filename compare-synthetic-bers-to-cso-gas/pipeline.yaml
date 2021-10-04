@@ -40,6 +40,12 @@ tasks:
       url: https://www.cso.ie/en/media/csoie/census/census2016/census2016boundaryfiles/SAPS2016_SA2017.csv
     product: data/external/SAPS2016_SA2017.csv
 
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_small_area_boundaries
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_12_dublin_small_area_boundaries.gpkg
+    product: data/external/2021_08_12_dublin_small_area_boundaries.gpkg
+
   - source: tasks.create_dublin_postcode_residential_gas_consumption
     product: data/interim/dublin_postcode_residential_networked_gas_consumption.csv
 
