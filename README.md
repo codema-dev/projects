@@ -26,3 +26,17 @@ Moving to open-source scripting tools enabled using logic written down in script
 
 - Install [Anaconda](https://docs.anaconda.com/anaconda/install/index.html) or [miniconda](https://github.com/conda-forge/miniforge)
 - Follow the setup guide for each project!
+
+## Keeping Binder up to date
+
+To run this repository in Binder it is necessary to create a single `environment.yml` which contains the dependencies required for all projects.  Binder uses this every time someone clicks on the Binder button to create a workspace for this repository.
+
+To update this file run:
+
+```bash
+conda env create --file environment.meta.yml --name codema-dev-projects
+conda activate codema-dev-projects
+invoke merge-environment-ymls
+```
+
+`invoke` runs the function `merge_environment_ymls` from `tasks.py` to merge the `environment.yml` from each project and from `environment.meta.yml` together into a single `environment.yml` 

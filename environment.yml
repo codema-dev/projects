@@ -3,15 +3,12 @@ channels:
 - patrikhlobil
 dependencies:
 - aiohttp
-- black
 - conda-merge
 - fsspec
 - geopandas
 - invoke
 - ipykernel
-- ipython
 - lxml
-- mypy
 - numpy
 - openpyxl
 - osmnx
@@ -31,5 +28,4 @@ dependencies:
 - seaborn
 - pip:
   - codema-dev-tasks==0.1.0
-  - prefect-geopandas-serializer
 name: codema-dev-projects
