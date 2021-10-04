@@ -81,3 +81,15 @@ def amalgamate_synthetic_ber_gas_consumption_to_postcodes(
         postcode_gas_consumption
     )
     postcode_gas_consumption_standardised.to_csv(product)
+
+
+def amalgamate_synthetic_ber_gas_meters_to_postcodes(
+    upstream: Any, product: Any
+) -> None:
+    bers = pd.read_parquet(upstream["download_synthetic_bers"])
+    gas_bers = bers.query("main_sh_boiler_fuel == 'Mains Gas'")
+    postcode_gas_meters = gas_bers.groupby("countyname").size().rename("ber_gas_meters")
+    postcode_gas_meters_standardised = _standardise_postcode_ber_names(
+        postcode_gas_meters
+    )
+    postcode_gas_meters_standardised.to_csv(product)
