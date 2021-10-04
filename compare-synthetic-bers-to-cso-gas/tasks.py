@@ -20,6 +20,18 @@ def create_dublin_postcode_residential_gas_consumption(
     dublin.to_csv(product)
 
 
+def create_dublin_postcode_residential_gas_meters(upstream: Any, product: Any) -> None:
+    county = pd.read_csv(
+        upstream["download_county_residential_networked_gas_meters"], index_col=0
+    )
+    postal_district = pd.read_csv(
+        upstream["download_dublin_postal_district_residential_networked_gas_meters"],
+        index_col=0,
+    )
+    dublin = pd.concat([county.loc[["Dublin County"], :], postal_district])
+    dublin.to_csv(product)
+
+
 def _standardise_postcode_ber_names(bers: pd.DataFrame) -> pd.DataFrame:
     # to the same format as CSO Gas
     return pd.concat(
