@@ -34,6 +34,12 @@ tasks:
       url: s3://codema-dev/views/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
     product: data/external/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
 
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_census_2016
+    params:
+      url: https://www.cso.ie/en/media/csoie/census/census2016/census2016boundaryfiles/SAPS2016_SA2017.csv
+    product: data/external/SAPS2016_SA2017.csv
+
   - source: tasks.create_dublin_postcode_residential_gas_consumption
     product: data/interim/dublin_postcode_residential_networked_gas_consumption.csv
 
