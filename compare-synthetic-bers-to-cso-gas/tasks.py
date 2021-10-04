@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 
-def concatenate_dublin_postal_districts_and_county_dublin(
+def create_dublin_postcode_residential_gas_consumption(
     upstream: Any, product: Any
 ) -> None:
     county = pd.read_csv(
@@ -38,7 +38,9 @@ def _standardise_postcode_ber_names(bers: pd.DataFrame) -> pd.DataFrame:
     ).set_index("countyname")
 
 
-def amalgamate_synthetic_bers_to_postcode_gas(upstream: Any, product: Any) -> None:
+def amalgamate_synthetic_ber_gas_consumption_to_postcodes(
+    upstream: Any, product: Any
+) -> None:
     bers = pd.read_parquet(upstream["download_synthetic_bers"])
     gas_bers = bers.query("main_sh_boiler_fuel == 'Mains Gas'")
     gas_consumption = (
