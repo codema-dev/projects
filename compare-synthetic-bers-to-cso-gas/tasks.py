@@ -20,6 +20,24 @@ def concatenate_dublin_postal_districts_and_county_dublin(
     dublin.to_csv(product)
 
 
+def _standardise_postcode_ber_names(bers: pd.DataFrame) -> pd.DataFrame:
+    # to the same format as CSO Gas
+    return pd.concat(
+        [
+            pd.Series(bers.index)
+            .replace({"CO. DUBLIN": "Dublin County"})
+            .str.title()
+            .str.replace(
+                r"^(Dublin )(\dW?)$",
+                lambda m: m.group(1) + "0" + m.group(2),
+                regex=True,
+            ),
+            bers.reset_index(drop=True),
+        ],
+        axis=1,
+    ).set_index("countyname")
+
+
 def amalgamate_synthetic_bers_to_postcode_gas(upstream: Any, product: Any) -> None:
     bers = pd.read_parquet(upstream["download_synthetic_bers"])
     gas_bers = bers.query("main_sh_boiler_fuel == 'Mains Gas'")
@@ -45,27 +63,7 @@ def amalgamate_synthetic_bers_to_postcode_gas(upstream: Any, product: Any) -> No
         .round()
         .rename("ber_gas_consumption")
     )
-    postcode_gas_consumption.to_csv(product)
-
-
-def adapt_ber_postcode_names_to_same_format_as_cso_gas(
-    upstream: Any, product: Any
-) -> None:
-    ber_gas = pd.read_csv(
-        upstream["amalgamate_synthetic_bers_to_postcode_gas"], index_col=0
+    postcode_gas_consumption_standardised = _standardise_postcode_ber_names(
+        postcode_gas_consumption
     )
-    ber_gas_standardised = pd.concat(
-        [
-            pd.Series(ber_gas.index)
-            .replace({"CO. DUBLIN": "Dublin County"})
-            .str.title()
-            .str.replace(
-                r"^(Dublin )(\dW?)$",
-                lambda m: m.group(1) + "0" + m.group(2),
-                regex=True,
-            ),
-            ber_gas.reset_index(drop=True),
-        ],
-        axis=1,
-    ).set_index("countyname")
-    ber_gas_standardised.to_csv(product)
+    postcode_gas_consumption_standardised.to_csv(product)
