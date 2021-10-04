@@ -17,21 +17,56 @@ tasks:
     product: data/external/2021_09_23_dublin_postal_district_residential_networked_gas_consumption.csv
 
   - source: codema_dev_tasks.requests.fetch_file
+    name: download_county_residential_networked_gas_meters
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_09_23_county_residential_gas_meters.csv
+    product: data/external/2021_09_23_county_residential_gas_meters.csv
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_postal_district_residential_networked_gas_meters
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_09_23_dublin_postal_district_residential_gas_meters.csv
+    product: data/external/2021_09_23_dublin_postal_district_residential_gas_meters.csv
+      
+  - source: codema_dev_tasks.requests.fetch_file
     name: download_synthetic_bers
     params:
       url: s3://codema-dev/views/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
     product: data/external/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
 
-  - source: tasks.concatenate_dublin_postal_districts_and_county_dublin
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_census_2016
+    params:
+      url: https://www.cso.ie/en/media/csoie/census/census2016/census2016boundaryfiles/SAPS2016_SA2017.csv
+    product: data/external/SAPS2016_SA2017.csv
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_small_area_boundaries
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_12_dublin_small_area_boundaries.gpkg
+    product: data/external/2021_08_12_dublin_small_area_boundaries.gpkg
+
+  - source: tasks.create_dublin_postcode_residential_gas_consumption
     product: data/interim/dublin_postcode_residential_networked_gas_consumption.csv
 
-  - source: tasks.amalgamate_synthetic_bers_to_postcode_gas
+  - source: tasks.create_dublin_postcode_residential_gas_meters
+    product: data/interim/dublin_postcode_residential_networked_gas_meters.csv
+
+  - source: tasks.amalgamate_synthetic_ber_gas_consumption_to_postcodes
     product: data/interim/dublin_postcode_synthetic_ber_gas_consumption.csv
-    
-  - source: tasks.adapt_ber_postcode_names_to_same_format_as_cso_gas
-    product: data/interim/standardised_dublin_postcode_synthetic_ber_gas_consumption.csv
-    
-  - source: plot_synthetic_bers_vs_cso_gas.py
+
+  - source: tasks.amalgamate_synthetic_ber_gas_meters_to_postcodes
+    product: data/interim/dublin_postcode_synthetic_ber_gas_meters.csv
+
+  - source: tasks.amalgamate_census_2016_gas_meters_to_postcodes
+    product: data/interim/dublin_postcode_residential_census_meters.csv
+
+  - source: plot_synthetic_ber_consumption_vs_cso_gas.py
     product:
-      nb: data/notebooks/plot_synthetic_bers_vs_cso_gas.ipynb
+      nb: data/notebooks/plot_synthetic_ber_consumption_vs_cso_gas.ipynb
       csv: data/processed/synthetic_bers_vs_cso_gas.csv
+
+  - source: plot_synthetic_ber_meters_vs_cso_gas_vs_census.py
+    product:
+      nb: data/notebooks/plot_synthetic_ber_meters_vs_cso_gas_vs_census.ipynb
+      csv: data/processed/synthetic_ber_meters_vs_cso_gas_vs_census.csv

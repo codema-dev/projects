@@ -8,8 +8,8 @@ sns.set()
 
 # + tags=["parameters"]
 upstream = [
-    "concatenate_dublin_postal_districts_and_county_dublin",
-    "adapt_ber_postcode_names_to_same_format_as_cso_gas",
+    "create_dublin_postcode_residential_gas_consumption",
+    "amalgamate_synthetic_ber_gas_consumption_to_postcodes",
 ]
 product = None
 # -
@@ -19,11 +19,11 @@ processed_dir = Path(product["csv"]).parent
 processed_dir.mkdir(exist_ok=True)
 
 cso_gas = pd.read_csv(
-    upstream["concatenate_dublin_postal_districts_and_county_dublin"], index_col=0
+    upstream["create_dublin_postcode_residential_gas_consumption"], index_col=0
 )
 
 ber_gas = pd.read_csv(
-    upstream["adapt_ber_postcode_names_to_same_format_as_cso_gas"], index_col=0
+    upstream["amalgamate_synthetic_ber_gas_consumption_to_postcodes"], index_col=0
 )
 
 ber_gas_vs_cso_gas = pd.concat([cso_gas, ber_gas], axis=1).dropna(how="any")
