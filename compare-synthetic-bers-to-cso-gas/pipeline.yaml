@@ -46,7 +46,7 @@ tasks:
   - source: tasks.amalgamate_synthetic_ber_gas_meters_to_postcodes
     product: data/interim/dublin_postcode_synthetic_ber_gas_meters.csv
     
-  - source: plot_synthetic_bers_vs_cso_gas.py
+  - source: plot_synthetic_ber_consumption_vs_cso_gas.py
     product:
-      nb: data/notebooks/plot_synthetic_bers_vs_cso_gas.ipynb
+      nb: data/notebooks/plot_synthetic_ber_consumption_vs_cso_gas.ipynb
       csv: data/processed/synthetic_bers_vs_cso_gas.csv
