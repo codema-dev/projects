@@ -65,3 +65,8 @@ tasks:
     product:
       nb: data/notebooks/plot_synthetic_ber_consumption_vs_cso_gas.ipynb
       csv: data/processed/synthetic_bers_vs_cso_gas.csv
+
+  - source: plot_synthetic_ber_meters_vs_cso_gas_vs_census.py
+    product:
+      nb: data/notebooks/plot_synthetic_ber_meters_vs_cso_gas_vs_census.ipynb
+      csv: data/processed/synthetic_ber_meters_vs_cso_gas_vs_census.csv
