@@ -96,7 +96,7 @@ def amalgamate_synthetic_ber_gas_meters_to_postcodes(
     postcode_gas_meters_standardised.to_csv(product)
 
 
-def extract_census_2016_postcode_meters(upstream: Any, product: Any) -> None:
+def amalgamate_census_2016_gas_meters_to_postcodes(upstream: Any, product: Any) -> None:
     census = pd.read_csv(upstream["download_census_2016"])
     census_small_areas = census["GEOGID"].str[7:].rename("small_area")
     census_gas_meters = pd.concat(
