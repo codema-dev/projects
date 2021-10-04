@@ -57,7 +57,10 @@ tasks:
 
   - source: tasks.amalgamate_synthetic_ber_gas_meters_to_postcodes
     product: data/interim/dublin_postcode_synthetic_ber_gas_meters.csv
-    
+
+  - source: tasks.extract_census_2016_postcode_meters
+    product: data/interim/dublin_postcode_residential_census_meters.csv
+
   - source: plot_synthetic_ber_consumption_vs_cso_gas.py
     product:
       nb: data/notebooks/plot_synthetic_ber_consumption_vs_cso_gas.ipynb

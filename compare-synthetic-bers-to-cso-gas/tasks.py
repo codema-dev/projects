@@ -1,5 +1,6 @@
 from typing import Any
 
+import geopandas as gpd
 import numpy as np
 import pandas as pd
 
@@ -89,6 +90,27 @@ def amalgamate_synthetic_ber_gas_meters_to_postcodes(
     bers = pd.read_parquet(upstream["download_synthetic_bers"])
     gas_bers = bers.query("main_sh_boiler_fuel == 'Mains Gas'")
     postcode_gas_meters = gas_bers.groupby("countyname").size().rename("ber_gas_meters")
+    postcode_gas_meters_standardised = _standardise_postcode_ber_names(
+        postcode_gas_meters
+    )
+    postcode_gas_meters_standardised.to_csv(product)
+
+
+def extract_census_2016_postcode_meters(upstream: Any, product: Any) -> None:
+    census = pd.read_csv(upstream["download_census_2016"])
+    census_small_areas = census["GEOGID"].str[7:].rename("small_area")
+    census_gas_meters = pd.concat(
+        [census_small_areas, census["T6_5_NGCH"].rename("census_gas_meters")], axis=1
+    )
+    dublin_small_area_boundaries = gpd.read_file(
+        str(upstream["download_dublin_small_area_boundaries"])
+    ).loc[:, ["small_area", "countyname"]]
+    postcode_gas_meters = (
+        census_gas_meters.merge(dublin_small_area_boundaries)
+        .drop(columns="small_area")
+        .groupby("countyname")
+        .sum()
+    )
     postcode_gas_meters_standardised = _standardise_postcode_ber_names(
         postcode_gas_meters
     )
