@@ -1,7 +1,7 @@
 tasks:
   - name: venv
-    command: conda create --file environment.yml --prefix ./venv \
-      && conda activate ./venv
+    init: conda create --file environment.yml --prefix ./venv
+    command: conda activate ./venv
 
 image:
   file: .gitpod.Dockerfile
