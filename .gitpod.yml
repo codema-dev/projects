@@ -1,8 +1,14 @@
 tasks:
-  - init: |
+  - name: Conda Terminal
+    init: |
       wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/latest \
         | tar -xvj bin/micromamba \
-        &&  ./bin/micromamba shell init -s bash -p ~/micromamba \
+        && ./bin/micromamba shell init -s bash -p ~/micromamba \
         && echo "alias conda=micromamba" >> ~/.bashrc \ 
         && source ~/.bashrc \
-        && conda activate
+        && conda create env -f environment.yml -p ./venv \
+    command: |
+      ./bin/micromamba shell init -s bash -p ~/micromamba \
+        && echo "alias conda=micromamba" >> ~/.bashrc \ 
+        && source ~/.bashrc \
+        && conda activate ./venv
