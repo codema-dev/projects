@@ -15,29 +15,22 @@ kernelspec:
 
 # Extract Dublin Gas Lines
 
-| :exclamation:  Requires GNI Network files |
-|-------------------------------------------|
+> ⚠️ Requires access to the closed-access Gas Networks Ireland CAD Network files!
 
 ## What `pipeline.py` is doing:
 
 ![pipeline.png](pipeline.png)
 
-## Setup
+## Run pipeline
 
-| ❗  Skip if running on Binder  |
-|-------------------------------|
+On Binder:
 
-Via [conda](https://github.com/conda-forge/miniforge):
-
-```{code-cell}
-conda env create --file environment.yml --name extract-dublin-gas-lines-from-network
-conda activate extract-dublin-gas-lines-from-network
+```{code-cell} ipython3
+!ploomber build
 ```
 
-## Run 
+OR on your Terminal:
 
-Now run the pipeline:
-
-```{code-cell}
-!ploomber build
+```{code-cell} ipython3
+ploomber build
 ```
