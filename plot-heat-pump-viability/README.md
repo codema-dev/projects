@@ -15,20 +15,22 @@ kernelspec:
 
 # Retrofit all Residential Homes to HLP=2
 
-## Setup
+> ⚠️ Requires access to the closed-access Small Area Building Energy Ratings files!
 
-| ❗  Skip if running on Binder  |
-|-------------------------------|
+## What `pipeline.py` is doing:
 
-Via [conda](https://github.com/conda-forge/miniforge):
+![pipeline.png](pipeline.png)
 
-```{code-cell}
-conda env create --name retrofit --file environment.yml
-conda activate retrofit
+## Run pipeline
+
+On Binder:
+
+```{code-cell} ipython3
+!ploomber build
 ```
 
-## Run
+OR on your Terminal:
 
-```{code-cell}
-python pipeline.py
+```{code-cell} ipython3
+ploomber build
 ```
