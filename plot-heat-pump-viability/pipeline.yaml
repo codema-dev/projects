@@ -1,7 +1,3 @@
-on_render:
-  dotted_path: codema_dev_tasks.hooks.load_environmental_variables
-  dotenv_path: ".env"
-
 tasks:
 
   - source: codema_dev_tasks.requests.fetch_file
@@ -14,6 +10,7 @@ tasks:
     name: download_buildings
     params:
       url: s3://codema-dev/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
+      dotenv_path: "{{here}}/.env"
     product: data/external/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
 
   - source: tasks.load_defaults
