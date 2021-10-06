@@ -1,0 +1,15 @@
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_census_small_area_statistics_2016
+    params:
+      url: https://www.cso.ie/en/media/csoie/census/census2016/census2016boundaryfiles/SAPS2016_SA2017.csv
+    product: data/external/SAPS2016_SA2017.csv
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_small_area_boundaries
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_12_dublin_small_area_boundaries.gpkg
+    product: data/external/2021_08_12_dublin_small_area_boundaries.gpkg
+
+  - source: tasks.extract_period_built_statistics
+    product: data/interim/census_small_area_period_built.csv
