@@ -1,7 +1,3 @@
-on_render:
-  dotted_path: codema_dev_tasks.hooks.load_environmental_variables
-  dotenv_path: ".env"
-
 tasks:
 
   - source: codema_dev_tasks.requests.fetch_file
@@ -32,6 +28,7 @@ tasks:
     name: download_synthetic_bers
     params:
       url: s3://codema-dev/views/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
+      dotenv_path: "{{here}}/.env"
     product: data/external/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
 
   - source: codema_dev_tasks.requests.fetch_file
