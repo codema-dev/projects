@@ -1,0 +1,11 @@
+name: estimate-ireland-census-small-area-building-ages
+channels:
+  - conda-forge
+dependencies:
+  - pandas
+  - ploomber
+  - aiohttp
+  - fsspec
+  - pip
+  - pip:
+    - codema-dev-tasks==0.2.0
