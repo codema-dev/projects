@@ -3,16 +3,17 @@ channels:
   - conda-forge
   - patrikhlobil
 dependencies:
-  - fs-s3fs
   - ipykernel
-  - ploomber >= 0.12.8
+  - ploomber
   - pandas-bokeh
   - geopandas
   - seaborn
   - python-dotenv
-  - pyarrow
+  - s3fs
+  - requests
+  - aiohttp
 
   - pip
   - pip:
     - rcbm
-    - codema-dev-tasks==0.1.0 
+    - codema-dev-tasks==0.2.0 

@@ -1,39 +1,12 @@
 from collections import defaultdict
 import json
-from pathlib import Path
 from typing import Any
 
-import fs
-from fs.tools import copy_file_data
-import geopandas as gpd
 import numpy as np
 import pandas as pd
 
 from rcbm import fab
 from rcbm import htuse
-
-
-def get_data(filepath: str) -> Path:
-    return Path(__name__).parent / filepath
-
-
-def create_folder_structure(data_dirpath: Path) -> None:
-    data_dirpath.mkdir(exist_ok=True)
-    external_dir = data_dirpath / "external"
-    external_dir.mkdir(exist_ok=True)
-    interim_dir = data_dirpath / "interim"
-    interim_dir.mkdir(exist_ok=True)
-    processed_dir = data_dirpath / "processed"
-    processed_dir.mkdir(exist_ok=True)
-
-
-def fetch_s3_file(bucket: str, filename: str, savedir: Path) -> None:
-    savepath = savedir / filename
-    if not savepath.exists():
-        s3fs = fs.open_fs(bucket)
-        with s3fs.open(filename, "rb") as remote_file:
-            with open(savedir / filename, "wb") as local_file:
-                copy_file_data(remote_file, local_file)
 
 
 def estimate_cost_of_fabric_retrofits(
