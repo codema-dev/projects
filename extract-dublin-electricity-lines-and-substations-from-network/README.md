@@ -15,31 +15,22 @@ kernelspec:
 
 # Extract Dublin Electricity Lines & Substations
 
-| :exclamation:  Requires ESB Networks CAD Network files |
-|--------------------------------------------------------|
-    
+> ⚠️ Requires access to the closed-access ESB Networks CAD Network files!
+
 ## What `pipeline.py` is doing:
 
 ![pipeline.png](pipeline.png)
 
-## Install
+## Run pipeline
 
-| :exclamation:  Skip unless running this locally |
-|-------------------------------------------------|
+On Binder:
 
-Via [conda](https://github.com/conda-forge/miniforge):
-
-- Minimal
-
-```{code-cell}
-conda env create --file environment.yml --name extract-dublin-electricity-infrastructure
-conda activate extract-dublin-electricity-infrastructure
+```{code-cell} ipython3
+!ploomber build
 ```
 
-## Run
+OR on your Terminal:
 
-Now run the pipeline:
-
-```{code-cell}
-!ploomber build
+```{code-cell} ipython3
+ploomber build
 ```
