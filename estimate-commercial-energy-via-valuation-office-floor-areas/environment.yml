@@ -1,4 +1,4 @@
-name: valuation-office
+name: estimate-commercial-energy-via-valuation-office-floor-areas
 channels:
   - conda-forge
 dependencies:
@@ -8,7 +8,8 @@ dependencies:
   - python-dotenv
   - pyarrow
   - s3fs
+  - pandera
 
   - pip
   - pip:
-    - codema-dev-tasks==0.1.0
+    - codema-dev-tasks==0.2.0

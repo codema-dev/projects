@@ -1,29 +1,30 @@
-on_render:
-  dotted_path: codema_dev_tasks.hooks.load_environmental_variables
-  dotenv_path: ".env"
 tasks:
   - source: codema_dev_tasks.requests.fetch_file
     name: download_valuation_office_floor_areas_dcc
     params:
       url: s3://codema-dev/raw/2021_06_15_valuation_office_floor_areas_dcc.ods
+      dotenv_path: "{{here}}/.env"
     product: data/external/2021_06_15_valuation_office_floor_areas_dcc.ods
     
   - source: codema_dev_tasks.requests.fetch_file
     name: download_valuation_office_floor_areas_dlrcc
     params:
       url: s3://codema-dev/raw/2021_06_15_valuation_office_floor_areas_dlrcc.ods
+      dotenv_path: "{{here}}/.env"
     product: data/external/2021_06_15_valuation_office_floor_areas_dlrcc.ods
 
   - source: codema_dev_tasks.requests.fetch_file
     name: download_valuation_office_floor_areas_fcc
     params:
       url: s3://codema-dev/raw/2021_06_15_valuation_office_floor_areas_fcc.ods
+      dotenv_path: "{{here}}/.env"
     product: data/external/2021_06_15_valuation_office_floor_areas_fcc.ods
 
   - source: codema_dev_tasks.requests.fetch_file
     name: download_valuation_office_floor_areas_sdcc
     params:
       url: s3://codema-dev/raw/2021_06_15_valuation_office_floor_areas_sdcc.ods
+      dotenv_path: "{{here}}/.env"
     product: data/external/2021_06_15_valuation_office_floor_areas_sdcc.ods
 
   - source: codema_dev_tasks.requests.fetch_file
