@@ -12,27 +12,24 @@ kernelspec:
   name: python3
 ---
 
-
 # Plot Residential Boiler Stats
 
-## What `pipeline.yaml` is doing:
+> ⚠️ Requires access to the closed-access Small Area Building Energy Ratings files!
+
+## What `pipeline.py` is doing:
 
 ![pipeline.png](pipeline.png)
 
-## Setup
+## Run pipeline
 
-| ❗  Skip if running on Binder  |
-|-------------------------------|
+On Binder:
 
-Via [conda](https://github.com/conda-forge/miniforge):
-
-```{code-cell}
-conda env create --file environment.yml --name plot-residential-boiler-stats
-conda activate plot-residential-boiler-stats
+```{code-cell} ipython3
+!ploomber build
 ```
 
-## Run 
+OR on your Terminal:
 
-```{code-cell}
-!ploomber build
+```{code-cell} ipython3
+ploomber build
 ```
