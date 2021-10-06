@@ -1,3 +1,4 @@
+---
 # Welcome to `codema-dev` projects!
 
 Download, wrangle & explore all Irish energy datasets used by the `codema-dev` team
@@ -8,7 +9,6 @@ Download, wrangle & explore all Irish energy datasets used by the `codema-dev` t
 
 Run the projects in your browser by clicking on the following buttons:
 
----
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/codema-dev/projects/main) ⬅️ click me to launch workspace
 
@@ -34,17 +34,19 @@ Run the projects in your browser by clicking on the following buttons:
 
 - Double click on the project you want to open
 
-- Change directory to a project folder by right clicking the project and selecting `Open in Integrated Terminal`
-
-- OR in your Terminal run: `cd NAME-OF-PROJECT` 
-
-    > So the prompt shows `projects/NAME-OF-PROJECT`
+- Change your Terminal directory to a project folder by running:
+    ```bash
+    cd NAME-OF-PROJECT
+    ```
 
 - Right click `README.md > Open Preview` to view the project guide
 
-**Note:**
-
-- **If the Terminal disappears** from the bottom of your screen click `≡ > Terminal > New Terminal` 
+⚠️ **Warning!** ⚠️
+- If **`(./venv)` disappears** from your prompt this means your Terminal no longer has access to all of the dependencies required to run projects so you need to reactivate it by running:
+    ```bash
+    conda activate /workspace/projects/venv
+    ``` 
+- If the **Terminal disappears** from the bottom of your screen click `≡ > Terminal > New`` Terminal` 
 </details>
 
 ---
