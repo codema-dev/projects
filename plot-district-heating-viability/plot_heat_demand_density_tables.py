@@ -3,7 +3,6 @@ from pathlib import Path
 import geopandas as gpd
 import numpy as np
 import pandas as pd
-import dataframe_image as dfi
 
 pd.set_option("display.precision", 1)
 
