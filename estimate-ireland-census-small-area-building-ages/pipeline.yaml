@@ -1,0 +1,15 @@
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_census_small_area_statistics_2016
+    params:
+      url: https://www.cso.ie/en/media/csoie/census/census2016/census2016boundaryfiles/SAPS2016_SA2017.csv
+    product: data/external/SAPS2016_SA2017.csv
+
+  - source: tasks.extract_period_built_statistics
+    product: data/interim/census_small_area_period_built.csv
+
+  - source: tasks.melt_small_area_period_built_to_individual_buildings
+    product: data/interim/census_individual_building_period_built.csv
+  
+  - source: tasks.replace_not_stated_period_built_with_mode
+    product: data/processed/census_individual_buildings_inferred_period_built.csv
