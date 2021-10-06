@@ -14,23 +14,24 @@ kernelspec:
 
 # Convert CSO Gas Consumption from HTML to CSV
 
-- Download the annual CSO Gas consumption data as a HTML file
-- Extract, clean and convert the tables to CSV
++++
 
-## Setup
+## What `pipeline.yaml` is doing:
 
-| ❗  Skip if running on Binder  |
-|-------------------------------|
+![pipeline.png](pipeline.png)
 
-Via [conda](https://github.com/conda-forge/miniforge):
++++
 
-```{code-cell} ipython3
-conda env create --name convert-cso-gas-from-html-to-csv --file environment.yml
-conda activate convert-cso-gas-from-html-to-csv
-```
+## Run pipeline
 
-## Run
+On Binder:
 
 ```{code-cell} ipython3
 !ploomber build
+```
+
+OR on your Terminal:
+
+```{code-cell} ipython3
+ploomber build
 ```
