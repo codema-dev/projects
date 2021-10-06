@@ -13,3 +13,6 @@ tasks:
 
   - source: tasks.extract_period_built_statistics
     product: data/interim/census_small_area_period_built.csv
+
+  - source: tasks.melt_small_area_period_built_to_individual_buildings
+    product: data/interim/census_individual_building_period_built.csv
