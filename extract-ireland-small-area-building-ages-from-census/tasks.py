@@ -1,6 +1,7 @@
 import re
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 
@@ -47,3 +48,16 @@ def melt_small_area_period_built_to_individual_buildings(
     )
     individual_building_period_built.to_csv(product, index=False)
 
+
+
+def replace_not_stated_period_built_with_mode(
+    product: Any, upstream: Any,
+) -> None:
+    buildings = pd.read_csv(upstream["melt_small_area_period_built_to_individual_buildings"])
+    modal_period_built = (
+        buildings.assign(period_built=lambda df: df["period_built"].replace({"NS": np.nan}))
+        .groupby("small_area")["period_built"]
+        .transform(lambda s: s.mode()[0])
+    )
+    buildings["period_built"] = buildings["period_built"].replace({"NS": np.nan}).fillna(modal_period_built)
+    buildings.to_csv(product, index=False)
