@@ -16,14 +16,14 @@ from pathlib import Path
 import geopandas as gpd
 
 # %% tags=["parameters"]
-upstream = None
+upstream = ["check_urban_atlas_is_uploaded", "download_dublin_small_area_boundaries"]
 product = None
 
 # %%
 urban_atlas = gpd.read_file(upstream["check_urban_atlas_is_uploaded"])
 
 # %%
-small_areas = gpd.read_file(upstream["download_small_areas"])
+small_areas = gpd.read_file(str(upstream["download_dublin_small_area_boundaries"]))
 
 # %%
 urban_atlas_in_small_areas = gpd.overlay(

@@ -1,0 +1,10 @@
+name: urban-atlas
+channels:
+  - conda-forge
+dependencies:
+  - geopandas
+  - ipykernel
+  - s3fs
+  - ploomber
+  - pip:
+    - codema-dev-tasks==0.2.0

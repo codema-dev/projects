@@ -1,8 +1,0 @@
-name: urban_atlas
-channels:
-  - conda-forge
-dependencies:
-  - geopandas
-  - ipykernel
-  - fs-s3fs
-  - ploomber
