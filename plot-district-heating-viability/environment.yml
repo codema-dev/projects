@@ -11,4 +11,4 @@ dependencies:
   - pyarrow
   - pip
   - pip:
-    - codema-dev-tasks==0.1.0
+    - codema-dev-tasks==0.2.0
