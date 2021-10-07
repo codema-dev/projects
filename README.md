@@ -3,14 +3,14 @@
 
 Download, wrangle & explore all Irish energy datasets used by the `codema-dev` team
 
-> ⚠️ Some projects use closed-access datasets for which you will need permission from the `codema-dev` team to use! 
+> ⚠️ Some projects use closed-access datasets for which you will need permission from the `codema-dev` team to use!  Email us at codema-dev@codema.ie
 
 ## Setup
 
 Run the projects in your browser by clicking on the following buttons:
 
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/codema-dev/projects/main) ⬅️ click me to launch workspace
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/codema-dev/projects-sandbox/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fcodema-dev%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252F%26branch%3Dmain) ⬅️ click me to launch workspace
 
 <details>
 <summary>⬅️ click me for a setup guide</summary>
@@ -92,16 +92,20 @@ Moving to open-source scripting tools enabled using logic written down in script
 
 ---
 
-## Keeping Binder up to date
+## Keeping the global `environment.yml` up to date
 
-To run this repository in Binder it is necessary to create a single `environment.yml` which contains the dependencies required for all projects.  Binder uses this every time someone clicks on the Binder button to create a workspace for this repository.
+This `environment.yml` is built by merging the `environment.yml` from each project.  `Binder` & `GitPod` use it to create a sandbox environment in which all dependencies are installed.
 
 To update this file run:
 
 ```bash
-conda env create --file environment.meta.yml --name codema-dev-projects
-conda activate codema-dev-projects
+conda env create --file environment.meta.yml --name codema-dev-projects-meta
+conda activate codema-dev-projects-meta
 invoke merge-environment-ymls
 ```
 
-`invoke` runs the function `merge_environment_ymls` from `tasks.py` to merge the `environment.yml` from each project and from `environment.meta.yml` together into a single `environment.yml` 
+> `conda env create` creates a virtual environment by reading `environment.meta.yml` in which `invoke` is defined as a dependency.  `invoke` then runs the function `merge_environment_ymls` from `tasks.py` which merges the `environment.yml` from each project and from `environment.meta.yml` together into a single `environment.yml` 
+
+To speed up `Binder` builds, `Binder` reads the `codema-dev/projects` dependencies from a separate repository [codema-dev/projects-sandbox](https://github.com/codema-dev/projects-sandbox).  You must also update the `environment.yml` here with your newly generated `environment.yml` to keep `Binder` up to date!
+
+> Every time any file is changed `Binder` rebuilds the entire repository and reinstalls the dependencies.  By keeping the environment and the content separate `Binder` only reinstalls dependencies when the dependencies change.  This means that it no longer has to download & resolve dependency conflicts which can take ~20 minutes. 
