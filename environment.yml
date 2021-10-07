@@ -10,13 +10,14 @@ dependencies:
 - ipykernel
 - lxml
 - numpy
+- odfpy
 - openpyxl
 - osmnx
 - pandas
 - pandas-bokeh
+- pandera
 - pip
 - ploomber
-- ploomber >=0.12.8
 - prefect
 - pyarrow
 - pygeos
@@ -27,5 +28,6 @@ dependencies:
 - s3fs
 - seaborn
 - pip:
-  - codema-dev-tasks==0.1.0
+  - codema-dev-tasks==0.2.0
+  - rcbm
 name: codema-dev-projects
