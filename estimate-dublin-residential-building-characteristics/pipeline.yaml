@@ -5,9 +5,6 @@ tasks:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_06_ireland_census_individual_buildings_inferred_period_built.zip
     product: data/external/2021_10_06_ireland_census_individual_buildings_inferred_period_built.zip
   
-  - source: tasks.check_file_exists
-    name: check_small_area_bers_are_uploaded
-    params:
-      filepath: data/raw/BER.public.14.05.2021.zip
-    product: data/raw/BER.public.14.05.2021.zip
+  - source: tasks.download_building_energy_ratings
+    product: data/external/BERPublicsearch.zip
   

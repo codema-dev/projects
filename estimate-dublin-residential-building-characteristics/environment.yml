@@ -6,5 +6,7 @@ dependencies:
   - aiohttp
   - fsspec
   - pip
+  - tqdm
+  - requests
   - pip:
     - codema-dev-tasks==0.2.0
