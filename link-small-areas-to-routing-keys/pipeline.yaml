@@ -1,0 +1,21 @@
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_ireland_small_area_boundaries
+    params:
+      url: https://opendata.arcgis.com/api/v3/datasets/c85e610da1464178a2cd84a88020c8e2_3/downloads/data?format=shp&spatialRefId=2157
+    product: data/external/Small_Areas_Ungeneralised_-_OSi_National_Statistical_Boundaries_-_2015.zip
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_routing_key_boundaries
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/raw/2016_09_29_routingkeys_shape_itm.zip
+    product: data/external/2016_09_29_routingkeys_shape_itm.zip
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_routing_key_descriptor_to_postcode_map
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/raw/2021_07_26_routing_key_descriptors_to_postcodes.json
+    product: data/external/2021_07_26_routing_key_descriptors_to_postcodes.json
+
+  - source: tasks.link_small_areas_to_routing_keys
+    product: data/processed/small_areas_in_routing_keys.gpkg
