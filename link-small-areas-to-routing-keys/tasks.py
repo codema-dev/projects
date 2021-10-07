@@ -77,9 +77,11 @@ def link_small_areas_to_routing_keys(
     product: Any,
     upstream: Any,
 ) -> None:
-    small_area_boundaries = gpd.read_file(
-        str(upstream["download_ireland_small_area_boundaries"])
-    ).rename(columns=str.lower).rename(columns={"countyname": "local_authority"})
+    small_area_boundaries = (
+        gpd.read_file(str(upstream["download_ireland_small_area_boundaries"]))
+        .rename(columns=str.lower)
+        .rename(columns={"countyname": "local_authority"})
+    )
     routing_key_boundaries = gpd.read_file(
         str(upstream["download_routing_key_boundaries"])
     ).rename(columns=str.lower)
@@ -94,17 +96,38 @@ def link_small_areas_to_routing_keys(
         pd.concat(
             [
                 small_area_boundaries[columns],
-                small_area_boundaries.geometry.representative_point().rename("geometry"),
+                small_area_boundaries.geometry.representative_point().rename(
+                    "geometry"
+                ),
             ],
             axis=1,
         ),
         crs="EPSG:2157",
     )
-    small_areas_in_routing_keys = representative_points.sjoin(
-        routing_key_boundaries,
-        predicate="within",
-        how="left",
-    ).drop(columns="index_right").pipe(_replace_erroneous_data)
-    
+    small_areas_in_routing_keys = (
+        representative_points.sjoin(
+            routing_key_boundaries,
+            predicate="within",
+            how="left",
+        )
+        .drop(columns="index_right")
+        .pipe(_replace_erroneous_data)
+    )
+
     small_areas_in_routing_keys["geometry"] = small_area_boundaries["geometry"]
     small_areas_in_routing_keys.to_file(str(product), driver="GPKG")
+
+
+def extract_small_area_countyname_map(
+    product: Any,
+    upstream: Any,
+) -> None:
+    small_areas_in_routing_keys = gpd.read_file(
+        str(upstream["link_small_areas_to_routing_keys"]), driver="GPKG"
+    )
+    columns = (
+        small_areas_in_routing_keys[["small_area", "countyname"]]
+        .set_index("small_area")
+        .squeeze()
+    )
+    columns.to_json(product)

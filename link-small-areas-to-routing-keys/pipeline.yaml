@@ -19,3 +19,6 @@ tasks:
 
   - source: tasks.link_small_areas_to_routing_keys
     product: data/processed/small_areas_in_routing_keys.gpkg
+
+  - source: tasks.extract_small_area_countyname_map
+    product: data/processed/small_areas_countyname_map.json
