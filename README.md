@@ -34,15 +34,15 @@ Run the projects in your browser by clicking on the following buttons:
 
 - Double click on the project you want to open
 
+- Right click `README.md > Open Preview` to view the project guide
+    
 - Change your Terminal directory to a project folder by running:
     ```bash
     cd NAME-OF-PROJECT
     ```
 
-- Right click `README.md > Open Preview` to view the project guide
-
 ⚠️ **Warning!** ⚠️
-- If **`(./venv)` disappears** from your prompt this means your Terminal no longer has access to all of the dependencies required to run projects so you need to reactivate it by running:
+- If **`(/workspace/projects/venv)` disappears** from your prompt this means your Terminal no longer has access to all of the dependencies required to run projects so you need to reactivate it by running:
     ```bash
     conda activate /workspace/projects/venv
     ``` 
