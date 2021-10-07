@@ -14,7 +14,7 @@ Run the projects in your browser by clicking on the following buttons:
 
 <details>
 <summary>⬅️ click me</summary>
-
+    
 > Setting up this workspace can take a few minutes.
 
 - Double click on the project you want to open
@@ -23,6 +23,13 @@ Run the projects in your browser by clicking on the following buttons:
 
 ![open-with-notebook.png](open-with-notebook.png)
 
+> ❓ `Binder` runs this code in the cloud for free with the help of `NumFocus`, if you find this useful consider donating to them [here](https://numfocus.org/)
+
+> This link was generated using:
+> - `Binder` on https://jupyterhub.github.io/nbgitpuller/link.html
+> - environment repository = https://github.com/codema-dev/projects-sandbox 
+> - content repository = https://github.com/codema-dev/projects-sandbox
+    
 </details>
 
 ---
