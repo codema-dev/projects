@@ -13,7 +13,7 @@ Run the projects in your browser by clicking on the following buttons:
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/codema-dev/projects-sandbox/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fcodema-dev%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252F%26branch%3Dmain) ⬅️ click me to launch workspace
 
 <details>
-<summary>⬅️ click me for a setup guide</summary>
+<summary>⬅️ click me</summary>
 
 > Setting up this workspace can take a few minutes.
 
@@ -30,7 +30,7 @@ Run the projects in your browser by clicking on the following buttons:
 [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-908a85?logo=gitpod)](https://gitpod.io/#https://github.com/codema-dev/projects) ⬅️ click me launch workspace
 
 <details>
-<summary>⬅️ click me for a setup guide</summary>
+<summary>⬅️ click me</summary>
 
 - Double click on the project you want to open
 
@@ -54,7 +54,7 @@ Run the projects in your browser by clicking on the following buttons:
 💻 Running locally
 
 <details>
-<summary>⬅️ click me for a setup guide</summary>
+<summary>⬅️ click me</summary>
 
 **Easy**:
 
@@ -78,6 +78,48 @@ Run the projects in your browser by clicking on the following buttons:
     > Click the `environment.yml` to view the environment name
 
 - Follow the GitPod instructions
+</details>
+
+---
+
+## How-To Guides
+
+⚠️ Accessing closed-access data
+
+<details>
+<summary>⬅️ click me</summary>
+
+- Create a new file called `.env` in your project directory
+
+- Add your s3 credentials to the `.env` file:
+
+```
+AWS_ACCESS_KEY_ID = "AKIA...."
+AWS_SECRET_ACCESS_KEY = "KXY6..."
+```
+</details>
+
+---
+
+❓ FAQ
+
+<details>
+<summary>⬅️ click me</summary>
+
+- If after running a project you see ...
+
+    (1)
+    ```python-traceback
+    botocore.exceptions.NoCredentialsError: Unable to locate credentials
+    ```
+    ... follow the instructions at ⚠️ **Accessing closed-access data** 
+
+    (2)
+    ```python-traceback
+    ModuleNotFoundError
+    ```
+    ... install the missing module with `conda install NAME` or `pip install NAME` and [raise an issue](https://github.com/codema-dev/projects/issues) on our Github
+
 </details>
 
 ---
