@@ -1,0 +1,10 @@
+name: estimate-dublin-residential-building-characteristics
+channels:
+  - conda-forge
+dependencies:
+  - ploomber
+  - aiohttp
+  - fsspec
+  - pip
+  - pip:
+    - codema-dev-tasks==0.2.0
