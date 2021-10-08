@@ -10,7 +10,7 @@ tasks:
     params:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_08_dublin_small_area_ids.csv
     product: data/external/2021_10_08_dublin_small_area_ids.csv
-  
+
   - source: tasks.download_building_energy_ratings
     product: data/external/BERPublicsearch.zip
 
@@ -22,3 +22,9 @@ tasks:
   
   - source: tasks.extract_buildings_meeting_conditions
     product: data/interim/building_energy_ratings_meeting_conditions.parquet
+
+  - source: tasks.extract_dublin_census_buildings
+    product: data/interim/dublin_census_buildings.parquet
+
+  - source: tasks.fill_census_with_bers
+    product: data/interim/census_with_bers.parquet

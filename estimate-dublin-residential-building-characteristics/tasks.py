@@ -4,6 +4,7 @@ from os import PathLike
 from typing import Any
 from zipfile import ZipFile
 
+import numpy as np
 import pandas as pd
 import requests
 
@@ -83,7 +84,7 @@ def extract_buildings_meeting_conditions(product: Any, upstream: Any) -> None:
     dublin_small_area_ids = pd.read_csv(
         upstream["download_dublin_small_area_ids"]
     ).squeeze()
-    
+
     conditions = [
         "type_of_rating != 'Provisional    '",
         "ground_floor_area > 0 and ground_floor_area < 1000",
@@ -98,10 +99,67 @@ def extract_buildings_meeting_conditions(product: Any, upstream: Any) -> None:
     ]
     query_str = " and ".join(["(" + c + ")" for c in conditions])
     buildings_meeting_conditions = buildings.query(query_str)
-    
+
     total_dublin_buildings = len(buildings[buildings.countyname.str.contains("Dublin")])
     print(f"Buildings in Dublin: {total_dublin_buildings}")
     total_buildings_meeting_conditions = len(buildings_meeting_conditions)
     print(f"Buildings meeting conditions: {total_buildings_meeting_conditions}")
-    
+
     buildings_meeting_conditions.to_parquet(product)
+
+
+def extract_dublin_census_buildings(product: Any, upstream: Any) -> None:
+    census = pd.read_csv(upstream["download_census_building_ages"])
+    dublin_small_area_ids = pd.read_csv(
+        upstream["download_dublin_small_area_ids"]
+    ).squeeze()
+    dublin_census = census.query("small_area in @dublin_small_area_ids")
+    dublin_census.to_parquet(product)
+
+
+def fill_census_with_bers(product: Any, upstream: Any) -> None:
+    census = pd.read_parquet(upstream["extract_dublin_census_buildings"])
+    bers = pd.read_parquet(upstream["extract_buildings_meeting_conditions"])
+
+    merge_columns = ["small_area", "period_built"]
+
+    census["id"] = census.groupby(merge_columns).cumcount().apply(lambda x: x + 1)
+
+    bers["period_built"] = pd.cut(
+        bers["year_of_construction"],
+        bins=[
+            -np.inf,
+            1919,
+            1945,
+            1960,
+            1970,
+            1980,
+            1990,
+            2000,
+            2011,
+            np.inf,
+        ],
+        labels=[
+            "PRE19",
+            "19_45",
+            "46_60",
+            "61_70",
+            "71_80",
+            "81_90",
+            "91_00",
+            "01_10",
+            "11L",
+        ],
+    )
+    bers["id"] = bers.groupby(merge_columns).cumcount().apply(lambda x: x + 1)
+
+    before_2016 = census.merge(
+        bers.query("year_of_construction < 2016"),
+        on=["small_area", "period_built", "id"],
+        how="left",
+    )
+    after_2016 = bers.query("year_of_construction >= 2016")
+
+    census_with_bers = pd.concat([before_2016, after_2016]).reset_index(drop=True)
+
+    census_with_bers.to_parquet(product)
