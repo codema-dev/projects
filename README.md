@@ -10,7 +10,7 @@ Download, wrangle & explore all Irish energy datasets used by the `codema-dev` t
 Run the projects in your browser by clicking on the following buttons:
 
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/codema-dev/projects-sandbox/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fcodema-dev%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252F%26branch%3Dmain) ⬅️ click me to launch workspace
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/codema-dev/projects-sandbox/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fcodema-dev%252Fprojects%26urlpath%3Dlab%252Ftree%252Fprojects%252Fbinder.ipynb%26branch%3Dmain) ⬅️ click me to launch workspace
 
 <details>
 <summary>⬅️ click me</summary>
@@ -24,6 +24,8 @@ Run the projects in your browser by clicking on the following buttons:
 ![open-with-notebook.png](open-with-notebook.png)
 
 > ❓ `Binder` runs this code in the cloud for free with the help of `NumFocus`, if you find this useful consider donating to them [here](https://numfocus.org/)
+
+<br>
 
 > This link was generated using:
 > - `Binder` on https://jupyterhub.github.io/nbgitpuller/link.html
