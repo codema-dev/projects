@@ -25,6 +25,12 @@ kernelspec:
 On Binder:
 
 ```{code-cell} ipython3
+%%writefile .env
+AWS_ACCESS_KEY_ID="AKIA..."
+AWS_SECRET_ACCESS_KEY="KXY6w..."
+```
+
+```{code-cell} ipython3
 !ploomber build
 ```
 
