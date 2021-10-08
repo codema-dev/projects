@@ -1,0 +1,42 @@
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_census_building_ages
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_06_ireland_census_individual_buildings_inferred_period_built.zip
+    product: data/external/2021_10_06_ireland_census_individual_buildings_inferred_period_built.zip
+  
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_small_area_ids
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_08_dublin_small_area_ids.csv
+    product: data/external/2021_10_08_dublin_small_area_ids.csv
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_small_area_electoral_district_id_map
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_08_small_area_electoral_district_id_map.json
+    product: data/external/2021_10_08_small_area_electoral_district_id_map.json
+
+  - source: tasks.download_building_energy_ratings
+    product: data/external/BERPublicsearch.zip
+
+  - source: tasks.extract_columns_and_standardise_column_names
+    product: data/interim/selected_building_energy_rating_columns.parquet
+    params:
+      dtypes_path: "{{here}}/dtypes.json"
+      names_path: "{{here}}/names.json"
+  
+  - source: tasks.extract_buildings_meeting_conditions
+    product: data/interim/building_energy_ratings_meeting_conditions.parquet
+
+  - source: tasks.extract_dublin_census_buildings
+    product: data/interim/dublin_census_buildings.parquet
+
+  - source: tasks.fill_census_with_bers
+    product: data/interim/census_with_bers.parquet
+  
+  - source: tasks.create_archetypes
+    product: data/processed/archetypes
+  
+  - source: tasks.fill_unknown_buildings_with_archetypes
+    product: data/processed/estimated_buildings.csv
