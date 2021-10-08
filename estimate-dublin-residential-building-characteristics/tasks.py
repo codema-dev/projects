@@ -218,4 +218,28 @@ def create_archetypes(product: Any, upstream: Any) -> None:
             .reset_index()
         )
         agg_buildings_of_sufficient_size["archetype"] = archetype_name
-        agg_buildings_of_sufficient_size.to_csv(dirpath / f"{archetype_name}.csv")
+        agg_buildings_of_sufficient_size.to_csv(
+            dirpath / f"{archetype_name}.csv", index=False
+        )
+
+
+def fill_unknown_buildings_with_archetypes(product: Any, upstream: Any) -> None:
+    buildings = pd.read_parquet(upstream["fill_census_with_bers"])
+    dirpath = Path(upstream["create_archetypes"])
+
+    archetype_columns = [
+        ["small_area", "period_built"],
+        ["cso_ed_id", "period_built"],
+        ["countyname", "period_built"],
+        ["period_built"],
+    ]
+    for archetype in archetype_columns:
+        filename = "_".join(archetype) + ".csv"
+        archetype_values = pd.read_csv(dirpath / filename)
+        buildings = (
+            buildings.set_index(archetype)
+            .combine_first(archetype_values.set_index(archetype))
+            .reset_index()
+        )
+
+    buildings.to_csv(product, index=False)
