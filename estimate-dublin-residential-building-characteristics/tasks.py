@@ -74,3 +74,34 @@ def extract_columns_and_standardise_column_names(
             ).rename(columns=names)
 
     building_energy_ratings.to_parquet(product)
+
+
+def extract_buildings_meeting_conditions(product: Any, upstream: Any) -> None:
+    buildings = pd.read_parquet(
+        upstream["extract_columns_and_standardise_column_names"]
+    )
+    dublin_small_area_ids = pd.read_csv(
+        upstream["download_dublin_small_area_ids"]
+    ).squeeze()
+    
+    conditions = [
+        "type_of_rating != 'Provisional    '",
+        "ground_floor_area > 0 and ground_floor_area < 1000",
+        "living_area_percent > 5 or living_area_percent < 90",
+        "main_sh_boiler_efficiency > 19 or main_sh_boiler_efficiency < 600",
+        "main_hw_boiler_efficiency > 19 or main_hw_boiler_efficiency < 320",
+        "main_sh_boiler_efficiency_adjustment_factor > 0.7",
+        "main_hw_boiler_efficiency_adjustment_factor > 0.7",
+        "declared_loss_factor < 20",
+        "thermal_bridging_factor > 0 or thermal_bridging_factor <= 0.15",
+        "small_area in @dublin_small_area_ids",
+    ]
+    query_str = " and ".join(["(" + c + ")" for c in conditions])
+    buildings_meeting_conditions = buildings.query(query_str)
+    
+    total_dublin_buildings = len(buildings[buildings.countyname.str.contains("Dublin")])
+    print(f"Buildings in Dublin: {total_dublin_buildings}")
+    total_buildings_meeting_conditions = len(buildings_meeting_conditions)
+    print(f"Buildings meeting conditions: {total_buildings_meeting_conditions}")
+    
+    buildings_meeting_conditions.to_parquet(product)
