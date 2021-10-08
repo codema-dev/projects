@@ -1,6 +1,7 @@
 from csv import QUOTE_NONE
 import json
 from os import PathLike
+from pathlib import Path
 from typing import Any
 from zipfile import ZipFile
 
@@ -163,3 +164,58 @@ def fill_census_with_bers(product: Any, upstream: Any) -> None:
     census_with_bers = pd.concat([before_2016, after_2016]).reset_index(drop=True)
 
     census_with_bers.to_parquet(product)
+
+
+def _get_mode_or_first_occurence(srs: pd.Series) -> str:
+    m = pd.Series.mode(srs)
+    return m.values[0] if not m.empty else np.nan
+
+
+def _get_aggregation_operations(df):
+    numeric_operations = {c: "median" for c in df.select_dtypes("number").columns}
+    categorical_operations = {
+        c: _get_mode_or_first_occurence
+        for c in set(
+            df.select_dtypes("object").columns.tolist()
+            + df.select_dtypes("string").columns.tolist()
+            + df.select_dtypes("category").columns.tolist()
+        )
+    }
+    return {**numeric_operations, **categorical_operations}
+
+
+def create_archetypes(product: Any, upstream: Any) -> None:
+    buildings = pd.read_parquet(upstream["fill_census_with_bers"])
+    with open(upstream["download_small_area_electoral_district_id_map"], "r") as f:
+        small_area_electoral_district_id_map = json.load(f)
+
+    buildings["cso_ed_id"] = buildings["small_area"].map(
+        small_area_electoral_district_id_map
+    )
+
+    dirpath = Path(product)
+    dirpath.mkdir(exist_ok=True)
+
+    min_sample_size = 30
+    archetype_columns = [
+        ["small_area", "period_built"],
+        ["cso_ed_id", "period_built"],
+        ["countyname", "period_built"],
+        ["period_built"],
+    ]
+    for archetype in archetype_columns:
+        archetype_name = "_".join(archetype)
+        sample_size_column = f"sample_size__{archetype_name}"
+        archetype_group_sizes = (
+            buildings.groupby(archetype).size().rename(sample_size_column)
+        )
+        agg_columns = set(buildings.columns).difference(set(archetype))
+        aggregation_operations = _get_aggregation_operations(buildings[agg_columns])
+        agg_buildings = buildings.groupby(archetype).agg(aggregation_operations)
+        agg_buildings_of_sufficient_size = (
+            agg_buildings.join(archetype_group_sizes)
+            .query(f"`{sample_size_column}` > @min_sample_size")
+            .reset_index()
+        )
+        agg_buildings_of_sufficient_size["archetype"] = archetype_name
+        agg_buildings_of_sufficient_size.to_csv(dirpath / f"{archetype_name}.csv")

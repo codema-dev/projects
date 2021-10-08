@@ -11,6 +11,12 @@ tasks:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_08_dublin_small_area_ids.csv
     product: data/external/2021_10_08_dublin_small_area_ids.csv
 
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_small_area_electoral_district_id_map
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_08_small_area_electoral_district_id_map.json
+    product: data/external/2021_10_08_small_area_electoral_district_id_map.json
+
   - source: tasks.download_building_energy_ratings
     product: data/external/BERPublicsearch.zip
 
@@ -28,3 +34,6 @@ tasks:
 
   - source: tasks.fill_census_with_bers
     product: data/interim/census_with_bers.parquet
+  
+  - source: tasks.create_archetypes
+    product: data/processed/archetypes
