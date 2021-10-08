@@ -14,9 +14,7 @@ kernelspec:
 
 # Plot Residential Boiler Stats
 
-> ⚠️ Requires access to the closed-access Small Area Building Energy Ratings files!
-
-## What `pipeline.py` is doing:
+## What `pipeline.yaml` is doing:
 
 ![pipeline.png](pipeline.png)
 

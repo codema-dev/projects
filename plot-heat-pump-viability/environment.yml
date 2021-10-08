@@ -9,7 +9,6 @@ dependencies:
   - geopandas
   - seaborn
   - python-dotenv
-  - s3fs
   - requests
   - aiohttp
 

@@ -9,9 +9,8 @@ tasks:
   - source: codema_dev_tasks.requests.fetch_file
     name: download_buildings
     params:
-      url: s3://codema-dev/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
-      dotenv_path: "{{here}}/.env"
-    product: data/external/dublin_census_2016_filled_with_ber_public_14_05_2021.parquet
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
+    product: data/external/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
 
   - source: tasks.load_defaults
     product: data/interim/defaults.json

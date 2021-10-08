@@ -1,5 +1,3 @@
-on_render: hooks.load_environmental_variables_and_create_folder_structure
-
 tasks:
   - source: codema_dev_tasks.requests.fetch_file
     name: download_small_area_statistics
@@ -10,7 +8,7 @@ tasks:
   - source: codema_dev_tasks.requests.fetch_file
     name: download_synthetic_bers
     params:
-      url: s3://codema-dev/views/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
     product: data/external/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
   
   - source: codema_dev_tasks.requests.fetch_file

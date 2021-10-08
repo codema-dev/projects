@@ -15,8 +15,6 @@ kernelspec:
 
 # Retrofit all Residential Homes to HLP=2
 
-> ⚠️ Requires access to the closed-access Small Area Building Energy Ratings files!
-
 ## What `pipeline.py` is doing:
 
 ![pipeline.png](pipeline.png)

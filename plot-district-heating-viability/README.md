@@ -14,7 +14,7 @@ kernelspec:
 
 # Heat Demand Density
 
-> ⚠️ Requires access to the closed-access Valuation Office & Small Area Building Energy Ratings files!
+> ⚠️ Requires access to the closed-access Valuation Office files!
 
 ## What `pipeline.py` is doing:
 

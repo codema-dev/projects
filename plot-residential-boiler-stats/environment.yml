@@ -7,7 +7,6 @@ dependencies:
   - ploomber
   - pandas-bokeh
   - python-dotenv
-  - s3fs
   - pyarrow
   - pip
   - pip:
