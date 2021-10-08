@@ -5,8 +5,11 @@ dependencies:
   - ploomber
   - aiohttp
   - fsspec
-  - pip
   - tqdm
   - requests
+  - pandas
+  - pyarrow
+  
+  - pip
   - pip:
     - codema-dev-tasks==0.2.0

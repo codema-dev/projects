@@ -7,4 +7,9 @@ tasks:
   
   - source: tasks.download_building_energy_ratings
     product: data/external/BERPublicsearch.zip
-  
+
+  - source: tasks.extract_columns_and_standardise_column_names
+    product: data/interim/selected_columns.parquet
+    params:
+      dtypes_path: "{{here}}/dtypes.json"
+      names_path: "{{here}}/names.json"
