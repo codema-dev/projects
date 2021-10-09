@@ -8,8 +8,8 @@ tasks:
   - source: tasks.check_file_exists
     name: check_urban_atlas_is_uploaded
     params:
-      filepath: data/raw/Urban Atlas
-    product: data/raw/Urban Atlas
+      filepath: data/raw/IE001L1_DUBLIN_UA2018_v013.zip
+    product: data/raw/IE001L1_DUBLIN_UA2018_v013.zip
 
   - source: group_footprints_by_small_areas.py
     name: group_footprints_by_small_areas

@@ -37,7 +37,7 @@ urban_atlas_in_small_areas.to_file(product["gpkg"], driver="GPKG")
 
 # %%
 urban_atlas_small_area_item_area = (
-    urban_atlas_in_small_areas.groupby(["small_area", "ITEM"])
+    urban_atlas_in_small_areas.groupby(["small_area", "class_2018"])
     .agg({"geometry": lambda x: x.area.sum()})
     .rename(columns={"geometry": "area_m2"})
 )
