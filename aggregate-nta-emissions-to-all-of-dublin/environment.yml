@@ -2,7 +2,7 @@ name: building-emissions
 channels:
   - conda-forge
 dependencies:
-  - python
+  - ploomber
   - geopandas
   - pandas
   - pygeos

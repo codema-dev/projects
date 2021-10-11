@@ -1,0 +1,39 @@
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_small_area_boundaries
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_11_dublin_small_area_boundaries.zip
+    product: data/external/2021_10_11_dublin_small_area_boundaries.zip
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_rail_schedules
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_17_dublin_rail_schedules.xlsx
+    product: data/external/2021_08_17_dublin_rail_schedules.xlsx
+
+  - source: tasks.check_file_exists
+    name: check_nta_rail_links_are_uploaded
+    params:
+      filepath: data/raw/Dublin_Rail_Links.zip
+    product: data/raw/Dublin_Rail_Links.zip
+
+  - source: tasks.check_file_exists
+    name: check_nta_grid_boundaries_are_uploaded
+    params:
+      filepath: data/raw/NTA_grid_boundaries.zip
+    product: data/raw/NTA_grid_boundaries.zip
+
+  - source: tasks.unzip_nta_rail_links_data
+    product: data/raw/Dublin_Rail_Links
+
+  - source: tasks.unzip_nta_grid_boundaries_data
+    product: data/raw/NTA_grid_boundaries
+
+  - source: calculate_rail_emissions_and_energy.py
+    product:
+      nb: data/notebooks/calculate_rail_emissions_and_energy.ipynb
+      gpkg: data/notebooks/rail_lines_in_small_areas.gpkg
+
+  - source: calculate_road_energy_emissions_and_energy.py
+    product:
+      nb: data/notebooks/calculate_road_energy_emissions_and_energy.ipynb
