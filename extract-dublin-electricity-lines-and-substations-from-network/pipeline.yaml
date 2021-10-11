@@ -11,14 +11,16 @@ tasks:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_13_esb_20210107_dublin_mv_index.csv
     product: data/external/2021_08_13_esb_20210107_dublin_mv_index.csv
   
+  - source: tasks.check_esb_cad_data_is_uploaded
+    product: data/raw/ESBdata_20210107.zip
+
+  - source: tasks.unzip_esb_cad_data
+    product: data/raw/ESBdata_20210107
+
   - source: tasks.convert_hv_data_to_parquet
-    params:
-      dirpath: data/raw/ESBdata_20210107/Dig Request Style/HV Data
     product: data/interim/ireland_hv_network.parquet
 
   - source: tasks.convert_mv_lv_data_to_parquet
-    params:
-      dirpath: data/raw/ESBdata_20210107/Dig Request Style/MV-LV Data
     product: data/interim/dublin_mv_lv_network.parquet
   
   - source: tasks.extract_hv_stations

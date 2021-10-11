@@ -15,7 +15,11 @@ kernelspec:
 
 # Extract Dublin Electricity Lines & Substations
 
-> ⚠️ Requires access to the closed-access ESB Networks CAD Network files!
+<details>
+<summary>⚠️ Before running the pipeline you must first fetch the ESB Networks CAD Network files</summary>
+
+- Create a new folder called `data` and drag & drop `ESBdata_20210107.zip` to a new folder within it called `raw`
+</details>
 
 ## What `pipeline.py` is doing:
 

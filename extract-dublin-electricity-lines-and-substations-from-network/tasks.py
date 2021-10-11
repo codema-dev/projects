@@ -1,4 +1,6 @@
+from os import PathLike
 from pathlib import Path
+from shutil import unpack_archive
 from typing import Any
 from typing import Dict
 from typing import List
@@ -7,23 +9,40 @@ import geopandas as gpd
 import pandas as pd
 
 
-def _check_esb_data_is_uploaded(dirpath: str) -> None:
-    message = "Please upload ESB CAD Network data (ESBdata_20210107) to data/raw/"
-    assert Path(dirpath).exists(), message
+def check_esb_cad_data_is_uploaded(product: PathLike) -> None:
+    message = "Please upload zipped ESB CAD Network data!"
+    assert Path(product).exists(), message
 
 
-def convert_hv_data_to_parquet(product: Any, dirpath: str) -> None:
-    _check_esb_data_is_uploaded(dirpath)
-    network = [gpd.read_file(filepath) for filepath in Path(dirpath).iterdir()]
-    hv_network = gpd.GeoDataFrame(pd.concat(network), crs="EPSG:29903")
+def unzip_esb_cad_data(product: PathLike, upstream: Dict[str, PathLike]) -> None:
+    unpack_archive(
+        filename=upstream["check_esb_cad_data_is_uploaded"],
+        extract_dir=Path(product).parent,
+    )
+
+
+def convert_hv_data_to_parquet(product: Any, upstream: Dict[str, PathLike]) -> None:
+    dirpath = Path(upstream["unzip_esb_cad_data"]) / "Dig Request Style" / "HV Data"
+    network = [gpd.read_file(filepath) for filepath in dirpath.iterdir()]
+    hv_network = pd.concat(network)
+
+    # set coordinate reference system to irish grid
+    hv_network.crs = "EPSG:29903"
+
+    # convert to irish transverse mercator
     hv_network.to_crs(epsg=2157).to_parquet(product)
 
 
-def convert_mv_lv_data_to_parquet(product: Any, upstream: Any, dirpath: str) -> None:
-    _check_esb_data_is_uploaded(dirpath)
+def convert_mv_lv_data_to_parquet(product: Any, upstream: Dict[str, PathLike]) -> None:
     dublin_mv_index = pd.read_csv(upstream["download_dublin_mv_index"], squeeze=True)
-    network = [gpd.read_file(Path(dirpath) / f"{id}.dgn") for id in dublin_mv_index]
-    mv_lv_network = gpd.GeoDataFrame(pd.concat(network), crs="EPSG:29903")
+    dirpath = Path(upstream["unzip_esb_cad_data"]) / "Dig Request Style" / "MV-LV Data"
+    network = [gpd.read_file(dirpath / f"{id}.dgn") for id in dublin_mv_index]
+    mv_lv_network = pd.concat(network)
+
+    # set coordinate reference system to irish grid
+    mv_lv_network.crs = "EPSG:29903"
+
+    # convert to irish transverse mercator
     mv_lv_network.to_crs(epsg=2157).to_parquet(product)
 
 
@@ -38,7 +57,10 @@ def extract_mv_lv_stations(
     product: Any, upstream: Any, text_mappings: Dict[str, str]
 ) -> None:
     mv_lv_network = gpd.read_parquet(upstream["convert_mv_lv_data_to_parquet"])
+
+    # convert Text from bytes to string
     mv_lv_network["Text"] = mv_lv_network["Text"].str.decode("utf-8", errors="ignore")
+
     text_is_a_station = mv_lv_network["Text"].isin(text_mappings.keys())
     stations = mv_lv_network[text_is_a_station].copy()
     stations["Type"] = stations["Text"].map(text_mappings)
