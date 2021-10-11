@@ -15,7 +15,9 @@ Run the projects in your browser by clicking on the following buttons:
 <details>
 <summary>⬅️ click me</summary>
     
-> Setting up this workspace can take a few minutes.
+<br>
+
+> `Binder` can take a few minutes to setup this workspace, click `Build logs > show` to see view the build progress.
 
 - Double click on the project you want to open
 
@@ -23,9 +25,9 @@ Run the projects in your browser by clicking on the following buttons:
 
 ![open-with-notebook.png](open-with-notebook.png)
 
-> ❓ `Binder` runs this code in the cloud for free with the help of `NumFocus`, if you find this useful consider donating to them [here](https://numfocus.org/)
-
 <br>
+    
+> ❓ `Binder` runs this code in the cloud for free with the help of `NumFocus`, if you find this useful consider donating to them [here](https://numfocus.org/)
 
 > This link was generated using:
 > - `Binder` on https://jupyterhub.github.io/nbgitpuller/link.html
