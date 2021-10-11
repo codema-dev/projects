@@ -1,0 +1,12 @@
+name: electricity-grid
+channels:
+  - conda-forge
+dependencies:
+  - ploomber
+  - geopandas >=0.10.0
+  - pandas
+  - scikit-learn
+  
+  - pip
+  - pip:
+    - codema-dev-tasks==0.2.0
