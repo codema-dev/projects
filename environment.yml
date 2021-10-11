@@ -5,11 +5,10 @@ dependencies:
 - aiohttp
 - conda-merge
 - fsspec
-- geopandas
+- geopandas >=0.10.0
 - invoke
 - ipykernel
 - lxml
-- numpy
 - odfpy
 - openpyxl
 - osmnx
@@ -18,15 +17,14 @@ dependencies:
 - pandera
 - pip
 - ploomber
-- prefect
 - pyarrow
 - pygeos
-- pygraphviz
-- python
 - python-dotenv
 - requests
 - s3fs
+- scikit-learn
 - seaborn
+- tqdm
 - pip:
   - codema-dev-tasks==0.2.0
   - rcbm
