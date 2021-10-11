@@ -15,7 +15,13 @@ kernelspec:
 
 # Extract Dublin Gas Lines
 
-> ⚠️ Requires access to the closed-access Gas Networks Ireland CAD Network files!
+<details>
+<summary>⚠️ Before running the pipeline you must first fetch the  Gas Networks Ireland CAD Network files</summary>
+
+- Compress `SHP ITM` to zip file `SHP ITM.zip`
+
+- Create a new folder called `data` and drag & drop `SHP ITM.zip` to a new folder within it called `raw`
+</details>
 
 ## What `pipeline.py` is doing:
 

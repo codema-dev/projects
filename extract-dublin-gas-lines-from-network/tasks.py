@@ -1,20 +1,31 @@
+from os import PathLike
 from pathlib import Path
+from shutil import unpack_archive
 from typing import Any
 from typing import Dict
-from typing import List
 
 import geopandas as gpd
 import pandas as pd
 
 
-def _check_gni_data_is_uploaded(filepath: str) -> None:
+def check_gni_data_is_uploaded(product: PathLike) -> None:
     message = "Please upload GNI CAD Network data (Tx and Dx) to data/raw/"
-    assert Path(filepath).exists(), message
+    assert Path(product).exists(), message
 
 
-def save_gni_data_to_parquet(product: Any, filepaths: List[str]) -> None:
-    _check_gni_data_is_uploaded(filepaths[0])
-    lines = pd.concat([gpd.read_file(f, crs="EPSG:2157") for f in filepaths])
+def unzip_gni_cad_data(product: PathLike, upstream: Dict[str, PathLike]) -> None:
+    unpack_archive(
+        filename=upstream["check_gni_data_is_uploaded"],
+        extract_dir=Path(product).parent,
+    )
+
+
+def convert_gni_data_to_parquet(product: Any, upstream: Dict[str, PathLike]) -> None:
+    dirpath = Path(upstream["unzip_gni_cad_data"])
+    filenames = [
+        f for f in dirpath.iterdir() if ("Centreline" in f.name) and ("shp" in f.suffix)
+    ]
+    lines = pd.concat([gpd.read_file(f, crs="EPSG:2157") for f in filenames])
     lines.to_parquet(product)
 
 
@@ -22,7 +33,7 @@ def extract_lines_in_small_area_boundaries(
     product: Any,
     upstream: Any,
 ) -> None:
-    lines = gpd.read_parquet(upstream["save_gni_data_to_parquet"])
+    lines = gpd.read_parquet(upstream["convert_gni_data_to_parquet"])
     dublin_small_area_boundaries = gpd.read_file(
         str(upstream["download_dublin_small_area_boundaries"])
     )
