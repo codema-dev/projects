@@ -1,0 +1,42 @@
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_esb_substation_capacities
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/raw/2020_11_01_esb_substation_heatmap.csv
+    product: data/external/2020_11_01_esb_substation_heatmap.csv
+  
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_small_area_boundaries
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/dublin_small_area_boundaries_in_routing_keys.gpkg
+    product: data/external/dublin_small_area_boundaries_in_routing_keys.gpkg
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_mv_index
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_08_13_esb_20210107_dublin_mv_index.csv
+    product: data/external/2021_08_13_esb_20210107_dublin_mv_index.csv
+  
+  - source: tasks.check_file_exists
+    name: check_esb_cad_data_is_uploaded
+    params:
+      filepath: data/raw/ESBdata_20210107.zip
+    product: data/raw/ESBdata_20210107.zip
+  
+  - source: tasks.unzip_esb_cad_data
+    product: data/raw/ESBdata_20210107
+
+  - source: tasks.extract_dublin_substations
+    product: data/processed/dublin_substations.gpkg
+
+  - source: tasks.convert_mv_lv_data_to_parquet
+    product: data/interim/dublin_mv_lv_network.parquet
+  
+  - source: tasks.extract_network_lines
+    product: data/processed/dublin_mv_and_lv_network_lines.parquet
+    
+  - source: tasks.find_nearest_nodes_to_stations_on_network
+    product: data/processed/nearest_network_nodes_to_substations.parquet
+
+  - source: tasks.calculate_path_lengths_along_network_between_nodes
+    product: data/interim/node_to_node_distances
