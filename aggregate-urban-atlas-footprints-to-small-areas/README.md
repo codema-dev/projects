@@ -19,7 +19,7 @@ kernelspec:
 
 > - Create an account with copernicus [here](https://land.copernicus.eu) and download the `open-access` 2018 Dublin Urban Atlas data [here](https://land.copernicus.eu/local/urban-atlas)
 > - Unzip the data, extract the file `IE001L1_DUBLIN_UA2018_v013.gpkg` from within the `Data` folder and zip it to `IE001L1_DUBLIN_UA2018_v013.zip` 
-> - In `Jupyter Lab` (i.e. the `Binder` default) or `GitPod` create a new folder called `data` and upload `IE001L1_DUBLIN_UA2018_v013.zip` to a new folder within it called `raw`
+> - Create a new folder called `data` and drag & drop `IE001L1_DUBLIN_UA2018_v013.zip` to a new folder within it called `raw`
 </details>
 
 +++
