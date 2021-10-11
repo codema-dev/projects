@@ -1,0 +1,12 @@
+name: extract-dublin-roads-from-openstreetmap
+channels:
+  - conda-forge
+dependencies:
+  - ploomber
+  - geopandas
+  - osmnx
+  - aiohttp
+  - fsspec
+  - pip
+  - pip:
+    - codema-dev-tasks==0.2.0

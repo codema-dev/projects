@@ -1,0 +1,25 @@
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_boundary
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2020_11_24_dublin_boundary.gpkg
+    product: data/external/2020_11_24_dublin_boundary.gpkg
+  
+  - source: tasks.download_roads_from_openstreetmaps
+    params:
+      columns:
+        - highway
+        - geometry
+    product: data/external/2021_10_11_dublin_openstreetmaps_roads.gpkg
+  
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_dublin_small_area_boundaries
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_11_dublin_small_area_boundaries.zip
+    product: data/external/2021_10_11_dublin_small_area_boundaries.zip
+
+  - source: tasks.cut_lines_on_boundaries
+    product: data/processed/roads_in_small_area_boundaries.gpkg
+  
+  - source: tasks.sum_small_area_line_lengths
+    product: data/processed/road_small_area_line_lengths.csv
