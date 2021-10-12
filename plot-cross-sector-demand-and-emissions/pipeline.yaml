@@ -45,4 +45,9 @@ tasks:
       overall: data/processed/Cross Sector Emissions Piechart.xlsx
       heat_vs_electricity_vs_transport: data/processed/Cross Sector Heat vs Electricity vs Transport Emissions Piechart.xlsx
 
-
+  - source: plot_industrial_piecharts.py
+    product:
+      nb: data/notebooks/plot_industrial_piecharts.ipynb
+      electricity: data/processed/Industrial Electricity Piechart.xlsx
+      fossil_fuel: data/processed/Industrial Fossil Fuel Piechart.xlsx
+      
