@@ -28,7 +28,7 @@ tasks:
   
   - source: plot_energy_piecharts.py
     params:
-      external_demand_yml: "{{here}}/external_demand_twh.yml"
+      external_energy_yml: "{{here}}/external_energy_twh.yml"
     product:
       nb: data/notebooks/plot_energy_piecharts.ipynb
       overall: data/processed/Cross Sector Energy Piechart.xlsx
@@ -38,6 +38,7 @@ tasks:
 
   - source: plot_emissions_piecharts.py
     params:
+      external_energy_yml: "{{here}}/external_energy_twh.yml"
       external_emissions_yml: "{{here}}/external_emissions_tco2.yml"
     product:
       nb: data/notebooks/plot_emissions_piecharts.ipynb

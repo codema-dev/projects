@@ -14,7 +14,7 @@ upstream = [
     "download_epa_industrial_site_demands",
     "download_public_sector_demands",
 ]
-external_demand_yml = None
+external_energy_yml = None
 product = None
 # -
 
@@ -30,7 +30,7 @@ partial_industrial = pd.read_excel(upstream["download_epa_industrial_site_demand
 
 public_sector = pd.read_csv(upstream["download_public_sector_demands"])
 
-with open(external_demand_yml, "r") as f:
+with open(external_energy_yml, "r") as f:
     external_demand = yaml.safe_load(f)
 
 ## Globals
@@ -168,6 +168,7 @@ public_sector_electricity = (
 
 ## Rest
 
+# Ireland’s Data Hosting Industry Biannual Report, Host In Ireland, May 2021
 data_centre_electricity = external_demand["data_centres"]
 
 road_transport_energy = external_demand["road"]

@@ -14,6 +14,7 @@ upstream = [
     "download_epa_industrial_site_demands",
     "download_public_sector_demands",
 ]
+external_energy_yml = None
 external_emissions_yml = None
 product = None
 # -
@@ -32,6 +33,9 @@ public_sector = pd.read_csv(upstream["download_public_sector_demands"])
 
 with open(external_emissions_yml, "r") as f:
     external_emissions = yaml.safe_load(f)
+
+with open(external_energy_yml, "r") as f:
+    external_energy = yaml.safe_load(f)
 
 ## Globals
 
@@ -220,7 +224,7 @@ public_sector_electricity_emissions = (
 
 ## Rest
 
-data_centre_emissions = external_emissions["data_centres"]
+data_centre_emissions = external_energy["data_centres"] * twh_to_tco2["Electricity"]
 
 road_transport_emissions = external_emissions["road"]
 
