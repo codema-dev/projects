@@ -1,0 +1,59 @@
+on_render:
+  dotted_path: codema_dev_tasks.hooks.load_environmental_variables
+  dotenv_path: ".env"
+tasks:
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_synthetic_bers
+    params:
+      url: s3://codema-dev/views/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
+    product: data/external/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
+  
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_valuation_office_energy_estimates
+    params:
+      url: s3://codema-dev/views/2021_09_24_dublin_valuation_office_energy_estimates.csv
+    product: data/external/2021_09_24_dublin_valuation_office_energy_estimates.csv
+
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_public_sector_demands
+    params:
+      url: s3://codema-dev/views/2021_09_27_seai_monitoring_and_reporting_buildings_dublin.csv
+    product: data/external/2021_09_27_seai_monitoring_and_reporting_buildings_dublin.csv
+  
+  - source: codema_dev_tasks.requests.fetch_file
+    name: download_epa_industrial_site_demands
+    params:
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_12_epa_industrial_site_demands.xlsx
+    product: data/external/2021_10_12_epa_industrial_site_demands.xlsx
+  
+  - source: plot_energy_piecharts.py
+    params:
+      external_energy_yml: "{{here}}/external_energy_twh.yml"
+    product:
+      nb: data/notebooks/plot_energy_piecharts.ipynb
+      overall: data/processed/Cross Sector Energy Piechart.xlsx
+      electricity: data/processed/Cross Sector Electricity Energy Piechart.xlsx
+      heat: data/processed/Cross Sector Heat Energy Piechart.xlsx
+      heat_vs_electricity_vs_transport: data/processed/Cross Sector Heat vs Electricity vs Transport Energy Piechart.xlsx
+
+  - source: plot_emissions_piecharts.py
+    params:
+      external_energy_yml: "{{here}}/external_energy_twh.yml"
+      external_emissions_yml: "{{here}}/external_emissions_tco2.yml"
+    product:
+      nb: data/notebooks/plot_emissions_piecharts.ipynb
+      overall: data/processed/Cross Sector Emissions Piechart.xlsx
+      heat_vs_electricity_vs_transport: data/processed/Cross Sector Heat vs Electricity vs Transport Emissions Piechart.xlsx
+
+  - source: plot_industrial_piecharts.py
+    product:
+      nb: data/notebooks/plot_industrial_piecharts.ipynb
+      electricity: data/processed/Industrial Electricity Piechart.xlsx
+      fossil_fuel: data/processed/Industrial Fossil Fuel Piechart.xlsx
+
+  - source: plot_public_sector_piecharts.py
+    product:
+      nb: data/notebooks/plot_public_sector_piecharts.ipynb
+      electricity: data/processed/Public Sector Electricity Piechart.xlsx
+      fossil_fuel: data/processed/Public Sector Fossil Fuel Piechart.xlsx
+      

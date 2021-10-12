@@ -1,0 +1,8 @@
+road: 7.31
+data_centres: 3.944
+rail:
+  DART: 0.024 
+  LUAS: 0.0235
+  Commuter: 0.067
+  Intercity: 0.015
+  
