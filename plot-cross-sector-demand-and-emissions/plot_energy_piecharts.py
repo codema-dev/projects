@@ -90,13 +90,8 @@ industrial_electricity_epa = (
     industrial_sites["Electricity Use [kWh/y]"].sum() / kwh_to_twh
 )
 
-fossil_fuel_use_columns = [
-    c
-    for c in industrial_sites.columns
-    if ("Use [kWh/y]" in c) and ("Electricity" not in c)
-]
 industrial_fossil_fuel_epa = (
-    industrial_sites[fossil_fuel_use_columns].sum().sum() / kwh_to_twh
+    industrial_sites["Total Fossil Fuel Use [kWh/y]"].sum().sum() / kwh_to_twh
 )
 
 # ASSUMPTION: A high proportion of these industrial boilers will be producing steam
