@@ -50,4 +50,10 @@ tasks:
       nb: data/notebooks/plot_industrial_piecharts.ipynb
       electricity: data/processed/Industrial Electricity Piechart.xlsx
       fossil_fuel: data/processed/Industrial Fossil Fuel Piechart.xlsx
+
+  - source: plot_public_sector_piecharts.py
+    product:
+      nb: data/notebooks/plot_public_sector_piecharts.ipynb
+      electricity: data/processed/Public Sector Electricity Piechart.xlsx
+      fossil_fuel: data/processed/Public Sector Fossil Fuel Piechart.xlsx
       
