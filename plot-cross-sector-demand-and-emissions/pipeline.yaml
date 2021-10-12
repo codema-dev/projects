@@ -12,6 +12,7 @@ tasks:
     name: download_valuation_office_energy_estimates
     params:
       url: s3://codema-dev/views/2021_09_24_dublin_valuation_office_energy_estimates.csv
+      dotenv_path: "{{here}}/.env"
     product: data/external/2021_09_24_dublin_valuation_office_energy_estimates.csv
 
   - source: codema_dev_tasks.requests.fetch_file
@@ -26,35 +27,35 @@ tasks:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_12_epa_industrial_site_demands.xlsx
     product: data/external/2021_10_12_epa_industrial_site_demands.xlsx
   
-  - source: plot_energy_piecharts.py
+  - source: plot_energy_breakdown.py
     params:
       external_energy_yml: "{{here}}/external_energy_twh.yml"
     product:
-      nb: data/notebooks/plot_energy_piecharts.ipynb
+      nb: data/notebooks/plot_energy_breakdown.ipynb
       overall: data/processed/Cross Sector Energy Piechart.xlsx
       electricity: data/processed/Cross Sector Electricity Energy Piechart.xlsx
       heat: data/processed/Cross Sector Heat Energy Piechart.xlsx
       heat_vs_electricity_vs_transport: data/processed/Cross Sector Heat vs Electricity vs Transport Energy Piechart.xlsx
 
-  - source: plot_emissions_piecharts.py
+  - source: plot_emissions_breakdown.py
     params:
       external_energy_yml: "{{here}}/external_energy_twh.yml"
       external_emissions_yml: "{{here}}/external_emissions_tco2.yml"
     product:
-      nb: data/notebooks/plot_emissions_piecharts.ipynb
+      nb: data/notebooks/plot_emissions_breakdown.ipynb
       overall: data/processed/Cross Sector Emissions Piechart.xlsx
       heat_vs_electricity_vs_transport: data/processed/Cross Sector Heat vs Electricity vs Transport Emissions Piechart.xlsx
 
-  - source: plot_industrial_piecharts.py
+  - source: plot_industrial_breakdown.py
     product:
-      nb: data/notebooks/plot_industrial_piecharts.ipynb
+      nb: data/notebooks/plot_industrial_breakdown.ipynb
       electricity: data/processed/Industrial Electricity Piechart.xlsx
       fossil_fuel: data/processed/Industrial Fossil Fuel Piechart.xlsx
       emissions: data/processed/Industrial Emissions Barchart.xlsx
 
-  - source: plot_public_sector_piecharts.py
+  - source: plot_public_sector_breakdown.py
     product:
-      nb: data/notebooks/plot_public_sector_piecharts.ipynb
+      nb: data/notebooks/plot_public_sector_breakdown.ipynb
       electricity: data/processed/Public Sector Electricity Piechart.xlsx
       fossil_fuel: data/processed/Public Sector Fossil Fuel Piechart.xlsx
       emissions: data/processed/Public Sector Emissions Barchart.xlsx
