@@ -56,4 +56,10 @@ tasks:
       electricity: data/processed/Public Sector Electricity Piechart.xlsx
       fossil_fuel: data/processed/Public Sector Fossil Fuel Piechart.xlsx
       emissions: data/processed/Public Sector Emissions Barchart.xlsx
+
+  - source: plot_commercial_breakdown.py
+    product:
+      nb: data/notebooks/plot_commercial_breakdown.ipynb
+      commercial: data/processed/Commercial Buildings Emissions Barchart.xlsx
+      industrial: data/processed/Benchmark-Estimated Industrial Buildings Emissions Barchart.xlsx
       
