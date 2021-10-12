@@ -26,7 +26,7 @@ commercial_and_industrial = pd.read_csv(
     upstream["download_valuation_office_energy_estimates"]
 )
 
-partial_industrial = pd.read_csv(upstream["download_epa_industrial_site_demands"])
+partial_industrial = pd.read_excel(upstream["download_epa_industrial_site_demands"])
 
 public_sector = pd.read_csv(upstream["download_public_sector_demands"])
 
