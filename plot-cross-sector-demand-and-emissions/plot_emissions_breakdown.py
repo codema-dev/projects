@@ -23,9 +23,18 @@ Path(product["overall"]).parent.mkdir(exist_ok=True)  # create processed/ direct
 
 residential = pd.read_parquet(upstream["download_synthetic_bers"])
 
+# skip as have either reported data or better estimates (data centres)
+skip_benchmarks = [
+    "Data Centre",
+    "Schools and seasonal public buildings",
+    "Hospital (clinical and research)",
+    "Cultural activities",
+    "University campus",
+    "Emergency services",
+]
 commercial_and_industrial = pd.read_csv(
     upstream["download_valuation_office_energy_estimates"]
-)
+).query("Benchmark not in @skip_benchmarks")
 
 partial_industrial = pd.read_excel(upstream["download_epa_industrial_site_demands"])
 
