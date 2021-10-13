@@ -80,8 +80,8 @@ def extract_network_lines(upstream: Any, product: Any) -> None:
     network = gpd.read_parquet(upstream["convert_mv_lv_data_to_parquet"])
 
     # explode converts multi-part geometries to single-part which is req by networkx
-    network_lines = network.query("Level in [1, 2, 10, 11]").explode(ignore_index=True)
-    network_lines.to_parquet(product)
+    lv_network_lines = network.query("Level in [1, 2, 5]").explode(ignore_index=True)
+    lv_network_lines.to_parquet(product)
 
 
 def _read_networkx_geoparquet(filepath: PathLike) -> nx.DiGraph:
