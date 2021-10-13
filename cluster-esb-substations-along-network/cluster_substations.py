@@ -27,6 +27,7 @@ sns.set()
 
 # + tags=["parameters"]
 upstream = [
+    "download_dublin_small_area_boundaries",
     "extract_dublin_substations",
     "extract_network_lines",
     "find_nearest_nodes_to_stations_on_network",
@@ -37,6 +38,8 @@ substation_type = "MV"
 # -
 
 ## Load
+
+small_area_boundaries = gpd.read_file(upstream["download_dublin_small_area_boundaries"])
 
 network = gpd.read_parquet(upstream["extract_network_lines"])
 
@@ -107,9 +110,23 @@ clusters = substations[use_columns].join(
     pd.DataFrame({"cluster_ids": cluster_ids, "node_id": nearest_node_ids.apply(str)})
 )
 
-## Save
+## Amalgamate to Zones
 
-network.to_file(product["network"], driver="GPKG")
+small_area_centroids = (
+    small_area_boundaries.geometry.representative_point().rename("geometry").to_frame()
+)
+
+small_area_substations = small_area_centroids.sjoin_nearest(clusters)
+
+cluster_polygons = (
+    pd.concat(
+        [small_area_boundaries, small_area_substations.drop(columns="geometry")], axis=1
+    )
+    .dissolve(by="cluster_ids")
+    .reset_index()
+)
+
+## Save
 
 clusters.to_file(product["clusters"], driver="GPKG")
 
@@ -126,3 +143,5 @@ clusters.apply(
     ),
     axis=1,
 )
+
+cluster_polygons.plot(column="cluster_ids", figsize=(40, 40))
