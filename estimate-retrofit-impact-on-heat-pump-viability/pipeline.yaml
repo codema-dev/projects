@@ -46,9 +46,9 @@ tasks:
     product:
       nb: data/notebooks/plot_pre_vs_post_retrofit_bers.ipynb
 
-  # - source: plot_retrofit_costs.py
-  #   product:
-  #     nb: data/notebooks/estimate_retrofit_costs.ipynb
+  - source: plot_retrofit_costs.py
+    product:
+      nb: data/notebooks/estimate_retrofit_costs.ipynb
   
   # - source: plot_uvalue_distribution.py
   #   product:

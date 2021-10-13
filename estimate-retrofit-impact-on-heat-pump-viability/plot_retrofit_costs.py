@@ -15,7 +15,7 @@ product = None
 
 ## Load
 
-pre_retrofit = pd.read_parquet(upstream["download_buildings"])
+pre_retrofit = pd.read_csv(upstream["download_buildings"])
 
 retrofit_costs = pd.read_csv(upstream["estimate_retrofit_costs"])
 
