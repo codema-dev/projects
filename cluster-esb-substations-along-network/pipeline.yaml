@@ -40,3 +40,7 @@ tasks:
 
   - source: tasks.calculate_path_lengths_along_network_between_nodes
     product: data/interim/node_to_node_distances
+  
+  - source: cluster_lv_substations.py
+    product: 
+      nb: data/notebooks/cluster_lv_substations.ipynb
