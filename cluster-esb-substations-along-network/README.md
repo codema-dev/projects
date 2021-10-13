@@ -20,6 +20,10 @@ kernelspec:
 - Create a new folder called `data` and drag & drop `ESBdata_20210107.zip` to a new folder within it called `raw`
 </details>
 
+> ⚠️ The clustering results from this project do not yet make sense, however, it does provide a guide on how to cluster points based on network distances in place of "as the crow flies". 
+
+> ⚠️ Calculating network distances for substations along the low voltage network using `networkx` takes several hours...
+
 +++
 
 ## What `pipeline.yaml` is doing:
