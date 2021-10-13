@@ -29,7 +29,7 @@ sns.set()
 upstream = [
     "download_dublin_small_area_boundaries",
     "extract_dublin_substations",
-    "extract_network_lines",
+    "extract_dublin_network_lines",
     "find_nearest_nodes_to_stations_on_network",
     "calculate_path_lengths_along_network_between_substations",
 ]
@@ -41,9 +41,11 @@ minpts = 3  # smallest cluster size allowed
 
 ## Load
 
-small_area_boundaries = gpd.read_file(upstream["download_dublin_small_area_boundaries"])
+small_area_boundaries = gpd.read_file(
+    str(upstream["download_dublin_small_area_boundaries"])
+)
 
-network = gpd.read_parquet(upstream["extract_network_lines"])
+network = gpd.read_file(upstream["extract_dublin_network_lines"], driver="GPKG")
 
 substations = (
     gpd.read_file(str(upstream["extract_dublin_substations"]))

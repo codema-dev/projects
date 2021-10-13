@@ -75,16 +75,29 @@ def extract_dublin_substations(upstream: Any, product: Any) -> None:
     dublin_substations.to_file(str(product), driver="GPKG")
 
 
-def extract_network_lines(upstream: Any, product: Any) -> None:
-    network = gpd.read_parquet(upstream["convert_mv_lv_data_to_parquet"])
+def extract_dublin_network_lines(upstream: Any, product: Any) -> None:
+    network = gpd.read_parquet(upstream["convert_mv_lv_data_to_parquet"]).to_crs(
+        epsg=2157
+    )
+    dublin_boundary = gpd.read_file(str(upstream["download_dublin_boundary"])).to_crs(
+        epsg=2157
+    )
+
+    mv_network_lines = network.query("Level in [10, 11, 14]")
+    dublin_mv_network_lines = mv_network_lines.overlay(
+        dublin_boundary, how="intersection"
+    )
 
     # explode converts multi-part geometries to single-part which is req by networkx
-    mv_network_lines = network.query("Level in [10, 11, 14]").explode(ignore_index=True)
-    mv_network_lines.to_parquet(product)
+    dublin_mv_network_lines.explode(ignore_index=True).to_file(
+        str(product), driver="GPKG"
+    )
 
 
 def convert_network_lines_to_networkx(upstream: Any, product: Any) -> None:
-    network = gpd.read_parquet(upstream["extract_network_lines"])
+    network = gpd.read_file(
+        str(upstream["extract_dublin_network_lines"]), driver="GPKG"
+    ).dropna(subset=["geometry"])
     G = momepy.gdf_to_nx(network, approach="primal")
     G_dm = nx.DiGraph(G)
     with open(product, "wb") as f:
