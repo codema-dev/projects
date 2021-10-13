@@ -1,6 +1,7 @@
 from ast import literal_eval
 from os import PathLike
 from pathlib import Path
+import pickle
 from shutil import unpack_archive
 from typing import Any
 from typing import Dict
@@ -84,11 +85,12 @@ def extract_network_lines(upstream: Any, product: Any) -> None:
     lv_network_lines.to_parquet(product)
 
 
-def _read_networkx_geoparquet(filepath: PathLike) -> nx.DiGraph:
-    network = gpd.read_parquet(filepath)
+def convert_network_lines_to_networkx(upstream: Any, product: Any) -> None:
+    network = gpd.read_parquet(upstream["extract_network_lines"])
     G = momepy.gdf_to_nx(network, approach="primal")
     G_dm = nx.DiGraph(G)
-    return G_dm
+    with open(product, "wb") as f:
+        pickle.dump(G_dm, f)
 
 
 def _join_nearest_points(
@@ -114,7 +116,8 @@ def find_nearest_nodes_to_stations_on_network(upstream: Any, product: Any) -> No
         .query("`Voltage Class` == 'LV'")
         .reset_index(drop=True)
     )
-    G = _read_networkx_geoparquet(upstream["extract_network_lines"])
+    with open(upstream["convert_network_lines_to_networkx"], "rb") as f:
+        G = pickle.load(f)
 
     nodes_as_points = gpd.GeoDataFrame(
         {"geometry": [Point(n) for n in G.nodes()]}, crs="EPSG:2157"
@@ -130,10 +133,12 @@ def find_nearest_nodes_to_stations_on_network(upstream: Any, product: Any) -> No
     nearest_node_ids.to_parquet(product)
 
 
-def calculate_path_lengths_along_network_between_nodes(
+def calculate_path_lengths_along_network_between_stations(
     upstream: Any, product: Any
 ) -> None:
-    G = _read_networkx_geoparquet(upstream["extract_network_lines"])
+    with open(upstream["convert_network_lines_to_networkx"], "rb") as f:
+        G = pickle.load(f)
+
     nearest_node_ids = (
         pd.read_parquet(upstream["find_nearest_nodes_to_stations_on_network"])
         .squeeze()

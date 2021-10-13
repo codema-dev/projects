@@ -28,7 +28,7 @@ upstream = [
     "extract_dublin_substations",
     "extract_network_lines",
     "find_nearest_nodes_to_stations_on_network",
-    "calculate_path_lengths_along_network_between_nodes",
+    "calculate_path_lengths_along_network_between_substations",
 ]
 product = None
 # -
@@ -51,7 +51,7 @@ nearest_node_ids = (
 
 unique_nearest_node_ids = nearest_node_ids.drop_duplicates()
 
-dirpath = Path(upstream["calculate_path_lengths_along_network_between_nodes"])
+dirpath = Path(upstream["calculate_path_lengths_along_network_between_substations"])
 filenames = list(dirpath.glob("*.parquet"))
 # i.e. filenames = ["DIRPATH/0.parquet", DIRPATH/1.parquet", ...]
 sorted_filenames = sorted(filenames, key=lambda x: int(x.stem))
