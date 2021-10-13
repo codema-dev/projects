@@ -9,54 +9,57 @@ tasks:
   - source: codema_dev_tasks.requests.fetch_file
     name: download_buildings
     params:
-      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
-    product: data/external/2021_09_02_dublin_synthetic_building_energy_ratings.parquet
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_13_dublin_residential_synthetic_building_energy_ratings.gz
+    product: data/external/2021_10_13_dublin_residential_synthetic_building_energy_ratings.gz
 
   - source: tasks.load_defaults
     product: data/interim/defaults.json
 
-  - source: tasks.replace_uvalues_with_target_uvalues
-    product: data/processed/uvalues_retrofitted.csv
+  - source: tasks.implement_retrofit_measures
+    product: data/processed/retrofitted_buildings.parquet
 
-  - source: tasks.estimate_retrofit_costs
-    product: data/processed/retrofit_costs.csv
+  # - source: tasks.replace_uvalues_with_target_uvalues
+  #   product: data/processed/uvalues_retrofitted.csv
 
-  - source: tasks.estimate_retrofit_energy_saving
-    product: data/processed/energy_saving_no_rebound.csv
+  # - source: tasks.estimate_retrofit_costs
+  #   product: data/processed/retrofit_costs.csv
 
-  - source: tasks.estimate_retrofit_energy_saving
-    name: estimate_retrofit_energy_saving_with_rebound
-    params:
-      rebound_effect: 0.66
-    product: data/processed/energy_saving_with_rebound.csv
+  # - source: tasks.estimate_retrofit_energy_saving
+  #   product: data/processed/energy_saving_no_rebound.csv
 
-  - source: tasks.estimate_retrofit_hlp_improvement
-    product: data/processed/heat_loss_parameter_retrofitted.csv
+  # - source: tasks.estimate_retrofit_energy_saving
+  #   name: estimate_retrofit_energy_saving_with_rebound
+  #   params:
+  #     rebound_effect: 0.66
+  #   product: data/processed/energy_saving_with_rebound.csv
 
-  - source: tasks.estimate_retrofit_ber_rating_improvement
-    product: data/processed/ber_rating_retrofitted.csv
+  # - source: tasks.estimate_retrofit_hlp_improvement
+  #   product: data/processed/heat_loss_parameter_retrofitted.csv
 
-  - source: plot_energy_savings.py
-    product:
-      nb: data/notebooks/plot_energy_savings.ipynb
+  # - source: tasks.estimate_retrofit_ber_rating_improvement
+  #   product: data/processed/ber_rating_retrofitted.csv
+
+  # - source: plot_energy_savings.py
+  #   product:
+  #     nb: data/notebooks/plot_energy_savings.ipynb
   
-  - source: plot_heat_pump_viability.py
-    product:
-      nb: data/notebooks/plot_heat_pump_viability.ipynb
-      csv: data/roughwork/percentage_viable_for_heat_pumps_no_threshold.csv
+  # - source: plot_heat_pump_viability.py
+  #   product:
+  #     nb: data/notebooks/plot_heat_pump_viability.ipynb
+  #     csv: data/roughwork/percentage_viable_for_heat_pumps_no_threshold.csv
 
-  - source: plot_pre_vs_post_retrofit_bers.py
-    product:
-      nb: data/notebooks/plot_pre_vs_post_retrofit_bers.ipynb
+  # - source: plot_pre_vs_post_retrofit_bers.py
+  #   product:
+  #     nb: data/notebooks/plot_pre_vs_post_retrofit_bers.ipynb
 
-  - source: plot_retrofit_costs.py
-    product:
-      nb: data/notebooks/estimate_retrofit_costs.ipynb
+  # - source: plot_retrofit_costs.py
+  #   product:
+  #     nb: data/notebooks/estimate_retrofit_costs.ipynb
   
-  - source: plot_uvalue_distribution.py
-    product:
-      nb: data/notebooks/estimate_uvalue_thresholds.ipynb
-      wall: data/roughwork/uvalue_wall.csv
-      roof: data/roughwork/uvalue_roof.csv
-      window: data/roughwork/uvalue_window.csv
+  # - source: plot_uvalue_distribution.py
+  #   product:
+  #     nb: data/notebooks/estimate_uvalue_thresholds.ipynb
+  #     wall: data/roughwork/uvalue_wall.csv
+  #     roof: data/roughwork/uvalue_roof.csv
+  #     window: data/roughwork/uvalue_window.csv
   
