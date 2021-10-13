@@ -91,76 +91,86 @@ def implement_retrofit_measures(upstream: Any, product: Any) -> None:
         ],
         axis=1,
     )
-    post_retrofit.to_parquet(product)
+    post_retrofit.to_csv(product)
 
 
-# def _estimate_component_cost(
-#     pre_retrofit,
-#     post_retrofit,
-#     target_value,
-#     areas,
-# ) -> pd.Series:
-#     where_is_retrofitted = pre_retrofit != post_retrofit
-#     return pd.Series([target_value] * where_is_retrofitted * areas, dtype="int64")
+def _estimate_component_cost(
+    pre_retrofit,
+    post_retrofit,
+    target_value,
+    areas,
+    name,
+) -> pd.Series:
+    where_is_retrofitted = pre_retrofit != post_retrofit
+    return pd.Series(
+        [target_value] * where_is_retrofitted * areas, dtype="int64", name=name
+    )
 
 
-# def estimate_retrofit_costs(upstream: Any, product: Any) -> None:
+def estimate_retrofit_costs(upstream: Any, product: Any) -> None:
 
-#     with open(upstream["load_defaults"], "r") as f:
-#         defaults = json.load(f)
-#     pre_retrofit = pd.read_csv(upstream["download_buildings"])
-#     post_retrofit = pd.read_parquet(upstream["implement_retrofit_measures"])
+    with open(upstream["load_defaults"], "r") as f:
+        defaults = json.load(f)
+    pre_retrofit = pd.read_csv(upstream["download_buildings"])
+    post_retrofit = pd.read_csv(upstream["implement_retrofit_measures"])
 
-#     wall_cost_lower = _estimate_component_cost(
-#         pre_retrofit["wall_uvalue"],
-#         post_retrofit["wall_uvalue"],
-#         defaults["wall_cost"]["lower"],
-#         pre_retrofit["wall_area"],
-#     )
-#     wall_cost_upper = _estimate_component_cost(
-#         pre_retrofit["wall_uvalue"],
-#         post_retrofit["wall_uvalue"],
-#         defaults["wall_cost"]["upper"],
-#         pre_retrofit["wall_area"],
-#     )
+    wall_cost_lower = _estimate_component_cost(
+        pre_retrofit["wall_uvalue"],
+        post_retrofit["wall_uvalue"],
+        defaults["wall_cost"]["lower"],
+        pre_retrofit["wall_area"],
+        "wall_cost_lower",
+    )
+    wall_cost_upper = _estimate_component_cost(
+        pre_retrofit["wall_uvalue"],
+        post_retrofit["wall_uvalue"],
+        defaults["wall_cost"]["upper"],
+        pre_retrofit["wall_area"],
+        "wall_cost_upper",
+    )
 
-#     roof_cost_lower = _estimate_component_cost(
-#         pre_retrofit["roof_uvalue"],
-#         post_retrofit["roof_uvalue"],
-#         defaults["roof_cost"]["lower"],
-#         pre_retrofit["roof_area"],
-#     )
-#     roof_cost_upper = _estimate_component_cost(
-#         pre_retrofit["roof_uvalue"],
-#         post_retrofit["roof_uvalue"],
-#         defaults["roof_cost"]["upper"],
-#         pre_retrofit["roof_area"],
-#     )
+    roof_cost_lower = _estimate_component_cost(
+        pre_retrofit["roof_uvalue"],
+        post_retrofit["roof_uvalue"],
+        defaults["roof_cost"]["lower"],
+        pre_retrofit["roof_area"],
+        "roof_cost_lower",
+    )
+    roof_cost_upper = _estimate_component_cost(
+        pre_retrofit["roof_uvalue"],
+        post_retrofit["roof_uvalue"],
+        defaults["roof_cost"]["upper"],
+        pre_retrofit["roof_area"],
+        "roof_cost_upper",
+    )
 
-#     window_cost_lower = _estimate_component_cost(
-#         pre_retrofit["window_uvalue"],
-#         post_retrofit["window_uvalue"],
-#         defaults["window_cost"]["lower"],
-#         pre_retrofit["window_area"],
-#     )
-#     window_cost_upper = _estimate_component_cost(
-#         pre_retrofit["window_uvalue"],
-#         post_retrofit["window_uvalue"],
-#         defaults["window_cost"]["upper"],
-#         pre_retrofit["window_area"],
-#     )
+    window_cost_lower = _estimate_component_cost(
+        pre_retrofit["window_uvalue"],
+        post_retrofit["window_uvalue"],
+        defaults["window_cost"]["lower"],
+        pre_retrofit["window_area"],
+        "window_cost_lower",
+    )
+    window_cost_upper = _estimate_component_cost(
+        pre_retrofit["window_uvalue"],
+        post_retrofit["window_uvalue"],
+        defaults["window_cost"]["upper"],
+        pre_retrofit["window_area"],
+        "window_cost_upper",
+    )
 
-#     costs = pd.concat(
-#         [
-#             wall_cost_lower,
-#             wall_cost_upper,
-#             roof_cost_lower,
-#             roof_cost_upper,
-#             window_cost_lower,
-#             window_cost_upper,
-#         ],
-#         axis=1,
-#     )
+    costs = pd.concat(
+        [
+            wall_cost_lower,
+            wall_cost_upper,
+            roof_cost_lower,
+            roof_cost_upper,
+            window_cost_lower,
+            window_cost_upper,
+        ],
+        axis=1,
+    )
+    costs.to_csv(product)
 
 
 # def calculate_fabric_heat_loss_w_per_k(buildings: pd.DataFrame) -> pd.Series:

@@ -16,7 +16,10 @@ tasks:
     product: data/interim/defaults.json
 
   - source: tasks.implement_retrofit_measures
-    product: data/processed/retrofitted_buildings.parquet
+    product: data/processed/retrofitted_buildings.csv.gz
+  
+  - source: tasks.estimate_retrofit_costs
+    product: data/processed/retrofit_costs.csv.gz
 
   # - source: tasks.replace_uvalues_with_target_uvalues
   #   product: data/processed/uvalues_retrofitted.csv
