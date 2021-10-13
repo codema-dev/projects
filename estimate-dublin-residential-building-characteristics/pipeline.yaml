@@ -59,14 +59,14 @@ tasks:
         HSSupplHeatFraction: suppl_sh_heat_fraction
         DeclaredLossFactor: declared_loss_factor
         ThermalBridgingFactor: thermal_bridging_factor
-        NoOfSidesSheltered: no_sides_sheltered
-        NoOfChimneys: no_chimneys
-        NoOfOpenFlues: no_open_flues
-        NoOfFansAndVents: no_fans
-        NoOfFluelessGasFires: no_room_heaters
+        NoOfSidesSheltered: number_of_sides_sheltered
+        NoOfChimneys: number_of_chimneys
+        NoOfOpenFlues: number_of_open_flues
+        NoOfFansAndVents: number_of_fans
+        NoOfFluelessGasFires: number_of_room_heaters
         DraftLobby: is_draught_lobby
         PermeabilityTestResult: permeability_test_result
-        NoStoreys: no_storeys
+        NoStoreys: number_of_storeys
         PercentageDraughtStripped: percentage_draught_stripped
         SuspendedWoodenFloor: is_floor_suspended
         StructureType: structure_type
