@@ -33,9 +33,9 @@ tasks:
   - source: tasks.estimate_retrofit_ber_rating_improvement
     product: data/processed/ber_rating_retrofitted.csv
 
-  # - source: plot_energy_savings.py
-  #   product:
-  #     nb: data/notebooks/plot_energy_savings.ipynb
+  - source: plot_energy_savings.py
+    product:
+      nb: data/notebooks/plot_energy_savings.ipynb
   
   # - source: plot_heat_pump_viability.py
   #   product:
