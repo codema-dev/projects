@@ -85,6 +85,7 @@ def extract_buildings_meeting_conditions(product: Any, upstream: Any) -> None:
     conditions = [
         "type_of_rating != 'Provisional    '",
         "ground_floor_area > 0 and ground_floor_area < 1000",
+        "ground_floor_height > 0",
         "living_area_percent > 5 or living_area_percent < 90",
         "main_sh_boiler_efficiency > 19 or main_sh_boiler_efficiency < 600",
         "main_hw_boiler_efficiency > 19 or main_hw_boiler_efficiency < 320",
