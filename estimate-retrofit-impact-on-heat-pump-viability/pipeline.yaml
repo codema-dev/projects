@@ -50,10 +50,10 @@ tasks:
     product:
       nb: data/notebooks/estimate_retrofit_costs.ipynb
   
-  # - source: plot_uvalue_distribution.py
-  #   product:
-  #     nb: data/notebooks/estimate_uvalue_thresholds.ipynb
-  #     wall: data/roughwork/uvalue_wall.csv
-  #     roof: data/roughwork/uvalue_roof.csv
-  #     window: data/roughwork/uvalue_window.csv
+  - source: plot_uvalue_distribution.py
+    product:
+      nb: data/notebooks/estimate_uvalue_thresholds.ipynb
+      wall: data/roughwork/uvalue_wall.csv
+      roof: data/roughwork/uvalue_roof.csv
+      window: data/roughwork/uvalue_window.csv
   

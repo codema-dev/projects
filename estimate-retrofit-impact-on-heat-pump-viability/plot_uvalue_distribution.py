@@ -9,7 +9,7 @@ upstream = ["download_buildings"]
 product = None
 # -
 
-buildings = pd.read_parquet(upstream["download_buildings"])
+buildings = pd.read_csv(upstream["download_buildings"])
 
 buildings["wall_uvalue"].plot.hist(bins=30)
 
