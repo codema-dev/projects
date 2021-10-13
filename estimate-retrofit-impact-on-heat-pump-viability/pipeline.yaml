@@ -21,6 +21,15 @@ tasks:
   - source: tasks.estimate_retrofit_costs
     product: data/processed/retrofit_costs.csv.gz
 
+  - source: tasks.estimate_retrofit_energy_saving
+    product: data/processed/energy_saving_no_rebound.csv.gz
+
+  - source: tasks.estimate_retrofit_energy_saving
+    name: estimate_retrofit_energy_saving_with_rebound
+    params:
+      rebound_effect: 0.66
+    product: data/processed/energy_saving_with_rebound.csv.gz
+
   # - source: tasks.replace_uvalues_with_target_uvalues
   #   product: data/processed/uvalues_retrofitted.csv
 

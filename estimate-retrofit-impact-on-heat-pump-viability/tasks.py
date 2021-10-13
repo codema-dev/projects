@@ -91,7 +91,7 @@ def implement_retrofit_measures(upstream: Any, product: Any) -> None:
         ],
         axis=1,
     )
-    post_retrofit.to_csv(product)
+    post_retrofit.to_csv(product, index=False)
 
 
 def _estimate_component_cost(
@@ -170,23 +170,97 @@ def estimate_retrofit_costs(upstream: Any, product: Any) -> None:
         ],
         axis=1,
     )
-    costs.to_csv(product)
+    costs.to_csv(product, index=False)
 
 
-# def calculate_fabric_heat_loss_w_per_k(buildings: pd.DataFrame) -> pd.Series:
-#     return fab.calculate_fabric_heat_loss(
-#         roof_area=buildings["roof_area"],
-#         roof_uvalue=buildings["roof_uvalue"],
-#         wall_area=buildings["wall_area"],
-#         wall_uvalue=buildings["wall_uvalue"],
-#         floor_area=buildings["floor_area"],
-#         floor_uvalue=buildings["floor_uvalue"],
-#         window_area=buildings["window_area"],
-#         window_uvalue=buildings["window_uvalue"],
-#         door_area=buildings["door_area"],
-#         door_uvalue=buildings["door_uvalue"],
-#         thermal_bridging_factor=0.05,
-#     )
+def _calc_annual_heat_loss(buildings: pd.DataFrame) -> pd.Series:
+
+    heat_loss_coefficient = fab.calculate_fabric_heat_loss_coefficient(
+        roof_area=buildings["roof_area"],
+        roof_uvalue=buildings["roof_uvalue"],
+        wall_area=buildings["wall_area"],
+        wall_uvalue=buildings["wall_uvalue"],
+        floor_area=buildings["floor_area"],
+        floor_uvalue=buildings["floor_uvalue"],
+        window_area=buildings["window_area"],
+        window_uvalue=buildings["window_uvalue"],
+        door_area=buildings["door_area"],
+        door_uvalue=buildings["door_uvalue"],
+        thermal_bridging_factor=0.05,
+    )
+
+    # DEAP 4.2.2 default internal & external temperatures
+    internal_temperatures = np.array(
+        [
+            17.72,
+            17.73,
+            17.85,
+            17.95,
+            18.15,
+            18.35,
+            18.50,
+            18.48,
+            18.33,
+            18.11,
+            17.88,
+            17.77,
+        ]
+    )
+    external_temperatures = np.array(
+        [
+            5.3,
+            5.5,
+            7.0,
+            8.3,
+            11.0,
+            13.5,
+            15.5,
+            15.2,
+            13.3,
+            10.4,
+            7.5,
+            6.0,
+        ]
+    )
+
+    return htuse.calculate_heat_loss_per_year(
+        heat_loss_coefficient,
+        internal_temperatures,
+        external_temperatures,
+        how="monthly",
+    )
+
+
+def estimate_retrofit_energy_saving(
+    upstream: Any, product: Any, rebound_effect: float = 1
+) -> None:
+
+    pre_retrofit = pd.read_csv(upstream["download_buildings"])
+    post_retrofit = pd.read_csv(upstream["implement_retrofit_measures"], index_col=0)
+
+    pre_retrofit_annual_heat_loss = _calc_annual_heat_loss(pre_retrofit)
+    post_retrofit_annual_heat_loss = _calc_annual_heat_loss(post_retrofit)
+
+    annual_energy_saving = rebound_effect * (
+        pre_retrofit_annual_heat_loss - post_retrofit_annual_heat_loss
+    )
+
+    use_columns = [
+        "small_area",
+        "dwelling_type",
+        "year_of_construction",
+        "period_built",
+        "archetype",
+        "main_sh_boiler_fuel",
+    ]
+    heat_loss = pd.concat(
+        [
+            pre_retrofit[use_columns],
+            annual_energy_saving.rename("annual_energy_saving_kwh"),
+        ],
+        axis=1,
+    )
+    heat_loss.to_csv(product, index=False)
 
 
 # def get_ber_rating(energy_values: pd.Series) -> pd.Series:
