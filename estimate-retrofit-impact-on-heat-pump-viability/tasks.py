@@ -173,9 +173,8 @@ def estimate_retrofit_costs(upstream: Any, product: Any) -> None:
     costs.to_csv(product, index=False)
 
 
-def _calc_annual_heat_loss(buildings: pd.DataFrame) -> pd.Series:
-
-    heat_loss_coefficient = fab.calculate_fabric_heat_loss_coefficient(
+def _calc_fabric_heat_loss_coefficient(buildings: pd.DataFrame) -> pd.Series:
+    return fab.calculate_fabric_heat_loss_coefficient(
         roof_area=buildings["roof_area"],
         roof_uvalue=buildings["roof_uvalue"],
         wall_area=buildings["wall_area"],
@@ -188,6 +187,11 @@ def _calc_annual_heat_loss(buildings: pd.DataFrame) -> pd.Series:
         door_uvalue=buildings["door_uvalue"],
         thermal_bridging_factor=0.05,
     )
+
+
+def _calc_annual_heat_loss(buildings: pd.DataFrame) -> pd.Series:
+
+    heat_loss_coefficient = _calc_fabric_heat_loss_coefficient(buildings)
 
     # DEAP 4.2.2 default internal & external temperatures
     internal_temperatures = np.array(
@@ -341,57 +345,3 @@ def estimate_retrofit_ber_rating_improvement(upstream: Any, product: Any) -> Non
         axis=1,
     )
     energy_rating.to_csv(product, index=False)
-
-
-# def estimate_retrofit_hlp_improvement(
-#     upstream: Any, product: Any, rebound_effect: float = 1
-# ) -> None:
-
-#     pre_retrofit = pd.read_parquet(upstream["download_buildings"])
-#     post_retrofit = pd.read_csv(
-#         upstream["replace_uvalues_with_target_uvalues"], index_col=0
-#     )
-
-#     total_floor_area = (
-#         pre_retrofit["ground_floor_area"]
-#         + pre_retrofit["first_floor_area"]
-#         + pre_retrofit["second_floor_area"]
-#         + pre_retrofit["third_floor_area"]
-#     ).rename("total_floor_area")
-
-#     pre_retrofit_fabric_heat_loss_w_per_k = pre_retrofit.pipe(
-#         calculate_fabric_heat_loss_w_per_k
-#     ).rename("pre_retrofit_fabric_heat_loss_w_per_k")
-#     post_retrofit_fabric_heat_loss_w_per_k = post_retrofit.pipe(
-#         calculate_fabric_heat_loss_w_per_k
-#     ).rename("post_retrofit_fabric_heat_loss_w_per_k")
-#     heat_loss_parameter_improvement = pre_retrofit_fabric_heat_loss_w_per_k.subtract(
-#         post_retrofit_fabric_heat_loss_w_per_k
-#     ).divide(total_floor_area)
-#     post_retrofit_heat_loss_parameter = (
-#         pre_retrofit["heat_loss_parameter"]
-#         .subtract(heat_loss_parameter_improvement)
-#         .rename("post_retrofit_heat_loss_parameter")
-#     )
-
-#     use_columns = [
-#         "small_area",
-#         "dwelling_type",
-#         "year_of_construction",
-#         "period_built",
-#         "archetype",
-#         "heat_loss_parameter",
-#     ] + [c for c in pre_retrofit.columns if "uvalue" in c]
-#     statistics = pd.concat(
-#         [
-#             pre_retrofit[use_columns].rename(
-#                 columns=lambda c: "pre_retrofit_" + c if "uvalue" in c else c
-#             ),
-#             pre_retrofit_fabric_heat_loss_w_per_k,
-#             post_retrofit_fabric_heat_loss_w_per_k,
-#             total_floor_area,
-#             post_retrofit_heat_loss_parameter,
-#         ],
-#         axis=1,
-#     )
-#     statistics.to_csv(product, index=False)
