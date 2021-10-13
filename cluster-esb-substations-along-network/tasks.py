@@ -133,7 +133,7 @@ def find_nearest_nodes_to_stations_on_network(upstream: Any, product: Any) -> No
     nearest_node_ids.to_parquet(product)
 
 
-def calculate_path_lengths_along_network_between_stations(
+def calculate_path_lengths_along_network_between_substations(
     upstream: Any, product: Any
 ) -> None:
     with open(upstream["convert_network_lines_to_networkx"], "rb") as f:
