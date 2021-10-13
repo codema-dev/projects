@@ -33,7 +33,7 @@ tasks:
     product: data/interim/dublin_mv_lv_network.parquet
   
   - source: tasks.extract_network_lines
-    product: data/processed/dublin_mv_network_lines.parquet
+    product: data/processed/dublin_mv_network_lines.gpkg
     
   - source: tasks.convert_network_lines_to_networkx
     product: data/interim/dublin_mv_network_lines.pickle
@@ -49,8 +49,8 @@ tasks:
   - source: cluster_substations.py
     params:
       substation_type: MV
-      eps: 5000
-      minpts: 2
+      eps: 2000
+      minpts: 1
     product: 
       nb: data/notebooks/cluster_substations.ipynb
       network: data/processed/mv_network.gpkg

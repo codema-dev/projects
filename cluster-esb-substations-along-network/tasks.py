@@ -80,11 +80,11 @@ def extract_network_lines(upstream: Any, product: Any) -> None:
 
     # explode converts multi-part geometries to single-part which is req by networkx
     mv_network_lines = network.query("Level in [10, 11, 14]").explode(ignore_index=True)
-    mv_network_lines.to_parquet(product)
+    mv_network_lines.to_file(str(product), driver="GPKG")
 
 
 def convert_network_lines_to_networkx(upstream: Any, product: Any) -> None:
-    network = gpd.read_parquet(upstream["extract_network_lines"])
+    network = gpd.read_file(str(upstream["extract_network_lines"]), driver="GPKG")
     G = momepy.gdf_to_nx(network, approach="primal")
     G_dm = nx.DiGraph(G)
     with open(product, "wb") as f:
