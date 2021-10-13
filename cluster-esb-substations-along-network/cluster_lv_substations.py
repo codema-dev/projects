@@ -33,6 +33,8 @@ upstream = [
 product = None
 # -
 
+## Load
+
 network = gpd.read_parquet(upstream["extract_network_lines"])
 
 lv_substations = (
@@ -66,6 +68,8 @@ network_distance_matrix = node_distance_matrix.copy().reindex(
     columns=nearest_node_ids.to_list(), index=nearest_node_ids.to_list()
 )
 
+## Cluster
+
 # In a regular distance matrix, zero elements are considered neighbors
 # (they're on top of each other). With a sparse matrix only nonzero elements may be
 # considered neighbors for DBSCAN. First, make all zeros a very small number instead,
@@ -90,9 +94,23 @@ pd.Series(cluster_ids).value_counts()
 
 silhouette_score(network_distance_matrix_sparse, cluster_ids)
 
-clusters = lv_substations[["geometry"]].join(
+use_columns = [
+    "Installed Capacity MVA",
+    "SLR Load MVA",
+    "Demand Available MVA",
+    "geometry",
+]
+clusters = lv_substations[use_columns].join(
     pd.DataFrame({"cluster_ids": cluster_ids, "node_id": nearest_node_ids.apply(str)})
 )
+
+## Save
+
+network.to_file(product["network"], driver="GPKG")
+
+clusters.to_file(product["clusters"], driver="GPKG")
+
+## Plot
 
 ax = network.plot(figsize=(60, 60))
 clusters.apply(

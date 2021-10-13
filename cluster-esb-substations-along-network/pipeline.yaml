@@ -44,3 +44,5 @@ tasks:
   - source: cluster_lv_substations.py
     product: 
       nb: data/notebooks/cluster_lv_substations.ipynb
+      network: data/processed/lv_network.gpkg
+      clusters: data/processed/lv_substation_clusters.gpkg
