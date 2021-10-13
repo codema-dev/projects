@@ -30,26 +30,11 @@ tasks:
       rebound_effect: 0.66
     product: data/processed/energy_saving_with_rebound.csv.gz
 
-  # - source: tasks.replace_uvalues_with_target_uvalues
-  #   product: data/processed/uvalues_retrofitted.csv
-
-  # - source: tasks.estimate_retrofit_costs
-  #   product: data/processed/retrofit_costs.csv
-
-  # - source: tasks.estimate_retrofit_energy_saving
-  #   product: data/processed/energy_saving_no_rebound.csv
-
-  # - source: tasks.estimate_retrofit_energy_saving
-  #   name: estimate_retrofit_energy_saving_with_rebound
-  #   params:
-  #     rebound_effect: 0.66
-  #   product: data/processed/energy_saving_with_rebound.csv
+  - source: tasks.estimate_retrofit_ber_rating_improvement
+    product: data/processed/ber_rating_retrofitted.csv.gz
 
   # - source: tasks.estimate_retrofit_hlp_improvement
   #   product: data/processed/heat_loss_parameter_retrofitted.csv
-
-  # - source: tasks.estimate_retrofit_ber_rating_improvement
-  #   product: data/processed/ber_rating_retrofitted.csv
 
   # - source: plot_energy_savings.py
   #   product:

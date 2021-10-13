@@ -236,7 +236,7 @@ def estimate_retrofit_energy_saving(
 ) -> None:
 
     pre_retrofit = pd.read_csv(upstream["download_buildings"])
-    post_retrofit = pd.read_csv(upstream["implement_retrofit_measures"], index_col=0)
+    post_retrofit = pd.read_csv(upstream["implement_retrofit_measures"])
 
     pre_retrofit_annual_heat_loss = _calc_annual_heat_loss(pre_retrofit)
     post_retrofit_annual_heat_loss = _calc_annual_heat_loss(post_retrofit)
@@ -263,165 +263,84 @@ def estimate_retrofit_energy_saving(
     heat_loss.to_csv(product, index=False)
 
 
-# def get_ber_rating(energy_values: pd.Series) -> pd.Series:
-#     return (
-#         pd.cut(
-#             energy_values,
-#             [
-#                 -np.inf,
-#                 25,
-#                 50,
-#                 75,
-#                 100,
-#                 125,
-#                 150,
-#                 175,
-#                 200,
-#                 225,
-#                 260,
-#                 300,
-#                 340,
-#                 380,
-#                 450,
-#                 np.inf,
-#             ],
-#             labels=[
-#                 "A1",
-#                 "A2",
-#                 "A3",
-#                 "B1",
-#                 "B2",
-#                 "B3",
-#                 "C1",
-#                 "C2",
-#                 "C3",
-#                 "D1",
-#                 "D2",
-#                 "E1",
-#                 "E2",
-#                 "F",
-#                 "G",
-#             ],
-#         )
-#         .rename("energy_rating")
-#         .astype("string")
-#     )  # streamlit & altair don't recognise category
+def _get_ber_rating(energy_values: pd.Series) -> pd.Series:
+    return (
+        pd.cut(
+            energy_values,
+            [
+                -np.inf,
+                25,
+                50,
+                75,
+                100,
+                125,
+                150,
+                175,
+                200,
+                225,
+                260,
+                300,
+                340,
+                380,
+                450,
+                np.inf,
+            ],
+            labels=[
+                "A1",
+                "A2",
+                "A3",
+                "B1",
+                "B2",
+                "B3",
+                "C1",
+                "C2",
+                "C3",
+                "D1",
+                "D2",
+                "E1",
+                "E2",
+                "F",
+                "G",
+            ],
+        )
+        .rename("energy_rating")
+        .astype("string")
+    )  # streamlit & altair don't recognise category
 
 
-# def estimate_retrofit_energy_saving(
-#     upstream: Any, product: Any, rebound_effect: float = 1
-# ) -> None:
+def estimate_retrofit_ber_rating_improvement(upstream: Any, product: Any) -> None:
 
-#     pre_retrofit = pd.read_parquet(upstream["download_buildings"])
-#     post_retrofit = pd.read_csv(
-#         upstream["replace_uvalues_with_target_uvalues"], index_col=0
-#     )
+    pre_retrofit = pd.read_csv(upstream["download_buildings"])
+    energy_saving = pd.read_csv(upstream["estimate_retrofit_energy_saving"])
 
-#     pre_retrofit_fabric_heat_loss_w_per_k = pre_retrofit.pipe(
-#         calculate_fabric_heat_loss_w_per_k
-#     ).rename("pre_retrofit_fabric_heat_loss_w_per_k")
-#     post_retrofit_fabric_heat_loss_w_per_k = post_retrofit.pipe(
-#         calculate_fabric_heat_loss_w_per_k
-#     ).rename("post_retrofit_fabric_heat_loss_w_per_k")
-#     pre_retrofit_fabric_heat_loss_kwh_per_year = (
-#         pre_retrofit_fabric_heat_loss_w_per_k.pipe(htuse.calculate_heat_loss_per_year)
-#     ).rename("pre_retrofit_fabric_heat_loss_kwh_per_year")
-#     post_retrofit_fabric_heat_loss_kwh_per_year = (
-#         post_retrofit_fabric_heat_loss_w_per_k.pipe(htuse.calculate_heat_loss_per_year)
-#     ).rename("post_retrofit_fabric_heat_loss_kwh_per_year")
-#     energy_saving_kwh_per_y = (
-#         pre_retrofit_fabric_heat_loss_kwh_per_year.subtract(
-#             post_retrofit_fabric_heat_loss_kwh_per_year
-#         )
-#         .multiply(rebound_effect)
-#         .rename("energy_saving_kwh_per_y")
-#     )
+    use_columns = [
+        "ground_floor_area",
+        "first_floor_area",
+        "second_floor_area",
+        "third_floor_area",
+    ]
+    floor_area = pre_retrofit[use_columns].fillna(0).sum(axis=1)
 
-#     use_columns = [
-#         "small_area",
-#         "dwelling_type",
-#         "year_of_construction",
-#         "period_built",
-#         "archetype",
-#         "main_sh_boiler_fuel",
-#     ] + [c for c in pre_retrofit.columns if "uvalue" in c]
-#     statistics = pd.concat(
-#         [
-#             pre_retrofit[use_columns].rename(
-#                 columns=lambda c: "pre_retrofit_" + c if "uvalue" in c else c
-#             ),
-#             pre_retrofit_fabric_heat_loss_w_per_k,
-#             post_retrofit_fabric_heat_loss_w_per_k,
-#             pre_retrofit_fabric_heat_loss_kwh_per_year,
-#             post_retrofit_fabric_heat_loss_kwh_per_year,
-#             energy_saving_kwh_per_y,
-#         ],
-#         axis=1,
-#     )
-#     statistics.to_csv(product, index=False)
+    energy_rating_improvement = energy_saving["annual_energy_saving_kwh"] / floor_area
+    post_retrofit_energy_rating = _get_ber_rating(
+        pre_retrofit["energy_value"] - energy_rating_improvement
+    )
 
-
-# def estimate_retrofit_ber_rating_improvement(upstream: Any, product: Any) -> None:
-
-#     pre_retrofit = pd.read_parquet(upstream["download_buildings"])
-#     post_retrofit = pd.read_csv(
-#         upstream["replace_uvalues_with_target_uvalues"], index_col=0
-#     )
-
-#     pre_retrofit_fabric_heat_loss_w_per_k = pre_retrofit.pipe(
-#         calculate_fabric_heat_loss_w_per_k
-#     ).rename("pre_retrofit_fabric_heat_loss_w_per_k")
-#     post_retrofit_fabric_heat_loss_w_per_k = post_retrofit.pipe(
-#         calculate_fabric_heat_loss_w_per_k
-#     ).rename("post_retrofit_fabric_heat_loss_w_per_k")
-#     pre_retrofit_fabric_heat_loss_kwh_per_year = (
-#         pre_retrofit_fabric_heat_loss_w_per_k.pipe(htuse.calculate_heat_loss_per_year)
-#     ).rename("pre_retrofit_fabric_heat_loss_kwh_per_year")
-#     post_retrofit_fabric_heat_loss_kwh_per_year = (
-#         post_retrofit_fabric_heat_loss_w_per_k.pipe(htuse.calculate_heat_loss_per_year)
-#     ).rename("post_retrofit_fabric_heat_loss_kwh_per_year")
-#     energy_saving_kwh_per_y = pre_retrofit_fabric_heat_loss_kwh_per_year.subtract(
-#         post_retrofit_fabric_heat_loss_kwh_per_year
-#     ).rename("energy_saving_kwh_per_y")
-
-#     total_floor_area = (
-#         pre_retrofit[
-#             [
-#                 "ground_floor_area",
-#                 "first_floor_area",
-#                 "second_floor_area",
-#                 "third_floor_area",
-#             ]
-#         ]
-#         .fillna(0)
-#         .sum(axis=1)
-#     )
-#     energy_rating_improvement = energy_saving_kwh_per_y / total_floor_area
-#     post_retrofit_energy_rating = get_ber_rating(
-#         pre_retrofit["energy_value"] - energy_rating_improvement
-#     )
-
-#     use_columns = [
-#         "small_area",
-#         "dwelling_type",
-#         "year_of_construction",
-#         "period_built",
-#         "archetype",
-#     ] + [c for c in pre_retrofit.columns if "uvalue" in c]
-#     statistics = pd.concat(
-#         [
-#             pre_retrofit[use_columns].rename(
-#                 columns=lambda c: "pre_retrofit_" + c if "uvalue" in c else c
-#             ),
-#             pre_retrofit_fabric_heat_loss_w_per_k,
-#             post_retrofit_fabric_heat_loss_w_per_k,
-#             pre_retrofit_fabric_heat_loss_kwh_per_year,
-#             post_retrofit_fabric_heat_loss_kwh_per_year,
-#             post_retrofit_energy_rating,
-#         ],
-#         axis=1,
-#     )
-#     statistics.to_csv(product, index=False)
+    use_columns = [
+        "small_area",
+        "dwelling_type",
+        "year_of_construction",
+        "period_built",
+        "archetype",
+    ]
+    energy_rating = pd.concat(
+        [
+            pre_retrofit[use_columns],
+            post_retrofit_energy_rating,
+        ],
+        axis=1,
+    )
+    energy_rating.to_csv(product, index=False)
 
 
 # def estimate_retrofit_hlp_improvement(
