@@ -267,51 +267,6 @@ def estimate_retrofit_energy_saving(
     heat_loss.to_csv(product, index=False)
 
 
-def _get_ber_rating(energy_values: pd.Series) -> pd.Series:
-    return (
-        pd.cut(
-            energy_values,
-            [
-                -np.inf,
-                25,
-                50,
-                75,
-                100,
-                125,
-                150,
-                175,
-                200,
-                225,
-                260,
-                300,
-                340,
-                380,
-                450,
-                np.inf,
-            ],
-            labels=[
-                "A1",
-                "A2",
-                "A3",
-                "B1",
-                "B2",
-                "B3",
-                "C1",
-                "C2",
-                "C3",
-                "D1",
-                "D2",
-                "E1",
-                "E2",
-                "F",
-                "G",
-            ],
-        )
-        .rename("energy_rating")
-        .astype("string")
-    )  # streamlit & altair don't recognise category
-
-
 def estimate_retrofit_ber_rating_improvement(upstream: Any, product: Any) -> None:
 
     pre_retrofit = pd.read_csv(upstream["download_buildings"])
@@ -326,7 +281,7 @@ def estimate_retrofit_ber_rating_improvement(upstream: Any, product: Any) -> Non
     floor_area = pre_retrofit[use_columns].fillna(0).sum(axis=1)
 
     energy_rating_improvement = energy_saving["annual_energy_saving_kwh"] / floor_area
-    post_retrofit_energy_rating = _get_ber_rating(
+    post_retrofit_energy_value = (
         pre_retrofit["energy_value"] - energy_rating_improvement
     )
 
@@ -338,10 +293,7 @@ def estimate_retrofit_ber_rating_improvement(upstream: Any, product: Any) -> Non
         "archetype",
     ]
     energy_rating = pd.concat(
-        [
-            pre_retrofit[use_columns],
-            post_retrofit_energy_rating,
-        ],
+        [pre_retrofit[use_columns], post_retrofit_energy_value.rename("energy_value")],
         axis=1,
     )
     energy_rating.to_csv(product, index=False)
