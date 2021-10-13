@@ -3,11 +3,13 @@ import json
 from os import PathLike
 from pathlib import Path
 from typing import Any
+from typing import Dict
 from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
 import requests
+import yaml
 
 
 def download_building_energy_ratings(product: PathLike) -> None:
@@ -56,21 +58,15 @@ def download_building_energy_ratings(product: PathLike) -> None:
 
 
 def extract_columns_and_standardise_column_names(
-    product: Any, upstream: Any, dtypes_path: PathLike, names_path: PathLike
+    product: Any, upstream: Any, names: Dict[str, str]
 ) -> None:
-
-    with open(dtypes_path, "r") as f:
-        dtypes = json.load(f)
-    with open(names_path, "r") as f:
-        names = json.load(f)
 
     with ZipFile(upstream["download_building_energy_ratings"]) as zf:
         with zf.open("BERPublicsearch.txt", "r") as f:
             building_energy_ratings = pd.read_csv(
                 f,
                 sep="\t",
-                usecols=dtypes.keys(),
-                dtype=dtypes,
+                usecols=names.keys(),
                 encoding="latin-1",
                 quoting=QUOTE_NONE,
             ).rename(columns=names)
