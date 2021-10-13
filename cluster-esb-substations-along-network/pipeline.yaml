@@ -33,19 +33,23 @@ tasks:
     product: data/interim/dublin_mv_lv_network.parquet
   
   - source: tasks.extract_network_lines
-    product: data/processed/dublin_lv_network_lines.parquet
+    product: data/processed/dublin_mv_network_lines.parquet
     
   - source: tasks.convert_network_lines_to_networkx
-    product: data/interim/dublin_lv_network_lines.pickle
+    product: data/interim/dublin_mv_network_lines.pickle
 
   - source: tasks.find_nearest_nodes_to_stations_on_network
+    params:
+      substation_type: MV
     product: data/processed/nearest_network_nodes_to_substations.parquet
 
   - source: tasks.calculate_path_lengths_along_network_between_substations
     product: data/interim/node_to_node_distances
   
-  - source: cluster_lv_substations.py
+  - source: cluster_substations.py
+    params:
+      substation_type: MV
     product: 
-      nb: data/notebooks/cluster_lv_substations.ipynb
-      network: data/processed/lv_network.gpkg
-      clusters: data/processed/lv_substation_clusters.gpkg
+      nb: data/notebooks/cluster_substations.ipynb
+      network: data/processed/mv_network.gpkg
+      clusters: data/processed/mv_substation_clusters.gpkg

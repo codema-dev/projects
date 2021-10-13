@@ -61,7 +61,7 @@ def _convert_dataframe_to_geodataframe(
 
 
 def extract_dublin_substations(upstream: Any, product: Any) -> None:
-    lv_substations = pd.read_csv(upstream["download_esb_substation_capacities"]).pipe(
+    substations = pd.read_csv(upstream["download_esb_substation_capacities"]).pipe(
         _convert_dataframe_to_geodataframe,
         x="Longitude",
         y="Latitude",
@@ -71,18 +71,16 @@ def extract_dublin_substations(upstream: Any, product: Any) -> None:
     small_area_boundaries = gpd.read_file(
         str(upstream["download_dublin_small_area_boundaries"])
     ).to_crs("EPSG:2157")
-    dublin_lv_substations = gpd.sjoin(
-        lv_substations, small_area_boundaries, op="within"
-    )
-    dublin_lv_substations.to_file(str(product), driver="GPKG")
+    dublin_substations = gpd.sjoin(substations, small_area_boundaries, op="within")
+    dublin_substations.to_file(str(product), driver="GPKG")
 
 
 def extract_network_lines(upstream: Any, product: Any) -> None:
     network = gpd.read_parquet(upstream["convert_mv_lv_data_to_parquet"])
 
     # explode converts multi-part geometries to single-part which is req by networkx
-    lv_network_lines = network.query("Level in [1, 2, 5]").explode(ignore_index=True)
-    lv_network_lines.to_parquet(product)
+    mv_network_lines = network.query("Level in [10, 11, 14]").explode(ignore_index=True)
+    mv_network_lines.to_parquet(product)
 
 
 def convert_network_lines_to_networkx(upstream: Any, product: Any) -> None:
@@ -110,10 +108,12 @@ def _join_nearest_points(
     )
 
 
-def find_nearest_nodes_to_stations_on_network(upstream: Any, product: Any) -> None:
-    lv_substations = (
+def find_nearest_nodes_to_stations_on_network(
+    upstream: Any, product: Any, substation_type: str
+) -> None:
+    substations = (
         gpd.read_file(str(upstream["extract_dublin_substations"]))
-        .query("`Voltage Class` == 'LV'")
+        .query("`Voltage Class` == @substation_type")
         .reset_index(drop=True)
     )
     with open(upstream["convert_network_lines_to_networkx"], "rb") as f:
@@ -123,7 +123,7 @@ def find_nearest_nodes_to_stations_on_network(upstream: Any, product: Any) -> No
         {"geometry": [Point(n) for n in G.nodes()]}, crs="EPSG:2157"
     )
     nearest_node_points = _join_nearest_points(
-        lv_substations[["geometry"]], nodes_as_points
+        substations[["geometry"]], nodes_as_points
     )
     nearest_node_ids = (
         nearest_node_points.geometry.apply(lambda x: str(x.coords[0]))

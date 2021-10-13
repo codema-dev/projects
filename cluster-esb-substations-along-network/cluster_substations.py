@@ -23,6 +23,8 @@ import seaborn as sns
 from sklearn.cluster import DBSCAN
 from sklearn.metrics import silhouette_score
 
+sns.set()
+
 # + tags=["parameters"]
 upstream = [
     "extract_dublin_substations",
@@ -31,15 +33,16 @@ upstream = [
     "calculate_path_lengths_along_network_between_substations",
 ]
 product = None
+substation_type = "MV"
 # -
 
 ## Load
 
 network = gpd.read_parquet(upstream["extract_network_lines"])
 
-lv_substations = (
+substations = (
     gpd.read_file(str(upstream["extract_dublin_substations"]))
-    .query("`Voltage Class` == 'LV'")
+    .query("`Voltage Class` == @substation_type")
     .reset_index(drop=True)
 )
 
@@ -100,7 +103,7 @@ use_columns = [
     "Demand Available MVA",
     "geometry",
 ]
-clusters = lv_substations[use_columns].join(
+clusters = substations[use_columns].join(
     pd.DataFrame({"cluster_ids": cluster_ids, "node_id": nearest_node_ids.apply(str)})
 )
 
@@ -112,13 +115,14 @@ clusters.to_file(product["clusters"], driver="GPKG")
 
 ## Plot
 
-ax = network.plot(figsize=(60, 60))
+ax = network.plot(figsize=(40, 40))
 clusters.apply(
     lambda x: ax.annotate(
         text=x["cluster_ids"],
         xy=x.geometry.centroid.coords[0],
         ha="center",
-        fontsize="x-small",
+        fontsize="large",
+        color="red",
     ),
     axis=1,
 )
