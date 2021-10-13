@@ -35,6 +35,8 @@ upstream = [
 ]
 product = None
 substation_type = "MV"
+eps = 2000  # max distance between points in meters
+minpts = 3  # smallest cluster size allowed
 # -
 
 ## Load
@@ -82,10 +84,6 @@ network_distance_matrix = node_distance_matrix.copy().reindex(
 # so we don't ignore them. Otherwise, we wouldn't consider two firms attached to the
 # same node as cluster neighbors. Then set everything bigger than epsilon to 0, so we do
 # ignore it as we won't consider them neighbors anyway.
-
-# parameterize DBSCAN
-eps = 2000  # meters
-minpts = 3  # smallest cluster size allowed
 
 network_distance_matrix[network_distance_matrix == 0] = 1
 network_distance_matrix[network_distance_matrix > eps] = 0

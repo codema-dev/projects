@@ -49,6 +49,8 @@ tasks:
   - source: cluster_substations.py
     params:
       substation_type: MV
+      eps: 5000
+      minpts: 2
     product: 
       nb: data/notebooks/cluster_substations.ipynb
       network: data/processed/mv_network.gpkg
