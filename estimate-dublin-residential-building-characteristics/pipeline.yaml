@@ -39,4 +39,4 @@ tasks:
     product: data/processed/archetypes
   
   - source: tasks.fill_unknown_buildings_with_archetypes
-    product: data/processed/estimated_buildings.csv
+    product: data/processed/estimated_buildings.csv.gz
