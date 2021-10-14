@@ -9,8 +9,8 @@ tasks:
   - source: codema_dev_tasks.requests.fetch_file
     name: download_buildings
     params:
-      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_13_dublin_residential_synthetic_building_energy_ratings.gz
-    product: data/external/2021_10_13_dublin_residential_synthetic_building_energy_ratings.gz
+      url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_13_dublin_residential_synthetic_building_energy_ratings.csv.gz
+    product: data/external/2021_10_13_dublin_residential_synthetic_building_energy_ratings.csv.gz
 
   - source: tasks.load_defaults
     product: data/interim/defaults.json
@@ -32,6 +32,9 @@ tasks:
 
   - source: tasks.estimate_retrofit_ber_rating_improvement
     product: data/processed/ber_rating_retrofitted.csv
+
+  - source: tasks.calculate_heat_loss_indicator_improvement
+    product: data/processed/heat_loss_indicator_retrofitted.csv
 
   - source: plot_energy_savings.py
     product:

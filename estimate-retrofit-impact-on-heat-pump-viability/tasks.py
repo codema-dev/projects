@@ -8,6 +8,7 @@ import yaml
 
 from rcbm import fab
 from rcbm import htuse
+from rcbm import vent
 
 
 def load_defaults(product: Any) -> None:
@@ -68,23 +69,12 @@ def implement_retrofit_measures(upstream: Any, product: Any) -> None:
         defaults["window_uvalue"]["target"],
     )
 
-    use_columns = [
-        "small_area",
-        "dwelling_type",
-        "year_of_construction",
-        "period_built",
-        "archetype",
-        "door_area",
-        "floor_area",
-        "roof_area",
-        "wall_area",
-        "window_area",
-        "floor_uvalue",
-        "door_uvalue",
+    drop_columns = ["wall_uvalue", "roof_uvalue", "window_uvalue"] + [
+        c for c in pre_retrofit.columns if "demand" in c
     ]
     post_retrofit = pd.concat(
         [
-            pre_retrofit[use_columns],
+            pre_retrofit.drop(columns=drop_columns),
             retrofitted_wall_uvalues,
             retrofitted_roof_uvalues,
             retrofitted_window_uvalues,
@@ -249,17 +239,9 @@ def estimate_retrofit_energy_saving(
         pre_retrofit_annual_heat_loss - post_retrofit_annual_heat_loss
     )
 
-    use_columns = [
-        "small_area",
-        "dwelling_type",
-        "year_of_construction",
-        "period_built",
-        "archetype",
-        "main_sh_boiler_fuel",
-    ]
     heat_loss = pd.concat(
         [
-            pre_retrofit[use_columns],
+            post_retrofit,
             annual_energy_saving.rename("annual_energy_saving_kwh"),
         ],
         axis=1,
@@ -270,6 +252,7 @@ def estimate_retrofit_energy_saving(
 def estimate_retrofit_ber_rating_improvement(upstream: Any, product: Any) -> None:
 
     pre_retrofit = pd.read_csv(upstream["download_buildings"])
+    post_retrofit = pd.read_csv(upstream["implement_retrofit_measures"])
     energy_saving = pd.read_csv(upstream["estimate_retrofit_energy_saving"])
 
     use_columns = [
@@ -285,15 +268,109 @@ def estimate_retrofit_ber_rating_improvement(upstream: Any, product: Any) -> Non
         pre_retrofit["energy_value"] - energy_rating_improvement
     )
 
-    use_columns = [
-        "small_area",
-        "dwelling_type",
-        "year_of_construction",
-        "period_built",
-        "archetype",
-    ]
     energy_rating = pd.concat(
-        [pre_retrofit[use_columns], post_retrofit_energy_value.rename("energy_value")],
+        [post_retrofit, post_retrofit_energy_value.rename("energy_value")],
         axis=1,
     )
     energy_rating.to_csv(product, index=False)
+
+
+def _calc_ventilation_heat_loss_coefficient(buildings: pd.DataFrame) -> pd.Series:
+    building_volume = (
+        buildings["ground_floor_area"] * buildings["ground_floor_height"]
+        + buildings["first_floor_area"] * buildings["first_floor_height"]
+        + buildings["second_floor_area"] * buildings["second_floor_height"]
+        + buildings["third_floor_area"] * buildings["third_floor_height"]
+    )
+    is_draught_lobby = buildings["is_draught_lobby"].map({"YES": True, "NO": False})
+    structure_type = buildings["structure_type"].map(
+        {
+            "Please select                 ": "unknown",
+            "Masonry                       ": "masonry",
+            "Timber or Steel Frame         ": "timber_or_steel",
+            "Insulated Conctete Form       ": "concrete",
+        }
+    )
+    is_floor_suspended = buildings["is_floor_suspended"].map(
+        {
+            "No                            ": "none",
+            "Yes (Sealed)                  ": "sealed",
+            "Yes (Unsealed)                ": "unsealed",
+        }
+    )
+    infiltration_rate = vent.calculate_infiltration_rate(
+        no_sides_sheltered=buildings["number_of_sides_sheltered"],
+        building_volume=building_volume,
+        no_chimneys=buildings["number_of_chimneys"],
+        no_open_flues=buildings["number_of_open_flues"],
+        no_fans=buildings["number_of_fans"],
+        no_room_heaters=buildings["number_of_room_heaters"],
+        is_draught_lobby=is_draught_lobby,
+        permeability_test_result=buildings["permeability_test_result"],
+        no_storeys=buildings["number_of_storeys"],
+        percentage_draught_stripped=buildings["percentage_draught_stripped"],
+        is_floor_suspended=is_floor_suspended,
+        structure_type=structure_type,
+    )
+
+    ventilation_method = buildings["ventilation_method"].map(
+        {
+            "Natural vent.": "natural_ventilation",
+            "Bal.whole mech.vent no heat re": "mechanical_ventilation_no_heat_recovery",
+            "Whole house extract vent.": "positive_input_ventilation_from_outside",
+            "Bal.whole mech.vent heat recvr": "mechanical_ventilation_heat_recovery",
+            "Pos input vent.- outside": "positive_input_ventilation_from_outside",
+            "Pos input vent.- loft": "positive_input_ventilation_from_loft",
+        }
+    )
+    effective_air_rate_change = vent.calculate_effective_air_rate_change(
+        ventilation_method=ventilation_method,
+        building_volume=building_volume,
+        infiltration_rate=infiltration_rate,
+        heat_exchanger_efficiency=buildings["heat_exchanger_efficiency"],
+    )
+    return vent.calculate_ventilation_heat_loss_coefficient(
+        building_volume=building_volume,
+        effective_air_rate_change=effective_air_rate_change,
+        ventilation_heat_loss_constant=0.33,  # DEAP 4.2.2 default
+    )
+
+
+def _calculate_heat_loss_indicator(buildings: pd.DataFrame) -> pd.Series:
+    fabric_heat_loss_coefficient = _calc_fabric_heat_loss_coefficient(buildings)
+    ventilation_heat_loss_coefficient = _calc_ventilation_heat_loss_coefficient(
+        buildings
+    )
+    heat_loss_coefficient = (
+        fabric_heat_loss_coefficient + ventilation_heat_loss_coefficient
+    )
+
+    use_columns = [
+        "ground_floor_area",
+        "first_floor_area",
+        "second_floor_area",
+        "third_floor_area",
+    ]
+    floor_area = buildings[use_columns].fillna(0).sum(axis=1)
+    return heat_loss_coefficient / floor_area
+
+
+def calculate_heat_loss_indicator_improvement(upstream: Any, product: Any) -> None:
+
+    pre_retrofit = pd.read_csv(upstream["download_buildings"])
+    post_retrofit = pd.read_csv(upstream["implement_retrofit_measures"])
+
+    pre_retrofit_heat_loss_indicator = _calculate_heat_loss_indicator(pre_retrofit)
+    post_retrofit_heat_loss_indicator = _calculate_heat_loss_indicator(post_retrofit)
+
+    hli = pd.concat(
+        [
+            post_retrofit,
+            pre_retrofit_heat_loss_indicator.rename("pre_retrofit_heat_loss_indicator"),
+            post_retrofit_heat_loss_indicator.rename(
+                "post_retrofit_heat_loss_indicator"
+            ),
+        ],
+        axis=1,
+    )
+    hli.to_csv(product, index=False)
