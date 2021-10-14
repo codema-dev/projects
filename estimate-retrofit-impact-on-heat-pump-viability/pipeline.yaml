@@ -40,10 +40,10 @@ tasks:
     product:
       nb: data/notebooks/plot_energy_savings.ipynb
   
-  # - source: plot_heat_pump_viability.py
-  #   product:
-  #     nb: data/notebooks/plot_heat_pump_viability.ipynb
-  #     csv: data/roughwork/percentage_viable_for_heat_pumps_no_threshold.csv
+  - source: plot_heat_pump_viability.py
+    product:
+      nb: data/notebooks/plot_heat_pump_viability.ipynb
+      csv: data/roughwork/percentage_viable_for_heat_pumps_no_threshold.csv
 
   - source: plot_pre_vs_post_retrofit_bers.py
     product:

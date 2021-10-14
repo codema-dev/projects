@@ -275,13 +275,16 @@ def estimate_retrofit_ber_rating_improvement(upstream: Any, product: Any) -> Non
     energy_rating.to_csv(product, index=False)
 
 
-def _calc_ventilation_heat_loss_coefficient(buildings: pd.DataFrame) -> pd.Series:
+def calculate_heat_loss_indicator_improvement(upstream: Any, product: Any) -> None:
+
+    buildings = pd.read_csv(upstream["implement_retrofit_measures"])
+
     building_volume = (
         buildings["ground_floor_area"] * buildings["ground_floor_height"]
         + buildings["first_floor_area"] * buildings["first_floor_height"]
         + buildings["second_floor_area"] * buildings["second_floor_height"]
         + buildings["third_floor_area"] * buildings["third_floor_height"]
-    )
+    ).rename("building_volume")
     is_draught_lobby = buildings["is_draught_lobby"].map({"YES": True, "NO": False})
     structure_type = buildings["structure_type"].map(
         {
@@ -329,18 +332,16 @@ def _calc_ventilation_heat_loss_coefficient(buildings: pd.DataFrame) -> pd.Serie
         infiltration_rate=infiltration_rate,
         heat_exchanger_efficiency=buildings["heat_exchanger_efficiency"],
     )
-    return vent.calculate_ventilation_heat_loss_coefficient(
-        building_volume=building_volume,
-        effective_air_rate_change=effective_air_rate_change,
-        ventilation_heat_loss_constant=0.33,  # DEAP 4.2.2 default
+    ventilation_heat_loss_coefficient = (
+        vent.calculate_ventilation_heat_loss_coefficient(
+            building_volume=building_volume,
+            effective_air_rate_change=effective_air_rate_change,
+            ventilation_heat_loss_constant=0.33,  # DEAP 4.2.2 default
+        )
     )
 
-
-def _calculate_heat_loss_indicator(buildings: pd.DataFrame) -> pd.Series:
     fabric_heat_loss_coefficient = _calc_fabric_heat_loss_coefficient(buildings)
-    ventilation_heat_loss_coefficient = _calc_ventilation_heat_loss_coefficient(
-        buildings
-    )
+
     heat_loss_coefficient = (
         fabric_heat_loss_coefficient + ventilation_heat_loss_coefficient
     )
@@ -352,24 +353,12 @@ def _calculate_heat_loss_indicator(buildings: pd.DataFrame) -> pd.Series:
         "third_floor_area",
     ]
     floor_area = buildings[use_columns].fillna(0).sum(axis=1)
-    return heat_loss_coefficient / floor_area
-
-
-def calculate_heat_loss_indicator_improvement(upstream: Any, product: Any) -> None:
-
-    pre_retrofit = pd.read_csv(upstream["download_buildings"])
-    post_retrofit = pd.read_csv(upstream["implement_retrofit_measures"])
-
-    pre_retrofit_heat_loss_indicator = _calculate_heat_loss_indicator(pre_retrofit)
-    post_retrofit_heat_loss_indicator = _calculate_heat_loss_indicator(post_retrofit)
+    heat_loss_indicator = heat_loss_coefficient / floor_area
 
     hli = pd.concat(
         [
-            post_retrofit,
-            pre_retrofit_heat_loss_indicator.rename("pre_retrofit_heat_loss_indicator"),
-            post_retrofit_heat_loss_indicator.rename(
-                "post_retrofit_heat_loss_indicator"
-            ),
+            buildings,
+            heat_loss_indicator.rename("post_retrofit_heat_loss_indicator"),
         ],
         axis=1,
     )
