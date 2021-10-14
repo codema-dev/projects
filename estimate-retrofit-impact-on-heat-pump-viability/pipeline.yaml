@@ -12,13 +12,32 @@ tasks:
       url: https://codema-dev.s3.eu-west-1.amazonaws.com/views/2021_10_13_dublin_residential_synthetic_building_energy_ratings.csv.gz
     product: data/external/2021_10_13_dublin_residential_synthetic_building_energy_ratings.csv.gz
 
-  - source: tasks.load_defaults
-    product: data/interim/defaults.json
-
   - source: tasks.implement_retrofit_measures
+    params:
+      defaults:
+        wall_uvalue:
+          target: 0.35
+          threshold: 1
+        roof_uvalue:
+          target: 0.25
+          threshold: 1
+        window_uvalue:
+          target: 1.4
+          threshold: 2
     product: data/processed/retrofitted_buildings.csv
   
   - source: tasks.estimate_retrofit_costs
+    params:
+      defaults:
+        wall_cost:
+          lower: 50
+          upper: 300
+        roof_cost:
+          lower: 5
+          upper: 30
+        window_cost:
+          lower: 30
+          upper: 150
     product: data/processed/retrofit_costs.csv
 
   - source: tasks.estimate_retrofit_energy_saving

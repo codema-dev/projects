@@ -1,40 +1,14 @@
 from collections import defaultdict
 import json
 from typing import Any
+from typing import Dict
 
 import numpy as np
 import pandas as pd
-import yaml
 
 from rcbm import fab
 from rcbm import htuse
 from rcbm import vent
-
-
-def load_defaults(product: Any) -> None:
-    yaml_defaults = """
-    wall_uvalue:
-      target: 0.35
-      threshold: 1
-    wall_cost:
-      lower: 50
-      upper: 300
-    roof_uvalue:
-      target: 0.25
-      threshold: 1
-    roof_cost:
-      lower: 5
-      upper: 30
-    window_uvalue:
-      target: 1.4
-      threshold: 2
-    window_cost:
-      lower: 30
-      upper: 150
-    """
-    defaults = yaml.safe_load(yaml_defaults)
-    with open(product, "w") as f:
-        json.dump(defaults, f)
 
 
 def _replace_property_with_value(
@@ -47,10 +21,10 @@ def _replace_property_with_value(
     return values
 
 
-def implement_retrofit_measures(upstream: Any, product: Any) -> None:
+def implement_retrofit_measures(
+    upstream: Any, product: Any, defaults: Dict[str, int]
+) -> None:
 
-    with open(upstream["load_defaults"], "r") as f:
-        defaults = json.load(f)
     pre_retrofit = pd.read_csv(upstream["download_buildings"])
 
     retrofitted_wall_uvalues = _replace_property_with_value(
@@ -97,10 +71,10 @@ def _estimate_component_cost(
     )
 
 
-def estimate_retrofit_costs(upstream: Any, product: Any) -> None:
+def estimate_retrofit_costs(
+    upstream: Any, product: Any, defaults: Dict[str, int]
+) -> None:
 
-    with open(upstream["load_defaults"], "r") as f:
-        defaults = json.load(f)
     pre_retrofit = pd.read_csv(upstream["download_buildings"])
     post_retrofit = pd.read_csv(upstream["implement_retrofit_measures"])
 
