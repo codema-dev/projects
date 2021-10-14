@@ -16,7 +16,7 @@ product = None
 
 ## Load
 
-pre_retrofit = pd.read_parquet(upstream["download_buildings"])
+pre_retrofit = pd.read_csv(upstream["download_buildings"])
 
 energy_saving = pd.read_csv(upstream["estimate_retrofit_energy_saving"])
 
@@ -45,17 +45,17 @@ emission_factors = energy_saving["main_sh_boiler_fuel"].map(
     }
 )
 
-energy_saving_twh = energy_saving["energy_saving_kwh_per_y"].sum() / 1e9
+energy_saving_twh = energy_saving["annual_energy_saving_kwh"].sum() / 1e9
 energy_saving_twh
 
-energy_saving["energy_saving_kwh_per_y"].multiply(emission_factors).sum()
+energy_saving["annual_energy_saving_kwh"].multiply(emission_factors).sum()
 
 energy_saving_with_rebound_twh = (
-    energy_saving_with_rebound["energy_saving_kwh_per_y"].sum() / 1e9
+    energy_saving_with_rebound["annual_energy_saving_kwh"].sum() / 1e9
 )
 energy_saving_with_rebound_twh
 
-energy_saving_with_rebound["energy_saving_kwh_per_y"].multiply(emission_factors).sum()
+energy_saving_with_rebound["annual_energy_saving_kwh"].multiply(emission_factors).sum()
 
 ## Estimate Retrofitting Impact on Space Heat : Hot Water
 

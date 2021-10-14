@@ -8,8 +8,7 @@ sns.set()
 # + tags=["parameters"]
 upstream = [
     "download_small_area_boundaries",
-    "estimate_retrofit_hlp_improvement",
-    "estimate_retrofit_ber_rating_improvement",
+    "calculate_heat_loss_indicator_improvement",
 ]
 product = None
 # -
@@ -18,14 +17,12 @@ product = None
 
 small_area_boundaries = gpd.read_file(upstream["download_small_area_boundaries"])
 
-hlp_improvement = pd.read_csv(upstream["estimate_retrofit_hlp_improvement"])
-
-ber_improvement = pd.read_csv(upstream["estimate_retrofit_ber_rating_improvement"])
+hlp_improvement = pd.read_csv(upstream["calculate_heat_loss_indicator_improvement"])
 
 ## Map Heat Pump Viability
 
 hlp_improvement["is_viable_for_a_heat_pump"] = (
-    hlp_improvement["post_retrofit_heat_loss_parameter"] < 2
+    hlp_improvement["post_retrofit_heat_loss_indicator"] < 2
 )
 
 hlp_improvement["is_viable_for_a_heat_pump"].sum() / len(hlp_improvement)
