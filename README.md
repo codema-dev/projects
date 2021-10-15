@@ -5,6 +5,10 @@ Download, wrangle & explore all Irish energy datasets used by the `codema-dev` t
 
 > ⚠️ Some projects use closed-access datasets for which you will need permission from the `codema-dev` team to use!  Email us at codema-dev@codema.ie
 
+![Masterplan Tools](Tools.drawio.svg)
+
+---
+
 ## Setup
 
 Run the projects in your browser by clicking on the following buttons:
