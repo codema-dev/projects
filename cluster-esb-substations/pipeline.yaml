@@ -22,7 +22,7 @@ tasks:
   
   - source: cluster_lv_substations.py
     params:
-      n_clusters: 40
+      n_clusters: 30
     product:
       nb: data/notebooks/cluster_lv_substations.ipynb
       gpkg: data/processed/lv_substation_cluster_polygons.gpkg
@@ -31,7 +31,7 @@ tasks:
   
   - source: cluster_mv_substations.py
     params:
-      n_clusters: 40
+      n_clusters: 30
     product:
       nb: data/notebooks/cluster_mv_substations.ipynb
       gpkg: data/processed/mv_substation_cluster_polygons.gpkg
