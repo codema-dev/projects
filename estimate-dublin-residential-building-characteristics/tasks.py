@@ -2,14 +2,14 @@ from csv import QUOTE_NONE
 import json
 from os import PathLike
 from pathlib import Path
+from shutil import unpack_archive
 from typing import Any
 from typing import Dict
-from zipfile import ZipFile
 
+import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 import requests
-import yaml
 
 
 def download_building_energy_ratings(product: PathLike) -> None:
@@ -57,21 +57,25 @@ def download_building_energy_ratings(product: PathLike) -> None:
             f.write(chunk)
 
 
-def extract_columns_and_standardise_column_names(
-    product: Any, upstream: Any, names: Dict[str, str]
+def unzip_building_energy_ratings(
+    product: PathLike, upstream: Dict[str, PathLike]
 ) -> None:
+    unpack_archive(upstream["download_building_energy_ratings"], product)
 
-    with ZipFile(upstream["download_building_energy_ratings"]) as zf:
-        with zf.open("BERPublicsearch.txt", "r") as f:
-            building_energy_ratings = pd.read_csv(
-                f,
-                sep="\t",
-                usecols=names.keys(),
-                encoding="latin-1",
-                quoting=QUOTE_NONE,
-            ).rename(columns=names)
 
-    building_energy_ratings.to_parquet(product)
+def extract_columns_and_standardise_column_names(
+    product: Any, upstream: Any, names: Dict[str, str], dtypes: Dict[str, str]
+) -> None:
+    filepath = Path(upstream["unzip_building_energy_ratings"]) / "BERPublicsearch.txt"
+    building_energy_ratings = dd.read_csv(
+        filepath,
+        sep="\t",
+        encoding="latin-1",
+        quoting=QUOTE_NONE,
+        usecols=names.keys(),
+        dtype=dtypes,
+    ).rename(columns=names)
+    building_energy_ratings.compute().to_parquet(product)
 
 
 def extract_buildings_meeting_conditions(product: Any, upstream: Any) -> None:
