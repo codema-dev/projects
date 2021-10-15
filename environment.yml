@@ -4,6 +4,7 @@ channels:
 dependencies:
 - aiohttp
 - conda-merge
+- dask
 - fsspec
 - geopandas >=0.10.0
 - invoke

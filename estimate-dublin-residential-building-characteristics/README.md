@@ -31,3 +31,14 @@ OR on your Terminal:
 ```{code-cell} ipython3
 ploomber build
 ```
+
+## Now, explore the Ireland BERs with Dask
+
+```{code-cell} ipython3
+from helper import read_bers
+
+bers = read_bers("data/BERPublicsearch.zip", how="dask")
+len(bers)
+```
+
+# ... for more information on using `dask` to explore the bers see https://tutorial.dask.org/

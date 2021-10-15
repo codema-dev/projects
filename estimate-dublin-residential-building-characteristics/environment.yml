@@ -9,6 +9,7 @@ dependencies:
   - requests
   - pandas
   - pyarrow
+  - dask
   
   - pip
   - pip:
