@@ -2,9 +2,9 @@ from csv import QUOTE_NONE
 import json
 from os import PathLike
 from pathlib import Path
-from shutil import unpack_archive
 from typing import Any
 from typing import Dict
+from zipfile import ZipFile
 
 import dask.dataframe as dd
 import numpy as np
@@ -60,7 +60,8 @@ def download_building_energy_ratings(product: PathLike) -> None:
 def unzip_building_energy_ratings(
     product: PathLike, upstream: Dict[str, PathLike]
 ) -> None:
-    unpack_archive(upstream["download_building_energy_ratings"], product)
+    zf = ZipFile(upstream["download_building_energy_ratings"])
+    zf.extractall(product)
 
 
 def extract_columns_and_standardise_column_names(
