@@ -123,6 +123,8 @@ def extract_dublin_census_buildings(product: Any, upstream: Any) -> None:
 def fill_census_with_bers(product: Any, upstream: Any) -> None:
     census = pd.read_parquet(upstream["extract_dublin_census_buildings"])
     bers = pd.read_parquet(upstream["extract_buildings_meeting_conditions"])
+    with open(upstream["download_small_area_electoral_district_id_map"], "r") as f:
+        small_area_electoral_district_id_map = json.load(f)
 
     merge_columns = ["small_area", "period_built"]
 
@@ -165,6 +167,10 @@ def fill_census_with_bers(product: Any, upstream: Any) -> None:
 
     census_with_bers = pd.concat([before_2016, after_2016]).reset_index(drop=True)
 
+    census_with_bers["cso_ed_id"] = census_with_bers["small_area"].map(
+        small_area_electoral_district_id_map
+    )
+
     census_with_bers.to_parquet(product)
 
 
@@ -188,12 +194,6 @@ def _get_aggregation_operations(df):
 
 def create_archetypes(product: Any, upstream: Any) -> None:
     buildings = pd.read_parquet(upstream["fill_census_with_bers"])
-    with open(upstream["download_small_area_electoral_district_id_map"], "r") as f:
-        small_area_electoral_district_id_map = json.load(f)
-
-    buildings["cso_ed_id"] = buildings["small_area"].map(
-        small_area_electoral_district_id_map
-    )
 
     dirpath = Path(product)
     dirpath.mkdir(exist_ok=True)
@@ -228,13 +228,6 @@ def create_archetypes(product: Any, upstream: Any) -> None:
 def fill_unknown_buildings_with_archetypes(product: Any, upstream: Any) -> None:
     buildings = pd.read_parquet(upstream["fill_census_with_bers"])
     dirpath = Path(upstream["create_archetypes"])
-
-    with open(upstream["download_small_area_electoral_district_id_map"], "r") as f:
-        small_area_electoral_district_id_map = json.load(f)
-
-    buildings["cso_ed_id"] = buildings["small_area"].map(
-        small_area_electoral_district_id_map
-    )
 
     archetype_columns = [
         ["small_area", "period_built"],
