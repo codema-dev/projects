@@ -32,13 +32,19 @@ OR on your Terminal:
 ploomber build
 ```
 
-## Now, explore the Ireland BERs with Dask
+## Now, explore the Ireland and Dublin BERs
+
+
+```{code-cell} ipython3
+import pandas as pd
+
+bers = pd.read_parquet("data/external/BERPublicsearch.parquet")
+len(bers)
+```
 
 ```{code-cell} ipython3
 from helper import read_bers
 
-bers = read_bers("data/BERPublicsearch.zip", how="dask")
+bers = pd.read_csv("data/processed/estimated_buildings.csv.gz")
 len(bers)
 ```
-
-# ... for more information on using `dask` to explore the bers see https://tutorial.dask.org/

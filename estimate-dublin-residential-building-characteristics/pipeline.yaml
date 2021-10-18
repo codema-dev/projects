@@ -23,7 +23,7 @@ tasks:
   - source: tasks.unzip_building_energy_ratings
     product: data/external/BERPublicsearch
 
-  - source: tasks.extract_columns_and_standardise_column_names
+  - source: tasks.save_selected_columns_as_parquet
     params:
       names:
         SA_Code: small_area

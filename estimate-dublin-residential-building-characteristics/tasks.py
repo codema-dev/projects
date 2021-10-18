@@ -64,11 +64,11 @@ def unzip_building_energy_ratings(
     zf.extractall(product)
 
 
-def extract_columns_and_standardise_column_names(
+def save_selected_columns_as_parquet(
     product: Any, upstream: Any, names: Dict[str, str], dtypes: Dict[str, str]
 ) -> None:
     filepath = Path(upstream["unzip_building_energy_ratings"]) / "BERPublicsearch.txt"
-    building_energy_ratings = dd.read_csv(
+    building_energy_ratings = pd.read_csv(
         filepath,
         sep="\t",
         encoding="latin-1",
@@ -76,12 +76,12 @@ def extract_columns_and_standardise_column_names(
         usecols=names.keys(),
         dtype=dtypes,
     ).rename(columns=names)
-    building_energy_ratings.compute().to_parquet(product)
+    building_energy_ratings.to_parquet(product)
 
 
 def extract_buildings_meeting_conditions(product: Any, upstream: Any) -> None:
     buildings = pd.read_parquet(
-        upstream["extract_columns_and_standardise_column_names"]
+        upstream["save_selected_columns_as_parquet"]
     )
     dublin_small_area_ids = pd.read_csv(
         upstream["download_dublin_small_area_ids"]
