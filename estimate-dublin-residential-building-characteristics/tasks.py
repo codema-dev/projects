@@ -229,6 +229,13 @@ def fill_unknown_buildings_with_archetypes(product: Any, upstream: Any) -> None:
     buildings = pd.read_parquet(upstream["fill_census_with_bers"])
     dirpath = Path(upstream["create_archetypes"])
 
+    with open(upstream["download_small_area_electoral_district_id_map"], "r") as f:
+        small_area_electoral_district_id_map = json.load(f)
+
+    buildings["cso_ed_id"] = buildings["small_area"].map(
+        small_area_electoral_district_id_map
+    )
+
     archetype_columns = [
         ["small_area", "period_built"],
         ["cso_ed_id", "period_built"],
@@ -243,5 +250,3 @@ def fill_unknown_buildings_with_archetypes(product: Any, upstream: Any) -> None:
             .combine_first(archetype_values.set_index(archetype))
             .reset_index()
         )
-
-    buildings.to_csv(product, index=False)
