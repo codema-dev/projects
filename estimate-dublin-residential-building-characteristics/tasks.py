@@ -80,9 +80,7 @@ def save_selected_columns_as_parquet(
 
 
 def extract_buildings_meeting_conditions(product: Any, upstream: Any) -> None:
-    buildings = pd.read_parquet(
-        upstream["save_selected_columns_as_parquet"]
-    )
+    buildings = pd.read_parquet(upstream["save_selected_columns_as_parquet"])
     dublin_small_area_ids = pd.read_csv(
         upstream["download_dublin_small_area_ids"]
     ).squeeze()
@@ -227,21 +225,35 @@ def create_archetypes(product: Any, upstream: Any) -> None:
 
 def fill_unknown_buildings_with_archetypes(product: Any, upstream: Any) -> None:
     buildings = pd.read_parquet(upstream["fill_census_with_bers"])
-    dirpath = Path(upstream["create_archetypes"])
+    input_dirpath = Path(upstream["create_archetypes"])
+    output_dirpath = Path(product)
+    output_dirpath.mkdir(exist_ok=True)
 
-    archetype_columns = [
+    unknown_buildings = buildings[buildings["countyname"].isnull()]
+    archetype_groups = [
         ["small_area", "period_built"],
         ["cso_ed_id", "period_built"],
         ["countyname", "period_built"],
         ["period_built"],
     ]
-    for archetype in archetype_columns:
-        filename = "_".join(archetype) + ".csv"
-        archetype_values = pd.read_csv(dirpath / filename)
-        buildings = (
-            buildings.set_index(archetype)
-            .combine_first(archetype_values.set_index(archetype))
+    for archetype_columns in archetype_groups:
+        unknown_buildings = unknown_buildings[unknown_buildings["countyname"].isnull()]
+        filename = "_".join(archetype_columns) + ".csv"
+        archetypes = pd.read_csv(input_dirpath / filename)
+        unknown_buildings = (
+            unknown_buildings.set_index(archetype_columns)
+            .combine_first(archetypes.set_index(archetype_columns))
             .reset_index()
         )
-    
-    buildings.to_csv(product)
+        unknown_buildings.dropna(subset=["countyname"]).to_csv(output_dirpath / filename)
+
+
+def combine_known_and_archetyped_buildings(product: Any, upstream: Any) -> None:
+    buildings = pd.read_parquet(upstream["fill_census_with_bers"])
+    known_buildings = buildings[buildings["countyname"].notnull()]
+    unknown_buildings = [
+        pd.read_csv(f)
+        for f in Path(upstream["fill_unknown_buildings_with_archetypes"]).iterdir()
+    ]
+    estimated_buildings = pd.concat([known_buildings] + unknown_buildings)
+    estimated_buildings.to_csv(product, index=False)
