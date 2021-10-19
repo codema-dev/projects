@@ -243,3 +243,5 @@ def fill_unknown_buildings_with_archetypes(product: Any, upstream: Any) -> None:
             .combine_first(archetype_values.set_index(archetype))
             .reset_index()
         )
+    
+    buildings.to_csv(product)
