@@ -149,6 +149,34 @@ Moving to open-source scripting tools enabled using logic written down in script
 
 ---
 
+## Tools Considered
+
+**Criteria:**  a tool capable of modelling retrofitting hundreds of thousands of buildings to estimate energy & carbon savings, BER rating improvement and costs.  
+
+[`EnergyPLAN`](https://www.energyplan.eu/) is an energy system model that works well for comparing aggregated demand against renewable supply profiles.  It doesn't, however, model individual buildings and instead requires aggregated inputs for building energy demands.
+
+SEAI's [Dwelling Energy Assessment Procedure (`DEAP`)](https://www.seai.ie/home-energy/building-energy-rating-ber/) Excel model, [`EnergyPlus`](https://energyplus.net/) and [`RC_BuildingSimulator`](https://github.com/architecture-building-systems/RC_BuildingSimulator) can model individual buildings using simple physics-based simulations but are difficult to scale.  As a result, it is necessary to create a limited number of representative archetypes (<100) in order to use them to model building stocks.  At present, archetype creation for these models is a long, manual process.  To avoid this limitation some scripting libraries were experimented with to see if this process could be sped up:
+
+- `DEAP`: [`pycel`](https://github.com/dgorissen/pycel) enables replacing individual building characteristics specified in a `DEAP` `Excel` model via a `Python` process, however, as of January 2020 `pycel` library didn't support all operations performed in the `DEAP` spreadsheet.
+
+- `EnergyPlus`: [`eppy`](https://github.com/santoshphilip/eppy) enables replacing building characteristics and [`geomeppy`](https://github.com/jamiebull1/geomeppy) geometry-specific characteristics via `Python`. As of September 2020 these libraries are better suited to parameterising existing models than for creating them from scratch.
+
+`RC_BuildingSimulator` is a `Python` library and so can be easily scaled. This library wasn't used as it is not actively maintained, cumbersome to adapt to this use case and would require some validation as to its accuracy as it is not a widely used library.       
+
+[`CityEnergyAnalyst`](https://cityenergyanalyst.com/) also models individual buildings using physics-based simulations but is designed for district-level simulations.  However, it is tied to `Openstreetmaps` as a data source for building geometries and ages and to swiss building standards by building age for archetypes.  As of October 2020 `Openstreetmaps` was not as complete as in Switzerland, and decoupling `CityEnergyAnalyst` from it proved difficult.   
+
+| Tool | Barrier |
+| --- | --- |
+| `EnergyPLAN` | Modelling building energy demands |
+| `DEAP` | Scaling building energy demands |
+| `EnergyPlus` | "" |
+| `RC_BuildingSimulator` | Adaptation & validation for the Dublin building stock |
+| `CityEnergyAnalyst` | Poor data quality for Dublin buildings |
+
+As a consequence, we developed `rc-building-model` which re-implements the `DEAP` model in `Python`.  This model was tested and validated against the `DEAP` `Excel` model for individual buildings, and implemented to easily and rapidly scale to the Dublin building stock.
+
+---
+
 ## Keeping the global `environment.yml` up to date
 
 This `environment.yml` is built by merging the `environment.yml` from each project.  `Binder` & `GitPod` use it to create a sandbox environment in which all dependencies are installed.
